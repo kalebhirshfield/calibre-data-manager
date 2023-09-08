@@ -1,1 +1,3 @@
 flet
+psycopg2-binary
+dotenv
