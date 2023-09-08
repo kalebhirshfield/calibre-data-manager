@@ -1,5 +1,13 @@
+import os
+import psycopg2
+from dotenv import load_dotenv
 import flet as ft
 from flet import RoundedRectangleBorder
+
+
+load_dotenv()
+connection = psycopg2.connect(os.getenv("dbURL"))
+cursor = connection.cursor()
 
 
 def main(page: ft.Page):
@@ -32,16 +40,12 @@ def main(page: ft.Page):
         on_click=lambda _: page.window_close(),
     )
 
-    btnMenu = ft.IconButton(
-        ft.icons.MENU,
-        style=ft.ButtonStyle(
-            color={
-                ft.MaterialState.DEFAULT: ft.colors.WHITE70,
-                ft.MaterialState.HOVERED: ft.colors.BLUE_ACCENT_200,
-            },
-            shape={ft.MaterialState.DEFAULT: RoundedRectangleBorder(radius=10)},
-            bgcolor=ft.colors.BLACK54,
-        ),
+    btnMenu = ft.PopupMenuButton(
+        items=[
+            ft.PopupMenuItem(icon=ft.icons.SEARCH, text="Search Database"),
+            ft.PopupMenuItem(icon=ft.icons.DATA_ARRAY, text="Edit Database"),
+            ft.PopupMenuItem(icon=ft.icons.AUTO_GRAPH, text="View Statistics"),
+        ],
     )
 
     page.add(ft.Row(controls=[btnMenu, windowDragArea, btnClose]))
