@@ -9,10 +9,10 @@ load_dotenv()
 connection = psycopg2.connect(os.getenv("dbURL"))
 cursor = connection.cursor()
 
-cursor.execute('SELECT NOW();')
+cursor.execute("SELECT NOW();")
 time = cursor.fetchone()[0]
 
-cursor.execute('SELECT version();')
+cursor.execute("SELECT version();")
 version = cursor.fetchone()[0]
 
 
@@ -63,5 +63,5 @@ ft.app(target=main)
 cursor.close()
 connection.close()
 
-print('Current time:', time)
-print('PostgreSQL version:', version)
+print("Current time:", time)
+print("PostgreSQL version:", version)
