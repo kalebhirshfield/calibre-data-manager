@@ -9,6 +9,12 @@ load_dotenv()
 connection = psycopg2.connect(os.getenv("dbURL"))
 cursor = connection.cursor()
 
+cursor.execute('SELECT NOW();')
+time = cursor.fetchone()[0]
+
+cursor.execute('SELECT version();')
+version = cursor.fetchone()[0]
+
 
 def main(page: ft.Page):
     page.title = "Calibre Data Manager"
@@ -52,3 +58,10 @@ def main(page: ft.Page):
 
 
 ft.app(target=main)
+
+
+cursor.close()
+connection.close()
+
+print('Current time:', time)
+print('PostgreSQL version:', version)
