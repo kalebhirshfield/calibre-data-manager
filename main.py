@@ -104,7 +104,6 @@ def main(page: ft.Page):
         rows=rows,
         bgcolor=ft.colors.BLACK54,
         border_radius=10,
-        data_row_height=60,
     )
 
     columnNames, historicalSales = fetchHisoricalSales()
@@ -117,7 +116,6 @@ def main(page: ft.Page):
         rows=rows,
         bgcolor=ft.colors.BLACK54,
         border_radius=10,
-        data_row_height=60,
     )
 
     page.add(
