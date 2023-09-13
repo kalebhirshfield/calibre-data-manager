@@ -17,9 +17,37 @@ def fetchStockLevels():
     return columnNames, stockLevels
 
 
+def fetchHisoricalSales():
+    cursor.execute("SELECT * FROM historicalsales")
+    historicalSales = cursor.fetchall()
+    columnNames = [desc[0] for desc in cursor.description]
+    return columnNames, historicalSales
+
+
 def main(page: ft.Page):
+    def dropDownChanged(e):
+        if tableSelection.value == "Stock Levels":
+            page.clean()
+            page.add(
+                ft.Row(controls=[btnMenu, windowDragArea, btnClose]),
+                ft.Row(
+                    controls=[tableSelection],
+                ),
+                ft.Column(controls=[stockLevelsTable], expand=True, scroll=True),
+            )
+        elif tableSelection.value == "Historical Sales":
+            page.clean()
+            page.add(
+                ft.Row(controls=[btnMenu, windowDragArea, btnClose]),
+                ft.Row(
+                    controls=[tableSelection],
+                ),
+                ft.Column(controls=[historicalSalesTable], expand=True, scroll=True),
+            )
+        page.update()
+
     page.title = "Calibre Data Manager"
-    page.window_width = 830
+    page.window_width = 1000
     page.window_height = 500
     page.window_title_bar_hidden = True
     page.window_title_bar_buttons_hidden = True
@@ -55,6 +83,17 @@ def main(page: ft.Page):
         ],
     )
 
+    tableSelection = ft.Dropdown(
+        on_change=dropDownChanged,
+        width=200,
+        border_radius=10,
+        hint_text="Select Table",
+        options=[
+            ft.dropdown.Option("Stock Levels"),
+            ft.dropdown.Option("Historical Sales"),
+        ],
+    )
+
     columnNames, stockLevels = fetchStockLevels()
     rows = []
     for row in stockLevels:
@@ -68,9 +107,24 @@ def main(page: ft.Page):
         data_row_height=60,
     )
 
+    columnNames, historicalSales = fetchHisoricalSales()
+    rows = []
+    for row in historicalSales:
+        rows.append(ft.DataRow(cells=[ft.DataCell(ft.Text(cell)) for cell in row]))
+
+    historicalSalesTable = ft.DataTable(
+        columns=[ft.DataColumn(ft.Text(columnName)) for columnName in columnNames],
+        rows=rows,
+        bgcolor=ft.colors.BLACK54,
+        border_radius=10,
+        data_row_height=60,
+    )
+
     page.add(
         ft.Row(controls=[btnMenu, windowDragArea, btnClose]),
-        ft.Column(controls=[stockLevelsTable], expand=True, scroll=True),
+        ft.Row(
+            controls=[tableSelection],
+        ),
     )
 
 
