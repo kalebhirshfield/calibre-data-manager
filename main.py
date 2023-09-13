@@ -30,24 +30,38 @@ def main(page: ft.Page):
             page.clean()
             page.add(
                 ft.Row(controls=[btnMenu, windowDragArea, btnClose]),
+                ft.Row(controls=[tableSelection]),
                 ft.Row(
-                    controls=[tableSelection],
+                    controls=[
+                        ft.Column(
+                            controls=[stockLevelsTable],
+                            scroll=True,
+                        ),
+                    ],
+                    scroll=True,
+                    expand=True,
                 ),
-                ft.Column(controls=[stockLevelsTable], expand=True, scroll=True),
             )
         elif tableSelection.value == "Historical Sales":
             page.clean()
             page.add(
                 ft.Row(controls=[btnMenu, windowDragArea, btnClose]),
+                ft.Row(controls=[tableSelection]),
                 ft.Row(
-                    controls=[tableSelection],
+                    controls=[
+                        ft.Column(
+                            controls=[historicalSalesTable],
+                            scroll=True,
+                        ),
+                    ],
+                    scroll=True,
+                    expand=True,
                 ),
-                ft.Column(controls=[historicalSalesTable], expand=True, scroll=True),
             )
         page.update()
 
     page.title = "Calibre Data Manager"
-    page.window_width = 1000
+    page.window_width = 750
     page.window_height = 500
     page.window_title_bar_hidden = True
     page.window_title_bar_buttons_hidden = True
