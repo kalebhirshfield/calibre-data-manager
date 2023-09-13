@@ -63,6 +63,8 @@ def main(page: ft.Page):
     stockLevelsTable = ft.DataTable(
         columns=[ft.DataColumn(ft.Text(columnName)) for columnName in columnNames],
         rows=rows,
+        bgcolor=ft.colors.BLACK54,
+        border_radius=10,
     )
 
     page.add(
