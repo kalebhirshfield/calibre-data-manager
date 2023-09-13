@@ -60,6 +60,30 @@ def main(page: ft.Page):
             )
         page.update()
 
+    def search(e):
+        query = searchBar.value.strip().lower()
+        if tableSelection.value == "Stock Levels":
+            filteredStockLevels = [
+                row
+                for row in stockLevels
+                if any(query in str(cell).lower() for cell in row)
+            ]
+            stockLevelsTable.rows = [
+                ft.DataRow(cells=[ft.DataCell(ft.Text(cell)) for cell in row])
+                for row in filteredStockLevels
+            ]
+        elif tableSelection.value == "Historical Sales":
+            filteredHistoricalSales = [
+                row
+                for row in historicalSales
+                if any(query in str(cell).lower() for cell in row)
+            ]
+            historicalSalesTable.rows = [
+                ft.DataRow(cells=[ft.DataCell(ft.Text(cell)) for cell in row])
+                for row in filteredHistoricalSales
+            ]
+        page.update()
+
     page.title = "Calibre Data Manager"
     page.window_width = 750
     page.window_height = 500
@@ -113,7 +137,11 @@ def main(page: ft.Page):
     )
 
     searchBar = ft.TextField(
-        label="Search", expand=True, border_radius=10, prefix_icon=ft.icons.SEARCH
+        label="Press enter to search",
+        expand=True,
+        border_radius=10,
+        prefix_icon=ft.icons.SEARCH,
+        on_submit=search,
     )
 
     columnNames, stockLevels = fetchStockLevels()
