@@ -9,16 +9,17 @@ load_dotenv()
 connection = psycopg2.connect(os.getenv("dbURL"))
 cursor = connection.cursor()
 
-cursor.execute("SELECT NOW();")
-time = cursor.fetchone()[0]
 
-cursor.execute("SELECT version();")
-version = cursor.fetchone()[0]
+def fetchStockLevels():
+    cursor.execute("SELECT * FROM stocklevels")
+    stockLevels = cursor.fetchall()
+    columnNames = [desc[0] for desc in cursor.description]
+    return columnNames, stockLevels
 
 
 def main(page: ft.Page):
     page.title = "Calibre Data Manager"
-    page.window_width = 500
+    page.window_width = 830
     page.window_height = 500
     page.window_title_bar_hidden = True
     page.window_title_bar_buttons_hidden = True
@@ -54,7 +55,20 @@ def main(page: ft.Page):
         ],
     )
 
-    page.add(ft.Row(controls=[btnMenu, windowDragArea, btnClose]))
+    columnNames, stockLevels = fetchStockLevels()
+    rows = []
+    for row in stockLevels:
+        rows.append(ft.DataRow(cells=[ft.DataCell(ft.Text(cell)) for cell in row]))
+
+    stockLevelsTable = ft.DataTable(
+        columns=[ft.DataColumn(ft.Text(columnName)) for columnName in columnNames],
+        rows=rows,
+    )
+
+    page.add(
+        ft.Row(controls=[btnMenu, windowDragArea, btnClose]),
+        ft.Row(controls=[stockLevelsTable]),
+    )
 
 
 ft.app(target=main)
@@ -62,6 +76,3 @@ ft.app(target=main)
 
 cursor.close()
 connection.close()
-
-print("Current time:", time)
-print("PostgreSQL version:", version)
