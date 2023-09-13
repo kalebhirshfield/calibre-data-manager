@@ -65,11 +65,12 @@ def main(page: ft.Page):
         rows=rows,
         bgcolor=ft.colors.BLACK54,
         border_radius=10,
+        data_row_height=60,
     )
 
     page.add(
         ft.Row(controls=[btnMenu, windowDragArea, btnClose]),
-        ft.Row(controls=[stockLevelsTable]),
+        ft.Column(controls=[stockLevelsTable], expand=True, scroll=True),
     )
 
 
