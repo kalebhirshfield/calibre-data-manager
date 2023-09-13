@@ -143,7 +143,7 @@ def main(page: ft.Page):
     page.add(
         ft.Row(controls=[btnMenu, windowDragArea, btnClose]),
         ft.Row(
-            controls=[tableSelection],
+            controls=[tableSelection, searchBar],
         ),
     )
 
