@@ -68,10 +68,15 @@ def main(page: ft.Page):
 
     windowDragArea = ft.WindowDragArea(
         ft.Container(
-            ft.Text("Calibre Data Manager", color=ft.colors.WHITE70, size=15),
+            ft.Text(
+                "Calibre Data Manager",
+                color=ft.colors.WHITE70,
+                size=20,
+                text_align="center",
+            ),
             bgcolor=ft.colors.BLACK54,
             padding=10,
-            border_radius=10,
+            border_radius=50,
         ),
         expand=True,
     )
@@ -83,8 +88,7 @@ def main(page: ft.Page):
                 ft.MaterialState.DEFAULT: ft.colors.WHITE70,
                 ft.MaterialState.HOVERED: ft.colors.RED_ACCENT_200,
             },
-            shape={ft.MaterialState.DEFAULT: RoundedRectangleBorder(radius=10)},
-            bgcolor=ft.colors.BLACK54,
+            shape={ft.MaterialState.DEFAULT: RoundedRectangleBorder(radius=50)},
         ),
         on_click=lambda _: page.window_close(),
     )
