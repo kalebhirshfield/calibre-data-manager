@@ -30,7 +30,7 @@ def main(page: ft.Page):
             page.clean()
             page.add(
                 ft.Row(controls=[btnMenu, windowDragArea, btnClose]),
-                ft.Row(controls=[tableSelection]),
+                ft.Row(controls=[tableSelection, searchBar]),
                 ft.Row(
                     controls=[
                         ft.Column(
@@ -46,7 +46,7 @@ def main(page: ft.Page):
             page.clean()
             page.add(
                 ft.Row(controls=[btnMenu, windowDragArea, btnClose]),
-                ft.Row(controls=[tableSelection]),
+                ft.Row(controls=[tableSelection, searchBar]),
                 ft.Row(
                     controls=[
                         ft.Column(
@@ -110,6 +110,10 @@ def main(page: ft.Page):
             ft.dropdown.Option("Stock Levels"),
             ft.dropdown.Option("Historical Sales"),
         ],
+    )
+
+    searchBar = ft.TextField(
+        label="Search", expand=True, border_radius=10, prefix_icon=ft.icons.SEARCH
     )
 
     columnNames, stockLevels = fetchStockLevels()
