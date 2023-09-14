@@ -29,7 +29,7 @@ def main(page: ft.Page):
         if tableSelection.value == "Stock Levels":
             page.clean()
             page.add(
-                ft.Row(controls=[btnMenu, windowDragArea, btnClose]),
+                ft.Row(controls=[windowDragArea, btnClose]),
                 ft.Row(controls=[tableSelection, searchBar]),
                 ft.Row(
                     controls=[
@@ -45,7 +45,7 @@ def main(page: ft.Page):
         elif tableSelection.value == "Historical Sales":
             page.clean()
             page.add(
-                ft.Row(controls=[btnMenu, windowDragArea, btnClose]),
+                ft.Row(controls=[windowDragArea, btnClose]),
                 ft.Row(controls=[tableSelection, searchBar]),
                 ft.Row(
                     controls=[
@@ -190,7 +190,6 @@ def main(page: ft.Page):
     )
 
     page.add(
-        ft.Row(controls=[navRail], expand=True),
         ft.Column(
             controls=[
                 ft.Row(controls=[windowDragArea, btnClose]),
