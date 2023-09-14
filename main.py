@@ -137,11 +137,11 @@ def main(page: ft.Page):
     )
 
     searchBar = ft.TextField(
-        label="Press enter to search",
+        label="Search",
         expand=True,
         border_radius=10,
         prefix_icon=ft.icons.SEARCH,
-        on_submit=search,
+        on_change=search,
     )
 
     columnNames, stockLevels = fetchStockLevels()
