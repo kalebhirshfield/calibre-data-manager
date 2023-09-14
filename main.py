@@ -60,6 +60,17 @@ def main(page: ft.Page):
             )
         page.update()
 
+    def navigateTo(section):
+        if section == "Search":
+            # Handle navigation to the Search section
+            pass
+        elif section == "Edit":
+            # Handle navigation to the Edit section
+            pass
+        elif section == "Statistics":
+            # Handle navigation to the View Statistics section
+            pass
+
     def search(e):
         query = searchBar.value.strip().lower()
         if tableSelection.value == "Stock Levels":
@@ -117,12 +128,22 @@ def main(page: ft.Page):
         on_click=lambda _: page.window_close(),
     )
 
-    btnMenu = ft.PopupMenuButton(
-        items=[
-            ft.PopupMenuItem(icon=ft.icons.SEARCH, text="Search Database"),
-            ft.PopupMenuItem(icon=ft.icons.DATA_ARRAY, text="Edit Database"),
-            ft.PopupMenuItem(icon=ft.icons.AUTO_GRAPH, text="View Statistics"),
+    navRail = ft.NavigationRail(
+        destinations=[
+            ft.NavigationRailDestination(
+                icon=ft.icons.SEARCH,
+                label="Search Database",
+            ),
+            ft.NavigationRailDestination(
+                icon=ft.icons.DATA_ARRAY,
+                label="Edit Database",
+            ),
+            ft.NavigationRailDestination(
+                icon=ft.icons.AUTO_GRAPH,
+                label="View Statistics",
+            ),
         ],
+        on_change=lambda e: navigateTo(e.control.selected_index),
     )
 
     tableSelection = ft.Dropdown(
@@ -169,9 +190,14 @@ def main(page: ft.Page):
     )
 
     page.add(
-        ft.Row(controls=[btnMenu, windowDragArea, btnClose]),
-        ft.Row(
-            controls=[tableSelection, searchBar],
+        ft.Row(controls=[navRail], expand=True),
+        ft.Column(
+            controls=[
+                ft.Row(controls=[windowDragArea, btnClose]),
+                ft.Row(
+                    controls=[tableSelection, searchBar],
+                ),
+            ]
         ),
     )
 
