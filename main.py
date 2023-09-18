@@ -106,12 +106,11 @@ def main(page: ft.Page):
             ft.Text(
                 "Calibre Data Manager",
                 color=ft.colors.WHITE70,
-                size=20,
                 text_align="center",
             ),
             bgcolor=ft.colors.BLACK54,
             padding=10,
-            border_radius=50,
+            border_radius=10,
         ),
         expand=True,
     )
@@ -123,7 +122,8 @@ def main(page: ft.Page):
                 ft.MaterialState.DEFAULT: ft.colors.WHITE70,
                 ft.MaterialState.HOVERED: ft.colors.RED_ACCENT_200,
             },
-            shape={ft.MaterialState.DEFAULT: RoundedRectangleBorder(radius=50)},
+            bgcolor={ft.MaterialState.DEFAULT: ft.colors.BLACK54},
+            shape={ft.MaterialState.DEFAULT: RoundedRectangleBorder(radius=10)},
         ),
         on_click=lambda _: page.window_close(),
     )
@@ -150,6 +150,12 @@ def main(page: ft.Page):
         on_change=dropDownChanged,
         width=200,
         border_radius=10,
+        border_color=ft.colors.BACKGROUND,
+        text_style=ft.TextStyle(color=ft.colors.WHITE70),
+        label_style=ft.TextStyle(color=ft.colors.WHITE70),
+        border_width=2,
+        focused_border_width=4,
+        focused_border_color=ft.colors.WHITE70,
         hint_text="Select Table",
         options=[
             ft.dropdown.Option("Stock Levels"),
@@ -163,6 +169,15 @@ def main(page: ft.Page):
         border_radius=10,
         prefix_icon=ft.icons.SEARCH,
         on_change=search,
+        text_style=ft.TextStyle(color=ft.colors.WHITE70),
+        label_style=ft.TextStyle(color=ft.colors.WHITE70),
+        border_width=2,
+        focused_border_width=4,
+        border_color=ft.colors.BACKGROUND,
+        focused_border_color=ft.colors.WHITE70,
+        bgcolor=ft.colors.BLACK54,
+        focused_bgcolor=ft.colors.BACKGROUND,
+        cursor_color=ft.colors.WHITE70,
     )
 
     columnNames, stockLevels = fetchStockLevels()
