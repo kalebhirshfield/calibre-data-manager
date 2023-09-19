@@ -143,6 +143,7 @@ def main(page: ft.Page):
                 label="View Statistics",
             ),
         ],
+        height=100,
         on_change=lambda e: navigateTo(e.control.selected_index),
     )
 
@@ -205,11 +206,18 @@ def main(page: ft.Page):
     )
 
     page.add(
-        ft.Column(
-            controls=[
-                ft.Row(controls=[windowDragArea, btnClose]),
-                ft.Row(
-                    controls=[tableSelection, searchBar],
+        ft.Row(
+            [
+                navRail,
+                ft.VerticalDivider(width=1, color=ft.colors.WHITE70),
+                ft.Column(
+                    [
+                        ft.Row(controls=[windowDragArea, btnClose]),
+                        ft.Row(
+                            controls=[tableSelection, searchBar],
+                        ),
+                    ],
+                    expand=True,
                 ),
             ]
         ),
