@@ -206,15 +206,14 @@ def main(page: ft.Page):
     )
 
     page.add(
+        ft.Row(controls=[windowDragArea, btnClose]),
         ft.Row(
             [
                 navRail,
-                ft.VerticalDivider(width=1, color=ft.colors.WHITE70),
                 ft.Column(
                     [
-                        ft.Row(controls=[windowDragArea, btnClose]),
                         ft.Row(
-                            controls=[tableSelection, searchBar],
+                            controls=[tableSelection],
                         ),
                     ],
                     expand=True,
