@@ -148,11 +148,11 @@ def main(page: ft.Page):
         expand=True,
         on_change=search,
     )
+
     page.add(ft.Row([windowDragArea, btnClose]), ft.Row([searchBar]), tabs)
 
 
 ft.app(target=main)
-
 
 cursor.close()
 connection.close()
