@@ -25,55 +25,9 @@ def fetchHisoricalSales():
 
 
 def main(page: ft.Page):
-    def dropDownChanged(e):
-        if tableSelection.value == "Stock Levels":
-            page.clean()
-            page.add(
-                ft.Row(controls=[windowDragArea, btnClose]),
-                ft.Row(controls=[tableSelection, searchBar]),
-                ft.Row(
-                    controls=[
-                        ft.Column(
-                            controls=[stockLevelsTable],
-                            scroll=True,
-                        ),
-                    ],
-                    scroll=True,
-                    expand=True,
-                ),
-            )
-        elif tableSelection.value == "Historical Sales":
-            page.clean()
-            page.add(
-                ft.Row(controls=[windowDragArea, btnClose]),
-                ft.Row(controls=[tableSelection, searchBar]),
-                ft.Row(
-                    controls=[
-                        ft.Column(
-                            controls=[historicalSalesTable],
-                            scroll=True,
-                        ),
-                    ],
-                    scroll=True,
-                    expand=True,
-                ),
-            )
-        page.update()
-
-    def navigateTo(section):
-        if section == "Search":
-            # Handle navigation to the Search section
-            pass
-        elif section == "Edit":
-            # Handle navigation to the Edit section
-            pass
-        elif section == "Statistics":
-            # Handle navigation to the View Statistics section
-            pass
-
     def search(e):
         query = searchBar.value.strip().lower()
-        if tableSelection.value == "Stock Levels":
+        if ft.Tab.text == "Stock Levels":
             filteredStockLevels = [
                 row
                 for row in stockLevels
@@ -83,7 +37,7 @@ def main(page: ft.Page):
                 ft.DataRow(cells=[ft.DataCell(ft.Text(cell)) for cell in row])
                 for row in filteredStockLevels
             ]
-        elif tableSelection.value == "Historical Sales":
+        elif ft.Tab.text == "Historical Sales":
             filteredHistoricalSales = [
                 row
                 for row in historicalSales
@@ -128,42 +82,6 @@ def main(page: ft.Page):
         on_click=lambda _: page.window_close(),
     )
 
-    navRail = ft.NavigationRail(
-        destinations=[
-            ft.NavigationRailDestination(
-                icon=ft.icons.SEARCH,
-                label="Search Database",
-            ),
-            ft.NavigationRailDestination(
-                icon=ft.icons.DATA_ARRAY,
-                label="Edit Database",
-            ),
-            ft.NavigationRailDestination(
-                icon=ft.icons.AUTO_GRAPH,
-                label="View Statistics",
-            ),
-        ],
-        height=100,
-        on_change=lambda e: navigateTo(e.control.selected_index),
-    )
-
-    tableSelection = ft.Dropdown(
-        on_change=dropDownChanged,
-        width=200,
-        border_radius=10,
-        border_color=ft.colors.BACKGROUND,
-        text_style=ft.TextStyle(color=ft.colors.WHITE70),
-        label_style=ft.TextStyle(color=ft.colors.WHITE70),
-        border_width=2,
-        focused_border_width=4,
-        focused_border_color=ft.colors.WHITE70,
-        hint_text="Select Table",
-        options=[
-            ft.dropdown.Option("Stock Levels"),
-            ft.dropdown.Option("Historical Sales"),
-        ],
-    )
-
     searchBar = ft.TextField(
         label="Search",
         expand=True,
@@ -205,22 +123,30 @@ def main(page: ft.Page):
         border_radius=10,
     )
 
-    page.add(
-        ft.Row(controls=[windowDragArea, btnClose]),
-        ft.Row(
-            [
-                navRail,
-                ft.Column(
-                    [
-                        ft.Row(
-                            controls=[tableSelection],
-                        ),
-                    ],
-                    expand=True,
-                ),
-            ]
-        ),
+    tabs = ft.Tabs(
+        selected_index=0,
+        animation_duration=300,
+        divider_color=ft.colors.WHITE70,
+        indicator_color=ft.colors.WHITE70,
+        label_color=ft.colors.WHITE70,
+        overlay_color=ft.colors.WHITE10,
+        tabs=[
+            ft.Tab(
+                text="Stock Levels",
+                icon=ft.icons.TABLE_ROWS,
+                content=ft.Column([stockLevelsTable], scroll=True, expand=True),
+            ),
+            ft.Tab(
+                text="Hisorical Sales",
+                icon=ft.icons.TABLE_CHART,
+                content=ft.Column([historicalSalesTable], scroll=True, expand=True),
+            ),
+            ft.Tab(text="Edit Tables", icon=ft.icons.EDIT),
+        ],
+        expand=True,
     )
+
+    page.add(ft.Row([windowDragArea, btnClose]), tabs)
 
 
 ft.app(target=main)
