@@ -27,7 +27,7 @@ def fetchHisoricalSales():
 def main(page: ft.Page):
     def search(e):
         query = searchBar.value.strip().lower()
-        if ft.Tab.text == "Stock Levels":
+        if tabs.selected_index == 0:
             filteredStockLevels = [
                 row
                 for row in stockLevels
@@ -37,7 +37,7 @@ def main(page: ft.Page):
                 ft.DataRow(cells=[ft.DataCell(ft.Text(cell)) for cell in row])
                 for row in filteredStockLevels
             ]
-        elif ft.Tab.text == "Historical Sales":
+        elif tabs.selected_index == 1:
             filteredHistoricalSales = [
                 row
                 for row in historicalSales
@@ -54,6 +54,8 @@ def main(page: ft.Page):
     page.window_height = 500
     page.window_title_bar_hidden = True
     page.window_title_bar_buttons_hidden = True
+    page.window_min_width = 330
+    page.window_min_height = 230
 
     windowDragArea = ft.WindowDragArea(
         ft.Container(
@@ -144,9 +146,9 @@ def main(page: ft.Page):
             ft.Tab(text="Edit Tables", icon=ft.icons.EDIT),
         ],
         expand=True,
+        on_change=search,
     )
-
-    page.add(ft.Row([windowDragArea, btnClose]), tabs)
+    page.add(ft.Row([windowDragArea, btnClose]), ft.Row([searchBar]), tabs)
 
 
 ft.app(target=main)
