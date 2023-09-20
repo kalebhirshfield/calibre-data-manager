@@ -76,7 +76,7 @@ def main(page: ft.Page):
         style=ft.ButtonStyle(
             color={
                 ft.MaterialState.DEFAULT: ft.colors.WHITE70,
-                ft.MaterialState.HOVERED: ft.colors.RED_ACCENT_200,
+                ft.MaterialState.HOVERED: ft.colors.RED_ACCENT,
             },
             bgcolor={ft.MaterialState.DEFAULT: ft.colors.BLACK54},
             shape={ft.MaterialState.DEFAULT: RoundedRectangleBorder(radius=10)},
@@ -129,7 +129,7 @@ def main(page: ft.Page):
         selected_index=0,
         animation_duration=300,
         divider_color=ft.colors.WHITE70,
-        indicator_color=ft.colors.WHITE70,
+        indicator_color=ft.colors.BLUE_ACCENT,
         label_color=ft.colors.WHITE70,
         overlay_color=ft.colors.WHITE10,
         tabs=[
