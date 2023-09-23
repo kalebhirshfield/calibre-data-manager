@@ -98,12 +98,12 @@ def main(page: ft.Page):
             page.update()
 
     page.title = "Calibre Data Manager"
-    page.window_width = 750
-    page.window_height = 500
+    page.window_width = 1000
+    page.window_height = 700
     page.window_title_bar_hidden = True
     page.window_title_bar_buttons_hidden = True
-    page.window_min_width = 330
-    page.window_min_height = 230
+    page.window_resizable = False
+    page.window_maximizable = False
 
     windowDragArea = ft.WindowDragArea(
         ft.Container(
@@ -117,6 +117,7 @@ def main(page: ft.Page):
             border_radius=10,
         ),
         expand=True,
+        maximizable=False,
     )
     btnClose = ft.IconButton(
         ft.icons.CLOSE,
