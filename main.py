@@ -50,7 +50,7 @@ def main(page: ft.Page):
         page.update()
 
     def onScroll(e: ft.OnScrollEvent):
-        if e.pixels >= e.max_scroll_extent - 100:
+        if e.pixels >= e.max_scroll_extent - 300:
             if sem.acquire(blocking=False):
                 try:
                     addDataToTable(
