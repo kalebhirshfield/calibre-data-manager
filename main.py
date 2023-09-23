@@ -66,6 +66,29 @@ def main(page: ft.Page):
                 finally:
                     sem.release()
 
+    def search(e):
+        query = str(searchBar.value.strip().lower())
+        columnsToSearch = [
+            "stock_cat",
+            "stock_code",
+            "description",
+            "quantity",
+            "moq",
+            "on_order",
+            "balance",
+        ]
+        conditions = [f"CAST({column} as TEXT) LIKE %s" for column in columnsToSearch]
+        whereClause = " OR ".join(conditions)
+        sqlQuery = f"SELECT * FROM stocklevels WHERE {whereClause}"
+        params = [f"%{query}%"] * len(columnsToSearch)
+        cursor.execute(sqlQuery, params)
+        searchData = cursor.fetchall()
+        rows = []
+        for row in searchData:
+            rows.append(ft.DataRow(cells=[ft.DataCell(ft.Text(cell)) for cell in row]))
+        searchTable.rows = rows
+        page.update()
+
     page.title = "Calibre Data Manager"
     page.window_width = 750
     page.window_height = 500
@@ -105,7 +128,7 @@ def main(page: ft.Page):
         expand=True,
         border_radius=10,
         prefix_icon=ft.icons.SEARCH,
-        # on_change=search,
+        on_change=search,
         text_style=ft.TextStyle(color=ft.colors.WHITE70),
         label_style=ft.TextStyle(color=ft.colors.WHITE70),
         border_width=2,
@@ -125,6 +148,20 @@ def main(page: ft.Page):
 
     historicalSalesTable = ft.DataTable(
         columns=[],
+        bgcolor=ft.colors.BLACK54,
+        border_radius=10,
+    )
+
+    searchTable = ft.DataTable(
+        columns=[
+            ft.DataColumn(ft.Text("stock_cat")),
+            ft.DataColumn(ft.Text("stock_code")),
+            ft.DataColumn(ft.Text("description")),
+            ft.DataColumn(ft.Text("quantity")),
+            ft.DataColumn(ft.Text("moq")),
+            ft.DataColumn(ft.Text("on_order")),
+            ft.DataColumn(ft.Text("balance")),
+        ],
         bgcolor=ft.colors.BLACK54,
         border_radius=10,
     )
@@ -151,7 +188,11 @@ def main(page: ft.Page):
                     [historicalSalesTable], scroll=True, expand=True, on_scroll=onScroll
                 ),
             ),
-            ft.Tab(text="Search", icon=ft.icons.SEARCH, content=ft.Column([searchBar])),
+            ft.Tab(
+                text="Search",
+                icon=ft.icons.SEARCH,
+                content=(ft.Column([searchBar, searchTable], expand=True)),
+            ),
             ft.Tab(text="Edit Tables", icon=ft.icons.EDIT),
         ],
         expand=True,
