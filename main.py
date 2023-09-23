@@ -40,12 +40,12 @@ def main(page: ft.Page):
 
     def addDataToTable(table, fetchFunction, limit, rows):
         columnNames, data = fetchFunction(limit=limit)
-        new_rows = []
+        newRows = []
         for row in data:
-            new_rows.append(
+            newRows.append(
                 ft.DataRow(cells=[ft.DataCell(ft.Text(cell)) for cell in row])
             )
-        rows += new_rows
+        rows += newRows
         table.rows = rows
         page.update()
 
