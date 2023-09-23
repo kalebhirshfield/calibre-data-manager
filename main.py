@@ -16,73 +16,21 @@ offset = 0
 def main(page: ft.Page):
     def fetchStockLevels(limit):
         global offset
-        query = searchBar.value.strip().lower()
-        if query != "":
-            stockLevelsTable.clean()
-            columnsToSearch = ["stock_cat", "stock_code", "description"]
-            conditions = [
-                f"CAST({column} AS TEXT) LIKE %s" for column in columnsToSearch
-            ]
-            whereClause = " OR ".join(conditions)
-            sqlQuery = f"SELECT * FROM stocklevels WHERE {whereClause}"
-            params = [f"%{query}%"] * len(columnsToSearch)
-            cursor.execute(sqlQuery, params)
-            stockLevels = cursor.fetchall()
-            columnNames = [desc[0] for desc in cursor.description]
-            newRows = []
-            for row in stockLevels:
-                newRows.append(
-                    ft.DataRow(cells=[ft.DataCell(ft.Text(cell)) for cell in row])
-                )
-            stockLevelsTable.rows = newRows
-            page.update()
-        else:
-            cursor.execute(
-                "SELECT * FROM stocklevels LIMIT %s OFFSET %s", (limit, offset)
-            )
-            stockLevels = cursor.fetchall()
-            columnNames = [desc[0] for desc in cursor.description]
-            offset += limit
+        cursor.execute("SELECT * FROM stocklevels LIMIT %s OFFSET %s", (limit, offset))
+        stockLevels = cursor.fetchall()
+        columnNames = [desc[0] for desc in cursor.description]
+        offset += limit
         return columnNames, stockLevels
 
     def fetchHistoricalSales(limit):
         global offset
-        query = searchBar.value.strip().lower()
-        if query != "":
-            historicalSalesTable.clean()
-            columnsToSearch = ["stock_cat", "stock_code", "description"]
-            conditions = [
-                f"CAST({column} AS TEXT) LIKE %s" for column in columnsToSearch
-            ]
-            whereClause = " OR ".join(conditions)
-            sqlQuery = (
-                f"SELECT * FROM historicalsales WHERE {whereClause} LIMIT %s OFFSET %s"
-            )
-            params = ([f"%{query}%"] * len(columnsToSearch)) + [limit, offset]
-            cursor.execute(sqlQuery, params)
-            stockLevels = cursor.fetchall()
-            columnNames = [desc[0] for desc in cursor.description]
-            newRows = []
-            for row in stockLevels:
-                newRows.append(
-                    ft.DataRow(cells=[ft.DataCell(ft.Text(cell)) for cell in row])
-                )
-            historicalSalesTable.rows = newRows
-            page.update()
-        else:
-            cursor.execute(
-                "SELECT * FROM historicalsales LIMIT %s OFFSET %s", (limit, offset)
-            )
-            historicalSales = cursor.fetchall()
-            columnNames = [desc[0] for desc in cursor.description]
-            offset += limit
+        cursor.execute(
+            "SELECT * FROM historicalsales LIMIT %s OFFSET %s", (limit, offset)
+        )
+        historicalSales = cursor.fetchall()
+        columnNames = [desc[0] for desc in cursor.description]
+        offset += limit
         return columnNames, historicalSales
-
-    def fetchTables(e):
-        if tabs.selected_index == 0:
-            fetchStockLevels(10)
-        if tabs.selected_index == 1:
-            fetchHistoricalSales(10)
 
     class State:
         i = 0
@@ -90,14 +38,14 @@ def main(page: ft.Page):
     s = State()
     sem = threading.Semaphore()
 
-    def addDataToTable(table: ft.DataTable, fetchFunction, limit, rows):
+    def addDataToTable(table, fetchFunction, limit, rows):
         columnNames, data = fetchFunction(limit=limit)
-        newRows = []
+        new_rows = []
         for row in data:
-            newRows.append(
+            new_rows.append(
                 ft.DataRow(cells=[ft.DataCell(ft.Text(cell)) for cell in row])
             )
-        rows += newRows
+        rows += new_rows
         table.rows = rows
         page.update()
 
@@ -156,7 +104,7 @@ def main(page: ft.Page):
         expand=True,
         border_radius=10,
         prefix_icon=ft.icons.SEARCH,
-        on_change=fetchTables,
+        # on_change=search,
         text_style=ft.TextStyle(color=ft.colors.WHITE70),
         label_style=ft.TextStyle(color=ft.colors.WHITE70),
         border_width=2,
