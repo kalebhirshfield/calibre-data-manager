@@ -38,8 +38,8 @@ def main(page: ft.Page):
     s = State()
     sem = threading.Semaphore()
 
-    def addDataToTable(table, fetch_function, limit, rows):
-        columnNames, data = fetch_function(limit=limit)
+    def addDataToTable(table, fetchFunction, limit, rows):
+        columnNames, data = fetchFunction(limit=limit)
         new_rows = []
         for row in data:
             new_rows.append(
@@ -150,6 +150,7 @@ def main(page: ft.Page):
                     [historicalSalesTable], scroll=True, expand=True, on_scroll=onScroll
                 ),
             ),
+            ft.Tab(text="Search", icon=ft.icons.SEARCH),
             ft.Tab(text="Edit Tables", icon=ft.icons.EDIT),
         ],
         expand=True,
