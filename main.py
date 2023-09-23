@@ -32,10 +32,6 @@ def main(page: ft.Page):
         offset += limit
         return columnNames, historicalSales
 
-    class State:
-        i = 0
-
-    s = State()
     sem = threading.Semaphore()
 
     def addDataToTable(table, fetchFunction, limit, rows):
@@ -162,7 +158,6 @@ def main(page: ft.Page):
     )
 
     addDataToTable(stockLevelsTable, fetchStockLevels, 10, stockLevelsTable.rows)
-    s.i += 10
     addDataToTable(
         historicalSalesTable, fetchHistoricalSales, 10, historicalSalesTable.rows
     )
