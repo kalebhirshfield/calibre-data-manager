@@ -67,27 +67,35 @@ def main(page: ft.Page):
                     sem.release()
 
     def search(e):
-        query = str(searchBar.value.strip().lower())
-        columnsToSearch = [
-            "stock_cat",
-            "stock_code",
-            "description",
-            "quantity",
-            "moq",
-            "on_order",
-            "balance",
-        ]
-        conditions = [f"CAST({column} as TEXT) LIKE %s" for column in columnsToSearch]
-        whereClause = " OR ".join(conditions)
-        sqlQuery = f"SELECT * FROM stocklevels WHERE {whereClause}"
-        params = [f"%{query}%"] * len(columnsToSearch)
-        cursor.execute(sqlQuery, params)
-        searchData = cursor.fetchall()
-        rows = []
-        for row in searchData:
-            rows.append(ft.DataRow(cells=[ft.DataCell(ft.Text(cell)) for cell in row]))
-        searchTable.rows = rows
-        page.update()
+        query = str(searchBar.value.strip())
+        if query != "":
+            columnsToSearch = [
+                "stock_cat",
+                "stock_code",
+                "description",
+                "quantity",
+                "moq",
+                "on_order",
+                "balance",
+            ]
+            conditions = [
+                f"CAST({column} as TEXT) LIKE %s" for column in columnsToSearch
+            ]
+            whereClause = " OR ".join(conditions)
+            sqlQuery = f"SELECT * FROM stocklevels WHERE {whereClause}"
+            params = [f"%{query}%"] * len(columnsToSearch)
+            cursor.execute(sqlQuery, params)
+            searchData = cursor.fetchall()
+            rows = []
+            for row in searchData:
+                rows.append(
+                    ft.DataRow(cells=[ft.DataCell(ft.Text(str(cell))) for cell in row])
+                )
+            searchTable.rows = rows
+            page.update()
+        else:
+            searchTable.rows = []
+            page.update()
 
     page.title = "Calibre Data Manager"
     page.window_width = 750
@@ -191,7 +199,7 @@ def main(page: ft.Page):
             ft.Tab(
                 text="Search",
                 icon=ft.icons.SEARCH,
-                content=(ft.Column([searchBar, searchTable], expand=True)),
+                content=ft.Column([searchTable], scroll=True, expand=True),
             ),
             ft.Tab(text="Edit Tables", icon=ft.icons.EDIT),
         ],
@@ -213,7 +221,7 @@ def main(page: ft.Page):
         ft.DataColumn(ft.Text(column)) for column in historicalSalesColumns
     ]
 
-    page.add(ft.Row([windowDragArea, btnClose]), tabs)
+    page.add(ft.Row([windowDragArea, btnClose]), ft.Row([searchBar]), tabs)
 
 
 ft.app(target=main)
