@@ -53,15 +53,20 @@ def main(page: ft.Page):
         if e.pixels >= e.max_scroll_extent - 300:
             if sem.acquire(blocking=False):
                 try:
-                    addDataToTable(
-                        stockLevelsTable, fetchStockLevels, 10, stockLevelsTable.rows
-                    )
-                    addDataToTable(
-                        historicalSalesTable,
-                        fetchHistoricalSales,
-                        10,
-                        historicalSalesTable.rows,
-                    )
+                    if tabs.selected_index == 0:
+                        addDataToTable(
+                            stockLevelsTable,
+                            fetchStockLevels,
+                            10,
+                            stockLevelsTable.rows,
+                        )
+                    elif tabs.selected_index == 1:
+                        addDataToTable(
+                            historicalSalesTable,
+                            fetchHistoricalSales,
+                            10,
+                            historicalSalesTable.rows,
+                        )
                 finally:
                     sem.release()
 
@@ -150,7 +155,7 @@ def main(page: ft.Page):
                     [historicalSalesTable], scroll=True, expand=True, on_scroll=onScroll
                 ),
             ),
-            ft.Tab(text="Search", icon=ft.icons.SEARCH),
+            ft.Tab(text="Search", icon=ft.icons.SEARCH, content=ft.Column([searchBar])),
             ft.Tab(text="Edit Tables", icon=ft.icons.EDIT),
         ],
         expand=True,
@@ -172,7 +177,7 @@ def main(page: ft.Page):
         ft.DataColumn(ft.Text(column)) for column in historicalSalesColumns
     ]
 
-    page.add(ft.Row([windowDragArea, btnClose]), ft.Row([searchBar]), tabs)
+    page.add(ft.Row([windowDragArea, btnClose]), tabs)
 
 
 ft.app(target=main)
