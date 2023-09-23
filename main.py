@@ -1,4 +1,5 @@
 import os
+import threading
 import psycopg2
 from dotenv import load_dotenv
 import flet as ft
@@ -9,45 +10,60 @@ load_dotenv()
 connection = psycopg2.connect(os.getenv("dbURL"))
 cursor = connection.cursor()
 
-
-def fetchStockLevels():
-    cursor.execute("SELECT * FROM stocklevels")
-    stockLevels = cursor.fetchall()
-    columnNames = [desc[0] for desc in cursor.description]
-    return columnNames, stockLevels
-
-
-def fetchHisoricalSales():
-    cursor.execute("SELECT * FROM historicalsales")
-    historicalSales = cursor.fetchall()
-    columnNames = [desc[0] for desc in cursor.description]
-    return columnNames, historicalSales
+offset = 0
 
 
 def main(page: ft.Page):
-    def search(e):
-        query = searchBar.value.strip().lower()
-        if tabs.selected_index == 0:
-            filteredStockLevels = [
-                row
-                for row in stockLevels
-                if any(query in str(cell).lower() for cell in row)
-            ]
-            stockLevelsTable.rows = [
+    def fetchStockLevels(limit):
+        global offset
+        cursor.execute("SELECT * FROM stocklevels LIMIT %s OFFSET %s", (limit, offset))
+        stockLevels = cursor.fetchall()
+        columnNames = [desc[0] for desc in cursor.description]
+        offset += limit
+        return columnNames, stockLevels
+
+    def fetchHistoricalSales(limit):
+        global offset
+        cursor.execute(
+            "SELECT * FROM historicalsales LIMIT %s OFFSET %s", (limit, offset)
+        )
+        historicalSales = cursor.fetchall()
+        columnNames = [desc[0] for desc in cursor.description]
+        offset += limit
+        return columnNames, historicalSales
+
+    class State:
+        i = 0
+
+    s = State()
+    sem = threading.Semaphore()
+
+    def addDataToTable(table, fetch_function, limit, rows):
+        columnNames, data = fetch_function(limit=limit)
+        new_rows = []
+        for row in data:
+            new_rows.append(
                 ft.DataRow(cells=[ft.DataCell(ft.Text(cell)) for cell in row])
-                for row in filteredStockLevels
-            ]
-        elif tabs.selected_index == 1:
-            filteredHistoricalSales = [
-                row
-                for row in historicalSales
-                if any(query in str(cell).lower() for cell in row)
-            ]
-            historicalSalesTable.rows = [
-                ft.DataRow(cells=[ft.DataCell(ft.Text(cell)) for cell in row])
-                for row in filteredHistoricalSales
-            ]
+            )
+        rows += new_rows
+        table.rows = rows
         page.update()
+
+    def onScroll(e: ft.OnScrollEvent):
+        if e.pixels >= e.max_scroll_extent - 100:
+            if sem.acquire(blocking=False):
+                try:
+                    addDataToTable(
+                        stockLevelsTable, fetchStockLevels, 10, stockLevelsTable.rows
+                    )
+                    addDataToTable(
+                        historicalSalesTable,
+                        fetchHistoricalSales,
+                        10,
+                        historicalSalesTable.rows,
+                    )
+                finally:
+                    sem.release()
 
     page.title = "Calibre Data Manager"
     page.window_width = 750
@@ -70,7 +86,6 @@ def main(page: ft.Page):
         ),
         expand=True,
     )
-
     btnClose = ft.IconButton(
         ft.icons.CLOSE,
         style=ft.ButtonStyle(
@@ -89,7 +104,7 @@ def main(page: ft.Page):
         expand=True,
         border_radius=10,
         prefix_icon=ft.icons.SEARCH,
-        on_change=search,
+        # on_change=search,
         text_style=ft.TextStyle(color=ft.colors.WHITE70),
         label_style=ft.TextStyle(color=ft.colors.WHITE70),
         border_width=2,
@@ -101,26 +116,14 @@ def main(page: ft.Page):
         cursor_color=ft.colors.WHITE70,
     )
 
-    columnNames, stockLevels = fetchStockLevels()
-    rows = []
-    for row in stockLevels:
-        rows.append(ft.DataRow(cells=[ft.DataCell(ft.Text(cell)) for cell in row]))
-
     stockLevelsTable = ft.DataTable(
-        columns=[ft.DataColumn(ft.Text(columnName)) for columnName in columnNames],
-        rows=rows,
+        columns=[],
         bgcolor=ft.colors.BLACK54,
         border_radius=10,
     )
 
-    columnNames, historicalSales = fetchHisoricalSales()
-    rows = []
-    for row in historicalSales:
-        rows.append(ft.DataRow(cells=[ft.DataCell(ft.Text(cell)) for cell in row]))
-
     historicalSalesTable = ft.DataTable(
-        columns=[ft.DataColumn(ft.Text(columnName)) for columnName in columnNames],
-        rows=rows,
+        columns=[],
         bgcolor=ft.colors.BLACK54,
         border_radius=10,
     )
@@ -136,18 +139,37 @@ def main(page: ft.Page):
             ft.Tab(
                 text="Stock Levels",
                 icon=ft.icons.TABLE_ROWS,
-                content=ft.Column([stockLevelsTable], scroll=True, expand=True),
+                content=ft.Column(
+                    [stockLevelsTable], scroll=True, expand=True, on_scroll=onScroll
+                ),
             ),
             ft.Tab(
                 text="Hisorical Sales",
                 icon=ft.icons.TABLE_CHART,
-                content=ft.Column([historicalSalesTable], scroll=True, expand=True),
+                content=ft.Column(
+                    [historicalSalesTable], scroll=True, expand=True, on_scroll=onScroll
+                ),
             ),
             ft.Tab(text="Edit Tables", icon=ft.icons.EDIT),
         ],
         expand=True,
-        on_change=search,
     )
+
+    addDataToTable(stockLevelsTable, fetchStockLevels, 10, stockLevelsTable.rows)
+    s.i += 10
+    addDataToTable(
+        historicalSalesTable, fetchHistoricalSales, 10, historicalSalesTable.rows
+    )
+
+    stockLevelsColumns, _ = fetchStockLevels(1)
+    historicalSalesColumns, _ = fetchHistoricalSales(1)
+
+    stockLevelsTable.columns = [
+        ft.DataColumn(ft.Text(column)) for column in stockLevelsColumns
+    ]
+    historicalSalesTable.columns = [
+        ft.DataColumn(ft.Text(column)) for column in historicalSalesColumns
+    ]
 
     page.add(ft.Row([windowDragArea, btnClose]), ft.Row([searchBar]), tabs)
 
