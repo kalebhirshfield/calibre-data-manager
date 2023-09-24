@@ -10,12 +10,10 @@ load_dotenv()
 connection = psycopg2.connect(os.getenv("dbURL"))
 cursor = connection.cursor()
 
-offset = 0
-
 
 def main(page: ft.Page):
     def fetchStockLevels(limit):
-        global offset
+        offset = 0
         cursor.execute("SELECT * FROM stocklevels LIMIT %s OFFSET %s", (limit, offset))
         stockLevels = cursor.fetchall()
         columnNames = [desc[0] for desc in cursor.description]
@@ -23,7 +21,7 @@ def main(page: ft.Page):
         return columnNames, stockLevels
 
     def fetchHistoricalSales(limit):
-        global offset
+        offset = 0
         cursor.execute(
             "SELECT * FROM historicalsales LIMIT %s OFFSET %s", (limit, offset)
         )
