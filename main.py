@@ -69,12 +69,17 @@ def main(page: ft.Page):
     def search(e):
         query = str(searchBar.value.strip())
         if query != "":
-            columnsToSearch = [column for column in stockLevelsColumns]
+            columnsToSearch = (
+                [column for column in stockLevelsColumns]
+                if tabs.selected_index == 2
+                else [column for column in historicalSalesColumns]
+            )
             conditions = [
                 f"CAST({column} as TEXT) LIKE %s" for column in columnsToSearch
             ]
             whereClause = " OR ".join(conditions)
-            sqlQuery = f"SELECT * FROM stocklevels WHERE {whereClause}"
+            table = "stocklevels" if tabs.selected_index == 2 else "historicalsales"
+            sqlQuery = f"SELECT * FROM {table} WHERE {whereClause}"
             params = [f"%{query}%"] * len(columnsToSearch)
             cursor.execute(sqlQuery, params)
             searchData = cursor.fetchall()
@@ -83,10 +88,16 @@ def main(page: ft.Page):
                 rows.append(
                     ft.DataRow(cells=[ft.DataCell(ft.Text(str(cell))) for cell in row])
                 )
-            searchTable.rows = rows
+            if tabs.selected_index == 2:
+                searchStockLevelsTable.rows = rows
+            elif tabs.selected_index == 3:
+                searchHistoricalSalesTable.rows = rows
             page.update()
         else:
-            searchTable.rows = []
+            if tabs.selected_index == 2:
+                searchStockLevelsTable.rows = []
+            elif tabs.selected_index == 3:
+                searchHistoricalSalesTable.rows = []
             page.update()
 
     page.title = "Calibre Data Manager"
@@ -166,7 +177,7 @@ def main(page: ft.Page):
         ft.DataColumn(ft.Text(column)) for column in historicalSalesColumns
     ]
 
-    searchTable = ft.DataTable(
+    searchStockLevelsTable = ft.DataTable(
         columns=[
             ft.DataColumn(ft.Text("stock_cat")),
             ft.DataColumn(ft.Text("stock_code")),
@@ -175,6 +186,21 @@ def main(page: ft.Page):
             ft.DataColumn(ft.Text("moq")),
             ft.DataColumn(ft.Text("on_order")),
             ft.DataColumn(ft.Text("balance")),
+        ],
+        bgcolor=ft.colors.BLACK54,
+        border_radius=10,
+    )
+
+    searchHistoricalSalesTable = ft.DataTable(
+        columns=[
+            ft.DataColumn(ft.Text("stock_cat")),
+            ft.DataColumn(ft.Text("stock_code")),
+            ft.DataColumn(ft.Text("description")),
+            ft.DataColumn(ft.Text("2022")),
+            ft.DataColumn(ft.Text("2021")),
+            ft.DataColumn(ft.Text("2020")),
+            ft.DataColumn(ft.Text("2019")),
+            ft.DataColumn(ft.Text("2018")),
         ],
         bgcolor=ft.colors.BLACK54,
         border_radius=10,
@@ -203,13 +229,20 @@ def main(page: ft.Page):
                 ),
             ),
             ft.Tab(
-                text="Search",
+                text="Search Stock Levels",
                 icon=ft.icons.SEARCH,
-                content=ft.Column([searchTable], scroll=True, expand=True),
+                content=ft.Column([searchStockLevelsTable], scroll=True, expand=True),
             ),
-            ft.Tab(text="Edit Tables", icon=ft.icons.EDIT),
+            ft.Tab(
+                text="Search Historical Sales",
+                icon=ft.icons.SEARCH,
+                content=ft.Column(
+                    [searchHistoricalSalesTable], scroll=True, expand=True
+                ),
+            ),
         ],
         expand=True,
+        on_change=search,
     )
 
     page.add(ft.Row([windowDragArea, btnClose]), ft.Row([searchBar]), tabs)
