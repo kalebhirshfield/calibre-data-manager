@@ -69,15 +69,7 @@ def main(page: ft.Page):
     def search(e):
         query = str(searchBar.value.strip())
         if query != "":
-            columnsToSearch = [
-                "stock_cat",
-                "stock_code",
-                "description",
-                "quantity",
-                "moq",
-                "on_order",
-                "balance",
-            ]
+            columnsToSearch = [column for column in stockLevelsColumns]
             conditions = [
                 f"CAST({column} as TEXT) LIKE %s" for column in columnsToSearch
             ]
