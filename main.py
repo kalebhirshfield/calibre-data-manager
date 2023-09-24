@@ -213,14 +213,14 @@ def main(page: ft.Page):
         overlay_color=ft.colors.WHITE10,
         tabs=[
             ft.Tab(
-                text="Stock Levels",
+                text="Browse Stock Levels",
                 icon=ft.icons.TABLE_ROWS,
                 content=ft.Column(
                     [stockLevelsTable], scroll=True, expand=True, on_scroll=onScroll
                 ),
             ),
             ft.Tab(
-                text="Hisorical Sales",
+                text="Browse Hisorical Sales",
                 icon=ft.icons.TABLE_CHART,
                 content=ft.Column(
                     [historicalSalesTable], scroll=True, expand=True, on_scroll=onScroll
