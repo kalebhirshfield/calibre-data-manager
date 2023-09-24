@@ -142,16 +142,29 @@ def main(page: ft.Page):
     )
 
     stockLevelsTable = ft.DataTable(
-        columns=[],
         bgcolor=ft.colors.BLACK54,
         border_radius=10,
     )
 
     historicalSalesTable = ft.DataTable(
-        columns=[],
         bgcolor=ft.colors.BLACK54,
         border_radius=10,
     )
+
+    addDataToTable(stockLevelsTable, fetchStockLevels, 10, stockLevelsTable.rows)
+    addDataToTable(
+        historicalSalesTable, fetchHistoricalSales, 10, historicalSalesTable.rows
+    )
+
+    stockLevelsColumns, _ = fetchStockLevels(1)
+    historicalSalesColumns, _ = fetchHistoricalSales(1)
+
+    stockLevelsTable.columns = [
+        ft.DataColumn(ft.Text(column)) for column in stockLevelsColumns
+    ]
+    historicalSalesTable.columns = [
+        ft.DataColumn(ft.Text(column)) for column in historicalSalesColumns
+    ]
 
     searchTable = ft.DataTable(
         columns=[
@@ -198,21 +211,6 @@ def main(page: ft.Page):
         ],
         expand=True,
     )
-
-    addDataToTable(stockLevelsTable, fetchStockLevels, 10, stockLevelsTable.rows)
-    addDataToTable(
-        historicalSalesTable, fetchHistoricalSales, 10, historicalSalesTable.rows
-    )
-
-    stockLevelsColumns, _ = fetchStockLevels(1)
-    historicalSalesColumns, _ = fetchHistoricalSales(1)
-
-    stockLevelsTable.columns = [
-        ft.DataColumn(ft.Text(column)) for column in stockLevelsColumns
-    ]
-    historicalSalesTable.columns = [
-        ft.DataColumn(ft.Text(column)) for column in historicalSalesColumns
-    ]
 
     page.add(ft.Row([windowDragArea, btnClose]), ft.Row([searchBar]), tabs)
 
