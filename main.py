@@ -74,14 +74,10 @@ def main(page: ft.Page):
             searchBar.visible = True
         else:
             searchBar.visible = False
-        if searchBar.value != "":
-            searchHistoricalSalesTable.visible = True
-            searchStockLevelsTable.visible = True
-        else:
-            searchHistoricalSalesTable.visible = False
-            searchStockLevelsTable.visible = False
         query = str(searchBar.value.strip())
         if query != "":
+            searchHistoricalSalesTable.visible = True
+            searchStockLevelsTable.visible = True
             columnsToSearch = (
                 [column for column in stockLevelsColumns]
                 if tabs.selected_index == 2
@@ -111,6 +107,8 @@ def main(page: ft.Page):
                 searchStockLevelsTable.rows = []
             elif tabs.selected_index == 3:
                 searchHistoricalSalesTable.rows = []
+            searchHistoricalSalesTable.visible = False
+            searchStockLevelsTable.visible = False
             page.update()
 
     page.title = "Calibre Data Manager"
@@ -150,17 +148,17 @@ def main(page: ft.Page):
         expand=True,
         border_radius=10,
         prefix_icon=ft.icons.SEARCH,
-        on_change=search,
         text_style=ft.TextStyle(color="#4dd8e6"),
-        label_style=ft.TextStyle(color=ft.colors.WHITE70),
+        label_style=ft.TextStyle(color="#a6eeff", weight=ft.FontWeight.BOLD),
         border_width=2,
         focused_border_width=4,
         border_color=ft.colors.TRANSPARENT,
         focused_border_color="#004f55",
         bgcolor=ft.colors.TRANSPARENT,
         focused_bgcolor=ft.colors.TRANSPARENT,
-        cursor_color=ft.colors.WHITE70,
+        cursor_color="#a6eeff",
         visible=False,
+        on_change=search,
     )
 
     stockLevelsTable = ft.DataTable(bgcolor="#04282f", border_radius=10)
@@ -221,6 +219,7 @@ def main(page: ft.Page):
         label_color="#a6eeff",
         overlay_color=ft.colors.WHITE10,
         unselected_label_color="#a6eeff",
+        indicator_border_radius=10,
         tabs=[
             ft.Tab(
                 text="Browse Stock Levels",
