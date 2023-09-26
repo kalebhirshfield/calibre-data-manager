@@ -10,29 +10,34 @@ load_dotenv()
 connection = psycopg2.connect(os.getenv("dbURL"))
 cursor = connection.cursor()
 
+offsetStock = 0
+offsetSales = 0
+
 
 def main(page: ft.Page):
     def fetchStockLevels(limit):
-        offset = 0
-        cursor.execute("SELECT * FROM stocklevels LIMIT %s OFFSET %s", (limit, offset))
+        global offsetStock
+        cursor.execute(
+            "SELECT * FROM stocklevels LIMIT %s OFFSET %s", (limit, offsetStock)
+        )
         stockLevels = cursor.fetchall()
         columnNames = [desc[0] for desc in cursor.description]
-        offset += limit
+        offsetStock += limit
         return columnNames, stockLevels
 
     def fetchHistoricalSales(limit):
-        offset = 0
+        global offsetSales
         cursor.execute(
-            "SELECT * FROM historicalsales LIMIT %s OFFSET %s", (limit, offset)
+            "SELECT * FROM historicalsales LIMIT %s OFFSET %s", (limit, offsetSales)
         )
         historicalSales = cursor.fetchall()
         columnNames = [desc[0] for desc in cursor.description]
-        offset += limit
+        offsetSales += limit
         return columnNames, historicalSales
 
     sem = threading.Semaphore()
 
-    def addDataToTable(table, fetchFunction, limit, rows):
+    def addDataToTable(table: ft.DataTable, fetchFunction, limit, rows):
         columnNames, data = fetchFunction(limit=limit)
         newRows = []
         for row in data:
@@ -65,6 +70,16 @@ def main(page: ft.Page):
                     sem.release()
 
     def search(e):
+        if tabs.selected_index == 2 or tabs.selected_index == 3:
+            searchBar.visible = True
+        else:
+            searchBar.visible = False
+        if searchBar.value != "":
+            searchHistoricalSalesTable.visible = True
+            searchStockLevelsTable.visible = True
+        else:
+            searchHistoricalSalesTable.visible = False
+            searchStockLevelsTable.visible = False
         query = str(searchBar.value.strip())
         if query != "":
             columnsToSearch = (
@@ -100,34 +115,31 @@ def main(page: ft.Page):
 
     page.title = "Calibre Data Manager"
     page.window_width = 1000
-    page.window_height = 700
+    page.window_height = 600
     page.window_title_bar_hidden = True
     page.window_title_bar_buttons_hidden = True
-    page.window_resizable = False
-    page.window_maximizable = False
+    page.bgcolor = "#001f25"
 
     windowDragArea = ft.WindowDragArea(
         ft.Container(
             ft.Text(
                 "Calibre Data Manager",
-                color=ft.colors.WHITE70,
+                color="#a6eeff",
                 text_align="center",
+                weight=ft.FontWeight.BOLD,
             ),
-            bgcolor=ft.colors.BLACK54,
             padding=10,
-            border_radius=10,
         ),
         expand=True,
-        maximizable=False,
     )
+
     btnClose = ft.IconButton(
         ft.icons.CLOSE,
         style=ft.ButtonStyle(
             color={
-                ft.MaterialState.DEFAULT: ft.colors.WHITE70,
-                ft.MaterialState.HOVERED: ft.colors.RED_ACCENT,
+                ft.MaterialState.DEFAULT: "#a6eeff",
+                ft.MaterialState.HOVERED: "#ffb4ab",
             },
-            bgcolor={ft.MaterialState.DEFAULT: ft.colors.BLACK54},
             shape={ft.MaterialState.DEFAULT: RoundedRectangleBorder(radius=10)},
         ),
         on_click=lambda _: page.window_close(),
@@ -139,26 +151,21 @@ def main(page: ft.Page):
         border_radius=10,
         prefix_icon=ft.icons.SEARCH,
         on_change=search,
-        text_style=ft.TextStyle(color=ft.colors.WHITE70),
+        text_style=ft.TextStyle(color="#4dd8e6"),
         label_style=ft.TextStyle(color=ft.colors.WHITE70),
         border_width=2,
         focused_border_width=4,
-        border_color=ft.colors.BACKGROUND,
-        focused_border_color=ft.colors.WHITE70,
-        bgcolor=ft.colors.BLACK54,
-        focused_bgcolor=ft.colors.BACKGROUND,
+        border_color=ft.colors.TRANSPARENT,
+        focused_border_color="#004f55",
+        bgcolor=ft.colors.TRANSPARENT,
+        focused_bgcolor=ft.colors.TRANSPARENT,
         cursor_color=ft.colors.WHITE70,
+        visible=False,
     )
 
-    stockLevelsTable = ft.DataTable(
-        bgcolor=ft.colors.BLACK54,
-        border_radius=10,
-    )
+    stockLevelsTable = ft.DataTable(bgcolor="#04282f", border_radius=10)
 
-    historicalSalesTable = ft.DataTable(
-        bgcolor=ft.colors.BLACK54,
-        border_radius=10,
-    )
+    historicalSalesTable = ft.DataTable(bgcolor="#04282f", border_radius=10)
 
     addDataToTable(stockLevelsTable, fetchStockLevels, 10, stockLevelsTable.rows)
     addDataToTable(
@@ -185,8 +192,9 @@ def main(page: ft.Page):
             ft.DataColumn(ft.Text("on_order")),
             ft.DataColumn(ft.Text("balance")),
         ],
-        bgcolor=ft.colors.BLACK54,
+        bgcolor="#04282f",
         border_radius=10,
+        visible=False,
     )
 
     searchHistoricalSalesTable = ft.DataTable(
@@ -200,17 +208,19 @@ def main(page: ft.Page):
             ft.DataColumn(ft.Text("2019")),
             ft.DataColumn(ft.Text("2018")),
         ],
-        bgcolor=ft.colors.BLACK54,
+        bgcolor="#04282f",
         border_radius=10,
+        visible=False,
     )
 
     tabs = ft.Tabs(
         selected_index=0,
         animation_duration=300,
-        divider_color=ft.colors.WHITE70,
-        indicator_color=ft.colors.BLUE_ACCENT,
-        label_color=ft.colors.WHITE70,
+        divider_color=ft.colors.TRANSPARENT,
+        indicator_color="#d3cb00",
+        label_color="#a6eeff",
         overlay_color=ft.colors.WHITE10,
+        unselected_label_color="#a6eeff",
         tabs=[
             ft.Tab(
                 text="Browse Stock Levels",
@@ -229,7 +239,9 @@ def main(page: ft.Page):
             ft.Tab(
                 text="Search Stock Levels",
                 icon=ft.icons.SEARCH,
-                content=ft.Column([searchStockLevelsTable], scroll=True, expand=True),
+                content=ft.Container(
+                    ft.Column([searchStockLevelsTable], scroll=True, expand=True),
+                ),
             ),
             ft.Tab(
                 text="Search Historical Sales",
@@ -243,7 +255,20 @@ def main(page: ft.Page):
         on_change=search,
     )
 
-    page.add(ft.Row([windowDragArea, btnClose]), ft.Row([searchBar]), tabs)
+    bar = ft.Column([ft.Row([windowDragArea, btnClose]), ft.Row([searchBar])])
+
+    titleBar = ft.Row(
+        [
+            ft.Container(
+                bar,
+                bgcolor="#04282f",
+                expand=True,
+                border_radius=10,
+            )
+        ]
+    )
+
+    page.add(titleBar, tabs)
 
 
 ft.app(target=main)
