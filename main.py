@@ -158,7 +158,7 @@ def main(page: ft.Page):
         focused_bgcolor=ft.colors.TRANSPARENT,
         cursor_color="#a6eeff",
         visible=False,
-        on_change=search,
+        on_submit=search,
     )
 
     stockLevelsTable = ft.DataTable(bgcolor="#04282f", border_radius=10)
@@ -181,31 +181,14 @@ def main(page: ft.Page):
     ]
 
     searchStockLevelsTable = ft.DataTable(
-        columns=[
-            ft.DataColumn(ft.Text("stock_cat")),
-            ft.DataColumn(ft.Text("stock_code")),
-            ft.DataColumn(ft.Text("description")),
-            ft.DataColumn(ft.Text("quantity")),
-            ft.DataColumn(ft.Text("moq")),
-            ft.DataColumn(ft.Text("on_order")),
-            ft.DataColumn(ft.Text("balance")),
-        ],
+        columns=[ft.DataColumn(ft.Text(column)) for column in stockLevelsColumns],
         bgcolor="#04282f",
         border_radius=10,
         visible=False,
     )
 
     searchHistoricalSalesTable = ft.DataTable(
-        columns=[
-            ft.DataColumn(ft.Text("stock_cat")),
-            ft.DataColumn(ft.Text("stock_code")),
-            ft.DataColumn(ft.Text("description")),
-            ft.DataColumn(ft.Text("2022")),
-            ft.DataColumn(ft.Text("2021")),
-            ft.DataColumn(ft.Text("2020")),
-            ft.DataColumn(ft.Text("2019")),
-            ft.DataColumn(ft.Text("2018")),
-        ],
+        columns=[ft.DataColumn(ft.Text(column)) for column in historicalSalesColumns],
         bgcolor="#04282f",
         border_radius=10,
         visible=False,
