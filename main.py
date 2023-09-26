@@ -116,6 +116,8 @@ def main(page: ft.Page):
     page.window_height = 600
     page.window_title_bar_hidden = True
     page.window_title_bar_buttons_hidden = True
+    page.window_resizable = False
+    page.window_maximizable = False
     page.bgcolor = "#001f25"
 
     windowDragArea = ft.WindowDragArea(
@@ -129,6 +131,7 @@ def main(page: ft.Page):
             padding=10,
         ),
         expand=True,
+        maximizable=False,
     )
 
     btnClose = ft.IconButton(
