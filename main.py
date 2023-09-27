@@ -118,13 +118,13 @@ def main(page: ft.Page):
     page.window_title_bar_buttons_hidden = True
     page.window_resizable = False
     page.window_maximizable = False
-    page.bgcolor = "#001f25"
+    page.bgcolor = "#191c1d"
 
     windowDragArea = ft.WindowDragArea(
         ft.Container(
             ft.Text(
                 "Calibre Data Manager",
-                color="#a6eeff",
+                color="#e1e3e3",
                 text_align="center",
                 weight=ft.FontWeight.BOLD,
             ),
@@ -138,8 +138,8 @@ def main(page: ft.Page):
         ft.icons.CLOSE,
         style=ft.ButtonStyle(
             color={
-                ft.MaterialState.DEFAULT: "#a6eeff",
-                ft.MaterialState.HOVERED: "#ffb4ab",
+                ft.MaterialState.DEFAULT: "#e1e3e3",
+                ft.MaterialState.HOVERED: "#ba1a1a",
             },
             shape={ft.MaterialState.DEFAULT: RoundedRectangleBorder(radius=10)},
         ),
@@ -151,22 +151,38 @@ def main(page: ft.Page):
         expand=True,
         border_radius=10,
         prefix_icon=ft.icons.SEARCH,
-        text_style=ft.TextStyle(color="#4dd8e6"),
-        label_style=ft.TextStyle(color="#a6eeff", weight=ft.FontWeight.BOLD),
+        text_style=ft.TextStyle(color="#e1e3e3"),
+        label_style=ft.TextStyle(color="#e1e3e3", weight=ft.FontWeight.BOLD),
         border_width=2,
         focused_border_width=4,
         border_color=ft.colors.TRANSPARENT,
-        focused_border_color="#004f55",
+        focused_border_color="#004f58",
         bgcolor=ft.colors.TRANSPARENT,
         focused_bgcolor=ft.colors.TRANSPARENT,
-        cursor_color="#a6eeff",
+        cursor_color="#e1e3e3",
         visible=False,
         on_submit=search,
     )
 
-    stockLevelsTable = ft.DataTable(bgcolor="#04282f", border_radius=10)
+    stockLevelsTable = ft.DataTable(
+        bgcolor="#1b2628",
+        border_radius=10,
+        divider_thickness=0,
+        heading_row_height=75,
+        horizontal_lines=ft.border.BorderSide(0, "#004f58"),
+        heading_text_style=ft.TextStyle(color="#e1e3e3", weight=ft.FontWeight.BOLD),
+        data_text_style=ft.TextStyle(color="#e1e3e3"),
+    )
 
-    historicalSalesTable = ft.DataTable(bgcolor="#04282f", border_radius=10)
+    historicalSalesTable = ft.DataTable(
+        bgcolor="#1b2628",
+        border_radius=10,
+        divider_thickness=0,
+        heading_row_height=75,
+        horizontal_lines=ft.border.BorderSide(0, "#004f58"),
+        heading_text_style=ft.TextStyle(color="#e1e3e3", weight=ft.FontWeight.BOLD),
+        data_text_style=ft.TextStyle(color="#e1e3e3"),
+    )
 
     addDataToTable(stockLevelsTable, fetchStockLevels, 10, stockLevelsTable.rows)
     addDataToTable(
@@ -185,26 +201,36 @@ def main(page: ft.Page):
 
     searchStockLevelsTable = ft.DataTable(
         columns=[ft.DataColumn(ft.Text(column)) for column in stockLevelsColumns],
-        bgcolor="#04282f",
+        bgcolor="#1b2628",
         border_radius=10,
         visible=False,
+        divider_thickness=0,
+        heading_row_height=75,
+        horizontal_lines=ft.border.BorderSide(0, "#004f58"),
+        heading_text_style=ft.TextStyle(color="#e1e3e3", weight=ft.FontWeight.BOLD),
+        data_text_style=ft.TextStyle(color="#e1e3e3"),
     )
 
     searchHistoricalSalesTable = ft.DataTable(
         columns=[ft.DataColumn(ft.Text(column)) for column in historicalSalesColumns],
-        bgcolor="#04282f",
+        bgcolor="#1b2628",
         border_radius=10,
         visible=False,
+        divider_thickness=0,
+        heading_row_height=75,
+        horizontal_lines=ft.border.BorderSide(0, "#004f58"),
+        heading_text_style=ft.TextStyle(color="#e1e3e3", weight=ft.FontWeight.BOLD),
+        data_text_style=ft.TextStyle(color="#e1e3e3"),
     )
 
     tabs = ft.Tabs(
         selected_index=0,
         animation_duration=300,
         divider_color=ft.colors.TRANSPARENT,
-        indicator_color="#d3cb00",
-        label_color="#a6eeff",
+        indicator_color="#d6ca00",
+        label_color="#e1e3e3",
         overlay_color=ft.colors.WHITE10,
-        unselected_label_color="#a6eeff",
+        unselected_label_color="#e1e3e3",
         indicator_border_radius=10,
         tabs=[
             ft.Tab(
@@ -246,7 +272,7 @@ def main(page: ft.Page):
         [
             ft.Container(
                 bar,
-                bgcolor="#04282f",
+                bgcolor="#1b2628",
                 expand=True,
                 border_radius=10,
             )
