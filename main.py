@@ -147,7 +147,7 @@ def main(page: ft.Page):
     )
 
     searchBar = ft.TextField(
-        label="Search",
+        label="Press Enter to Search",
         expand=True,
         border_radius=10,
         prefix_icon=ft.icons.SEARCH,
