@@ -159,9 +159,10 @@ def main(page: ft.Page):
                 sales2021 = allSales[6]
                 sales2022 = allSales[7]
                 sales = [sales2018, sales2019, sales2020, sales2021, sales2022]
-                ax.plot(years, sales)
+                ax.plot(years, sales, color="#d6ca00", linewidth=3)
                 ax.set_xlabel("Years")
                 ax.set_ylabel("Sales")
+                ax.xaxis.set_major_locator(matplotlib.ticker.MultipleLocator(1))
                 ax.set_title("Sales by Year")
                 ax.grid(True)
                 ax.set_facecolor("#1b2628")
