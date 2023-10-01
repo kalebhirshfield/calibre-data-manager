@@ -85,6 +85,7 @@ def main(page: ft.Page):
 
     def search(e):
         if tabs.selected_index == 1:
+            searchBar.label = "Press Enter to Search"
             searchBar.visible = True
             tableSearchSelection.visible = True
             tableBrowseSelection.visible = False
@@ -141,12 +142,13 @@ def main(page: ft.Page):
             tableSearchSelection.visible = False
             page.update()
         elif tabs.selected_index == 2:
+            searchBar.label = "Enter Stock Code to Display"
             searchBar.visible = True
             tableSearchSelection.visible = False
             tableBrowseSelection.visible = False
             page.update()
             if searchBar.value != "":
-                stockCode = str(searchBar.value.strip())
+                stockCode = str(searchBar.value.strip().upper())
                 fig, ax = plt.subplots()
                 years = [2018, 2019, 2020, 2021, 2022]
                 cursor.execute(
