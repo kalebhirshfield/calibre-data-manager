@@ -153,11 +153,11 @@ def main(page: ft.Page):
                     f"SELECT * FROM historicalsales WHERE stock_code = '{stockCode}'"
                 )
                 allSales = cursor.fetchone()
-                sales2018 = allSales[3]
-                sales2019 = allSales[4]
+                sales2018 = allSales[7]
+                sales2019 = allSales[6]
                 sales2020 = allSales[5]
-                sales2021 = allSales[6]
-                sales2022 = allSales[7]
+                sales2021 = allSales[4]
+                sales2022 = allSales[3]
                 sales = [sales2018, sales2019, sales2020, sales2021, sales2022]
                 ax.plot(years, sales, color="#d6ca00", linewidth=3)
                 ax.set_xlabel("Years")
