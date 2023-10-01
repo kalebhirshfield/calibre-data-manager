@@ -332,7 +332,7 @@ def main(page: ft.Page):
         tabs=[
             ft.Tab(
                 text="Browse",
-                icon=ft.icons.TABLE_ROWS,
+                icon=ft.icons.TABLE_ROWS_ROUNDED,
                 content=ft.Column(
                     [stockLevelsTable, historicalSalesTable],
                     scroll=True,
@@ -342,7 +342,7 @@ def main(page: ft.Page):
             ),
             ft.Tab(
                 text="Search",
-                icon=ft.icons.SEARCH,
+                icon=ft.icons.SEARCH_ROUNDED,
                 content=ft.Container(
                     ft.Column(
                         [searchStockLevelsTable, searchHistoricalSalesTable],
@@ -351,7 +351,7 @@ def main(page: ft.Page):
                     ),
                 ),
             ),
-            ft.Tab(text="Charts", icon=ft.icons.AUTO_GRAPH),
+            ft.Tab(text="Charts", icon=ft.icons.LINE_AXIS_ROUNDED),
         ],
         expand=True,
         on_change=search,
