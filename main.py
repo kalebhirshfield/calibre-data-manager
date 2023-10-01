@@ -4,6 +4,11 @@ import psycopg2
 from dotenv import load_dotenv
 import flet as ft
 from flet import RoundedRectangleBorder
+import matplotlib
+import matplotlib.pyplot as plt
+from flet.matplotlib_chart import MatplotlibChart
+
+matplotlib.use("svg")
 
 
 load_dotenv()
@@ -82,57 +87,96 @@ def main(page: ft.Page):
         if tabs.selected_index == 1:
             searchBar.visible = True
             tableSearchSelection.visible = True
-        else:
+            tableBrowseSelection.visible = False
+            page.update()
+            query = str(searchBar.value.strip())
+            if query != "":
+                searchHistoricalSalesTable.visible = (
+                    True if tableSearchSelection.value == "Historical Sales" else False
+                )
+                searchStockLevelsTable.visible = (
+                    True if tableSearchSelection.value == "Stock Levels" else False
+                )
+                columnsToSearch = (
+                    [column for column in stockLevelsColumns]
+                    if tableSearchSelection.value == "Stock Levels"
+                    else [column for column in historicalSalesColumns]
+                )
+                conditions = [
+                    f"CAST({column} as TEXT) LIKE %s" for column in columnsToSearch
+                ]
+                whereClause = " OR ".join(conditions)
+                table = (
+                    "stocklevels"
+                    if tableSearchSelection.value == "Stock Levels"
+                    else "historicalsales"
+                )
+                sqlQuery = f"SELECT * FROM {table} WHERE {whereClause}"
+                params = [f"%{query}%"] * len(columnsToSearch)
+                cursor.execute(sqlQuery, params)
+                searchData = cursor.fetchall()
+                rows = []
+                for row in searchData:
+                    rows.append(
+                        ft.DataRow(
+                            cells=[ft.DataCell(ft.Text(str(cell))) for cell in row]
+                        )
+                    )
+                if tableSearchSelection.value == "Stock Levels":
+                    searchStockLevelsTable.rows = rows
+                elif tableSearchSelection.value == "Historical Sales":
+                    searchHistoricalSalesTable.rows = rows
+                page.update()
+            else:
+                if tableSearchSelection.value == "Stock Levels":
+                    searchStockLevelsTable.rows = []
+                elif tableSearchSelection.value == "Historical Sales":
+                    searchHistoricalSalesTable.rows = []
+                searchHistoricalSalesTable.visible = False
+                searchStockLevelsTable.visible = False
+                page.update()
+        elif tabs.selected_index == 0:
+            tableBrowseSelection.visible = True
             searchBar.visible = False
             tableSearchSelection.visible = False
-        if tabs.selected_index == 0:
-            tableBrowseSelection.visible = True
-        else:
+            page.update()
+        elif tabs.selected_index == 2:
+            searchBar.visible = True
+            tableSearchSelection.visible = False
             tableBrowseSelection.visible = False
-        query = str(searchBar.value.strip())
-        if query != "":
-            searchHistoricalSalesTable.visible = (
-                True if tableSearchSelection.value == "Historical Sales" else False
-            )
-            searchStockLevelsTable.visible = (
-                True if tableSearchSelection.value == "Stock Levels" else False
-            )
-            columnsToSearch = (
-                [column for column in stockLevelsColumns]
-                if tableSearchSelection.value == "Stock Levels"
-                else [column for column in historicalSalesColumns]
-            )
-            conditions = [
-                f"CAST({column} as TEXT) LIKE %s" for column in columnsToSearch
-            ]
-            whereClause = " OR ".join(conditions)
-            table = (
-                "stocklevels"
-                if tableSearchSelection.value == "Stock Levels"
-                else "historicalsales"
-            )
-            sqlQuery = f"SELECT * FROM {table} WHERE {whereClause}"
-            params = [f"%{query}%"] * len(columnsToSearch)
-            cursor.execute(sqlQuery, params)
-            searchData = cursor.fetchall()
-            rows = []
-            for row in searchData:
-                rows.append(
-                    ft.DataRow(cells=[ft.DataCell(ft.Text(str(cell))) for cell in row])
+            page.update()
+            if searchBar.value != "":
+                stockCode = str(searchBar.value.strip())
+                fig, ax = plt.subplots()
+                years = [2018, 2019, 2020, 2021, 2022]
+                cursor.execute(
+                    f"SELECT * FROM historicalsales WHERE stock_code = '{stockCode}'"
                 )
-            if tableSearchSelection.value == "Stock Levels":
-                searchStockLevelsTable.rows = rows
-            elif tableSearchSelection.value == "Historical Sales":
-                searchHistoricalSalesTable.rows = rows
-            page.update()
-        else:
-            if tableSearchSelection.value == "Stock Levels":
-                searchStockLevelsTable.rows = []
-            elif tableSearchSelection.value == "Historical Sales":
-                searchHistoricalSalesTable.rows = []
-            searchHistoricalSalesTable.visible = False
-            searchStockLevelsTable.visible = False
-            page.update()
+                allSales = cursor.fetchone()
+                sales2018 = allSales[3]
+                sales2019 = allSales[4]
+                sales2020 = allSales[5]
+                sales2021 = allSales[6]
+                sales2022 = allSales[7]
+                sales = [sales2018, sales2019, sales2020, sales2021, sales2022]
+                ax.plot(years, sales)
+                ax.set_xlabel("Years")
+                ax.set_ylabel("Sales")
+                ax.set_title("Sales by Year")
+                ax.grid(True)
+                ax.set_facecolor("#1b2628")
+                ax.tick_params(axis="x", colors="#e1e3e3")
+                ax.tick_params(axis="y", colors="#e1e3e3")
+                ax.spines["bottom"].set_color("#e1e3e3")
+                ax.spines["top"].set_color("#e1e3e3")
+                ax.spines["left"].set_color("#e1e3e3")
+                ax.spines["right"].set_color("#e1e3e3")
+                ax.xaxis.label.set_color("#e1e3e3")
+                ax.yaxis.label.set_color("#e1e3e3")
+                ax.title.set_color("#e1e3e3")
+                chart = MatplotlibChart(fig, expand=True, transparent=True)
+                tabs.tabs[2].content = ft.Container(chart, expand=True)
+                page.update()
 
     page.title = "Calibre Data Manager"
     page.window_width = 1000
