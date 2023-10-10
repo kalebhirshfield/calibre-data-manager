@@ -329,7 +329,7 @@ def main(page: ft.Page):
     )
 
     stockCodeTF = ft.TextField(
-        label="Enter Stock Code to Edit",
+        label="Enter Stock Code",
         expand=True,
         border_radius=10,
         text_style=ft.TextStyle(color="#e1e3e3"),
