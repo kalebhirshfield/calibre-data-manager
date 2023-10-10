@@ -180,6 +180,11 @@ def main(page: ft.Page):
                 chart = MatplotlibChart(fig, expand=True, transparent=True)
                 tabs.tabs[2].content = ft.Container(chart, expand=True)
                 page.update()
+            elif tabs.selected_index == 3:
+                searchBar.visible = False
+                tableSearchSelection.visible = False
+                tableBrowseSelection.visible = False
+                page.update()
 
     page.title = "Calibre Data Manager"
     page.window_width = 1000
@@ -323,6 +328,111 @@ def main(page: ft.Page):
         data_text_style=ft.TextStyle(color="#e1e3e3"),
     )
 
+    stockCodeTF = ft.TextField(
+        label="Enter Stock Code to Edit",
+        expand=True,
+        border_radius=10,
+        text_style=ft.TextStyle(color="#e1e3e3"),
+        label_style=ft.TextStyle(color="#e1e3e3"),
+        border_width=2,
+        focused_border_width=4,
+        border_color="#004f58",
+        focused_border_color="#d6ca00",
+        bgcolor=ft.colors.TRANSPARENT,
+        focused_bgcolor=ft.colors.TRANSPARENT,
+        cursor_color="#e1e3e3",
+    )
+
+    stockCATTF = ft.TextField(
+        label="Enter Stock CAT",
+        expand=True,
+        border_radius=10,
+        text_style=ft.TextStyle(color="#e1e3e3"),
+        label_style=ft.TextStyle(color="#e1e3e3"),
+        border_width=2,
+        focused_border_width=4,
+        border_color="#004f58",
+        focused_border_color="#d6ca00",
+        bgcolor=ft.colors.TRANSPARENT,
+        focused_bgcolor=ft.colors.TRANSPARENT,
+        cursor_color="#e1e3e3",
+    )
+
+    descriptionTF = ft.TextField(
+        label="Enter Description",
+        expand=True,
+        border_radius=10,
+        text_style=ft.TextStyle(color="#e1e3e3"),
+        label_style=ft.TextStyle(color="#e1e3e3"),
+        border_width=2,
+        focused_border_width=4,
+        border_color="#004f58",
+        focused_border_color="#d6ca00",
+        bgcolor=ft.colors.TRANSPARENT,
+        focused_bgcolor=ft.colors.TRANSPARENT,
+        cursor_color="#e1e3e3",
+    )
+
+    quantityTF = ft.TextField(
+        label="Enter Quantity",
+        expand=True,
+        border_radius=10,
+        text_style=ft.TextStyle(color="#e1e3e3"),
+        label_style=ft.TextStyle(color="#e1e3e3"),
+        border_width=2,
+        focused_border_width=4,
+        border_color="#004f58",
+        focused_border_color="#d6ca00",
+        bgcolor=ft.colors.TRANSPARENT,
+        focused_bgcolor=ft.colors.TRANSPARENT,
+        cursor_color="#e1e3e3",
+    )
+
+    moqTF = ft.TextField(
+        label="Enter Minimum Order Quantity",
+        expand=True,
+        border_radius=10,
+        text_style=ft.TextStyle(color="#e1e3e3"),
+        label_style=ft.TextStyle(color="#e1e3e3"),
+        border_width=2,
+        focused_border_width=4,
+        border_color="#004f58",
+        focused_border_color="#d6ca00",
+        bgcolor=ft.colors.TRANSPARENT,
+        focused_bgcolor=ft.colors.TRANSPARENT,
+        cursor_color="#e1e3e3",
+    )
+
+    onOrderTF = ft.TextField(
+        label="Enter Quantity On Order",
+        expand=True,
+        border_radius=10,
+        text_style=ft.TextStyle(color="#e1e3e3"),
+        label_style=ft.TextStyle(color="#e1e3e3"),
+        border_width=2,
+        focused_border_width=4,
+        border_color="#004f58",
+        focused_border_color="#d6ca00",
+        bgcolor=ft.colors.TRANSPARENT,
+        focused_bgcolor=ft.colors.TRANSPARENT,
+        cursor_color="#e1e3e3",
+    )
+
+    salesTF = ft.TextField(
+        label="Enter Sales from 2018 to 2022 (separated by commas)",
+        expand=True,
+        border_radius=10,
+        text_style=ft.TextStyle(color="#e1e3e3"),
+        label_style=ft.TextStyle(color="#e1e3e3"),
+        border_width=2,
+        focused_border_width=4,
+        border_color="#004f58",
+        focused_border_color="#d6ca00",
+        bgcolor=ft.colors.TRANSPARENT,
+        focused_bgcolor=ft.colors.TRANSPARENT,
+        cursor_color="#e1e3e3",
+    )
+
     tabs = ft.Tabs(
         selected_index=0,
         animation_duration=300,
@@ -355,6 +465,24 @@ def main(page: ft.Page):
                 ),
             ),
             ft.Tab(text="Charts", icon=ft.icons.LINE_AXIS_ROUNDED),
+            ft.Tab(
+                text="Add / Edit Data",
+                icon=ft.icons.EDIT_ROUNDED,
+                content=ft.Container(
+                    ft.Column(
+                        [
+                            stockCodeTF,
+                            stockCATTF,
+                            descriptionTF,
+                            quantityTF,
+                            moqTF,
+                            onOrderTF,
+                            salesTF,
+                        ]
+                    ),
+                    expand=True,
+                ),
+            ),
         ],
         expand=True,
         on_change=search,
