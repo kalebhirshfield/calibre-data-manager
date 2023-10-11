@@ -189,7 +189,7 @@ def main(page: ft.Page):
                 page.update()
 
     page.title = "Calibre Data Manager"
-    page.window_width = 1100
+    page.window_width = 1200
     page.window_height = 600
     page.window_title_bar_hidden = True
     page.window_title_bar_buttons_hidden = True
