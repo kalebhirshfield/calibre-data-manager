@@ -23,7 +23,8 @@ def main(page: ft.Page):
     def fetchStockLevels(limit):
         global offsetStock
         cursor.execute(
-            "SELECT * FROM stocklevels LIMIT %s OFFSET %s", (limit, offsetStock)
+            "SELECT * FROM stockdetails d INNER JOIN stocklevel using(stock_code) INNER JOIN stockbalance using(stock_id) LIMIT %s OFFSET %s",
+            (limit, offsetStock),
         )
         stockLevels = cursor.fetchall()
         columnNames = [desc[0] for desc in cursor.description]
@@ -33,7 +34,8 @@ def main(page: ft.Page):
     def fetchHistoricalSales(limit):
         global offsetSales
         cursor.execute(
-            "SELECT * FROM historicalsales LIMIT %s OFFSET %s", (limit, offsetSales)
+            "SELECT * FROM stockdetails d INNER JOIN stocksales using(stock_code) LIMIT %s OFFSET %s",
+            (limit, offsetSales),
         )
         historicalSales = cursor.fetchall()
         columnNames = [desc[0] for desc in cursor.description]
@@ -108,9 +110,9 @@ def main(page: ft.Page):
                 ]
                 whereClause = " OR ".join(conditions)
                 table = (
-                    "stocklevels"
+                    "stockdetails d INNER JOIN stocklevel using(stock_code) INNER JOIN stockbalance using(stock_id)"
                     if tableSearchSelection.value == "Stock Levels"
-                    else "historicalsales"
+                    else "stockdetails d INNER JOIN stocksales using(stock_code)"
                 )
                 sqlQuery = f"SELECT * FROM {table} WHERE {whereClause}"
                 params = [f"%{query}%"] * len(columnsToSearch)
@@ -152,14 +154,14 @@ def main(page: ft.Page):
                 fig, ax = plt.subplots()
                 years = [2018, 2019, 2020, 2021, 2022]
                 cursor.execute(
-                    f"SELECT * FROM historicalsales WHERE stock_code = '{stockCode}'"
+                    f"SELECT * FROM stockdetails d INNER JOIN stocksales using(stock_code) WHERE stock_code = '{stockCode}'"
                 )
                 allSales = cursor.fetchone()
-                sales2018 = allSales[7]
-                sales2019 = allSales[6]
-                sales2020 = allSales[5]
-                sales2021 = allSales[4]
-                sales2022 = allSales[3]
+                sales2018 = allSales[8]
+                sales2019 = allSales[7]
+                sales2020 = allSales[6]
+                sales2021 = allSales[5]
+                sales2022 = allSales[4]
                 sales = [sales2018, sales2019, sales2020, sales2021, sales2022]
                 ax.plot(years, sales, color="#d6ca00", linewidth=3)
                 ax.set_xlabel("Years")
@@ -191,7 +193,7 @@ def main(page: ft.Page):
     page.window_height = 600
     page.window_title_bar_hidden = True
     page.window_title_bar_buttons_hidden = True
-    page.window_resizable = False
+    page.window_resizable = True
     page.window_maximizable = False
     page.bgcolor = "#191c1d"
 
