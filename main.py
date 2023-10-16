@@ -157,6 +157,8 @@ def main(page: ft.Page):
                     f"SELECT * FROM stockdetails d INNER JOIN stocksales using(stock_code) WHERE stock_code = '{stockCode}'"
                 )
                 allSales = cursor.fetchone()
+                if allSales == None:
+                    return
                 sales2018 = allSales[8]
                 sales2019 = allSales[7]
                 sales2020 = allSales[6]
