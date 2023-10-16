@@ -182,11 +182,11 @@ def main(page: ft.Page):
                 chart = MatplotlibChart(fig, expand=True, transparent=True)
                 tabs.tabs[2].content = ft.Container(chart, expand=True)
                 page.update()
-            elif tabs.selected_index == 3:
-                searchBar.visible = False
-                tableSearchSelection.visible = False
-                tableBrowseSelection.visible = False
-                page.update()
+        elif tabs.selected_index == 3:
+            searchBar.visible = False
+            tableSearchSelection.visible = False
+            tableBrowseSelection.visible = False
+            page.update()
 
     page.title = "Calibre Data Manager"
     page.window_width = 1200
