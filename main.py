@@ -435,6 +435,17 @@ def main(page: ft.Page):
         cursor_color="#e1e3e3",
     )
 
+    addButton = ft.IconButton(
+        icon=ft.icons.ADD,
+        style=ft.ButtonStyle(
+            color={
+                ft.MaterialState.DEFAULT: "#e1e3e3",
+                ft.MaterialState.HOVERED: "#d6ca00",
+            },
+            shape={ft.MaterialState.DEFAULT: RoundedRectangleBorder(radius=10)},
+        ),
+    )
+
     tabs = ft.Tabs(
         selected_index=0,
         animation_duration=300,
@@ -473,7 +484,7 @@ def main(page: ft.Page):
                 content=ft.Container(
                     ft.Column(
                         [
-                            stockCodeTF,
+                            ft.Row([stockCodeTF, addButton]),
                             stockCATTF,
                             descriptionTF,
                             quantityTF,
