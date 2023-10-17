@@ -15,32 +15,20 @@ load_dotenv()
 connection = psycopg2.connect(os.getenv("dbURL"))
 cursor = connection.cursor()
 
-offsetStock = 0
-offsetSales = 0
+offset = 0
 
 
 def main(page: ft.Page):
     def fetchStockLevels(limit):
-        global offsetStock
+        global offset
         cursor.execute(
             "SELECT * FROM products d INNER JOIN stocklevels using(stock_code) INNER JOIN stockbalance using(stock_id) LIMIT %s OFFSET %s",
-            (limit, offsetStock),
+            (limit, offset),
         )
         stockLevels = cursor.fetchall()
         columnNames = [desc[0] for desc in cursor.description]
-        offsetStock += limit
+        offset += limit
         return columnNames, stockLevels
-
-    def fetchHistoricalSales(limit):
-        global offsetSales
-        cursor.execute(
-            "SELECT * FROM products d INNER JOIN sales using(stock_code) LIMIT %s OFFSET %s",
-            (limit, offsetSales),
-        )
-        historicalSales = cursor.fetchall()
-        columnNames = [desc[0] for desc in cursor.description]
-        offsetSales += limit
-        return columnNames, historicalSales
 
     sem = threading.Semaphore()
 
@@ -59,61 +47,38 @@ def main(page: ft.Page):
         if e.pixels >= e.max_scroll_extent - 300:
             if sem.acquire(blocking=False):
                 try:
-                    if tableBrowseSelection.value == "Stock Levels":
-                        addDataToTable(
-                            stockLevelsTable,
-                            fetchStockLevels,
-                            10,
-                            stockLevelsTable.rows,
-                        )
-                    elif tableBrowseSelection.value == "Historical Sales":
-                        addDataToTable(
-                            historicalSalesTable,
-                            fetchHistoricalSales,
-                            10,
-                            historicalSalesTable.rows,
-                        )
+                    addDataToTable(
+                        stockLevelsTable,
+                        fetchStockLevels,
+                        10,
+                        stockLevelsTable.rows,
+                    )
+
                 finally:
                     sem.release()
 
-    def tableSwitcher(e):
-        stockLevelsTable.visible = (
-            True if tableBrowseSelection.value == "Stock Levels" else False
+    def tabSwitch(e):
+        searchBar.visible = (
+            True if tabs.selected_index == 1 or tabs.selected_index == 2 else False
         )
-        historicalSalesTable.visible = (
-            True if tableBrowseSelection.value == "Historical Sales" else False
+        searchBar.label = (
+            "Enter Stock Code to Display"
+            if tabs.selected_index == 2
+            else "Press Enter to Search"
         )
         page.update()
 
     def search(e):
         if tabs.selected_index == 1:
-            searchBar.label = "Press Enter to Search"
-            searchBar.visible = True
-            tableSearchSelection.visible = True
-            tableBrowseSelection.visible = False
-            page.update()
             query = str(searchBar.value.strip())
             if query != "":
-                searchHistoricalSalesTable.visible = (
-                    True if tableSearchSelection.value == "Historical Sales" else False
-                )
-                searchStockLevelsTable.visible = (
-                    True if tableSearchSelection.value == "Stock Levels" else False
-                )
-                columnsToSearch = (
-                    [column for column in stockLevelsColumns]
-                    if tableSearchSelection.value == "Stock Levels"
-                    else [column for column in historicalSalesColumns]
-                )
+                searchStockLevelsTable.visible = True
+                columnsToSearch = [column for column in stockLevelsColumns]
                 conditions = [
                     f"CAST({column} as TEXT) LIKE %s" for column in columnsToSearch
                 ]
                 whereClause = " OR ".join(conditions)
-                table = (
-                    "products d INNER JOIN stocklevels using(stock_code) INNER JOIN stockbalance using(stock_id)"
-                    if tableSearchSelection.value == "Stock Levels"
-                    else "products d INNER JOIN sales using(stock_code)"
-                )
+                table = "products d INNER JOIN stocklevels using(stock_code) INNER JOIN stockbalance using(stock_id)"
                 sqlQuery = f"SELECT * FROM {table} WHERE {whereClause}"
                 params = [f"%{query}%"] * len(columnsToSearch)
                 cursor.execute(sqlQuery, params)
@@ -125,47 +90,16 @@ def main(page: ft.Page):
                             cells=[ft.DataCell(ft.Text(str(cell))) for cell in row]
                         )
                     )
-                if tableSearchSelection.value == "Stock Levels":
                     searchStockLevelsTable.rows = rows
-                elif tableSearchSelection.value == "Historical Sales":
-                    searchHistoricalSalesTable.rows = rows
                 page.update()
             else:
-                if tableSearchSelection.value == "Stock Levels":
-                    searchStockLevelsTable.rows = []
-                elif tableSearchSelection.value == "Historical Sales":
-                    searchHistoricalSalesTable.rows = []
-                searchHistoricalSalesTable.visible = False
+                searchStockLevelsTable.rows = []
                 searchStockLevelsTable.visible = False
                 page.update()
-        elif tabs.selected_index == 0:
-            tableBrowseSelection.visible = True
-            searchBar.visible = False
-            tableSearchSelection.visible = False
-            page.update()
         elif tabs.selected_index == 2:
-            searchBar.label = "Enter Stock Code to Display"
-            searchBar.visible = True
-            tableSearchSelection.visible = False
-            tableBrowseSelection.visible = False
-            page.update()
             if searchBar.value != "":
                 stockCode = str(searchBar.value.strip().upper())
                 fig, ax = plt.subplots()
-                years = [2018, 2019, 2020, 2021, 2022]
-                cursor.execute(
-                    f"SELECT * FROM products d INNER JOIN sales using(stock_code) WHERE stock_code = '{stockCode}'"
-                )
-                allSales = cursor.fetchone()
-                if allSales == None:
-                    return
-                sales2018 = allSales[8]
-                sales2019 = allSales[7]
-                sales2020 = allSales[6]
-                sales2021 = allSales[5]
-                sales2022 = allSales[4]
-                sales = [sales2018, sales2019, sales2020, sales2021, sales2022]
-                ax.plot(years, sales, color="#d6ca00", linewidth=3)
                 ax.set_xlabel("Years")
                 ax.set_ylabel("Sales")
                 ax.xaxis.set_major_locator(matplotlib.ticker.MultipleLocator(1))
@@ -184,11 +118,6 @@ def main(page: ft.Page):
                 chart = MatplotlibChart(fig, expand=True, transparent=True)
                 tabs.tabs[2].content = ft.Container(chart, expand=True)
                 page.update()
-        elif tabs.selected_index == 3:
-            searchBar.visible = False
-            tableSearchSelection.visible = False
-            tableBrowseSelection.visible = False
-            page.update()
 
     page.title = "Calibre Data Manager"
     page.window_width = 1200
@@ -225,34 +154,6 @@ def main(page: ft.Page):
         on_click=lambda _: page.window_close(),
     )
 
-    tableBrowseSelection = ft.Dropdown(
-        label="Select Table to Browse",
-        label_style=ft.TextStyle(color="#e1e3e3", weight=ft.FontWeight.BOLD),
-        options=[
-            ft.dropdown.Option("Stock Levels"),
-            ft.dropdown.Option("Historical Sales"),
-        ],
-        on_change=tableSwitcher,
-        expand=True,
-        border_radius=10,
-        border_color=ft.colors.TRANSPARENT,
-        visible=True,
-    )
-
-    tableSearchSelection = ft.Dropdown(
-        label="Select Table to Search",
-        label_style=ft.TextStyle(color="#e1e3e3", weight=ft.FontWeight.BOLD),
-        options=[
-            ft.dropdown.Option("Stock Levels"),
-            ft.dropdown.Option("Historical Sales"),
-        ],
-        visible=False,
-        on_change=search,
-        expand=True,
-        border_radius=10,
-        border_color=ft.colors.TRANSPARENT,
-    )
-
     searchBar = ft.TextField(
         label="Press Enter to Search",
         expand=True,
@@ -279,57 +180,26 @@ def main(page: ft.Page):
         horizontal_lines=ft.border.BorderSide(0, "#004f58"),
         heading_text_style=ft.TextStyle(color="#e1e3e3", weight=ft.FontWeight.BOLD),
         data_text_style=ft.TextStyle(color="#e1e3e3"),
-        visible=False,
-    )
-
-    historicalSalesTable = ft.DataTable(
-        bgcolor="#1b2628",
-        border_radius=10,
-        divider_thickness=0,
-        heading_row_height=75,
-        horizontal_lines=ft.border.BorderSide(0, "#004f58"),
-        heading_text_style=ft.TextStyle(color="#e1e3e3", weight=ft.FontWeight.BOLD),
-        data_text_style=ft.TextStyle(color="#e1e3e3"),
-        visible=False,
     )
 
     addDataToTable(stockLevelsTable, fetchStockLevels, 10, stockLevelsTable.rows)
-    addDataToTable(
-        historicalSalesTable, fetchHistoricalSales, 10, historicalSalesTable.rows
-    )
 
     stockLevelsColumns, _ = fetchStockLevels(1)
-    historicalSalesColumns, _ = fetchHistoricalSales(1)
 
     stockLevelsTable.columns = [
         ft.DataColumn(ft.Text(column)) for column in stockLevelsColumns
-    ]
-    historicalSalesTable.columns = [
-        ft.DataColumn(ft.Text(column)) for column in historicalSalesColumns
     ]
 
     searchStockLevelsTable = ft.DataTable(
         columns=[ft.DataColumn(ft.Text(column)) for column in stockLevelsColumns],
         bgcolor="#1b2628",
         border_radius=10,
-        visible=False,
         divider_thickness=0,
         heading_row_height=75,
         horizontal_lines=ft.border.BorderSide(0, "#004f58"),
         heading_text_style=ft.TextStyle(color="#e1e3e3", weight=ft.FontWeight.BOLD),
         data_text_style=ft.TextStyle(color="#e1e3e3"),
-    )
-
-    searchHistoricalSalesTable = ft.DataTable(
-        columns=[ft.DataColumn(ft.Text(column)) for column in historicalSalesColumns],
-        bgcolor="#1b2628",
-        border_radius=10,
         visible=False,
-        divider_thickness=0,
-        heading_row_height=75,
-        horizontal_lines=ft.border.BorderSide(0, "#004f58"),
-        heading_text_style=ft.TextStyle(color="#e1e3e3", weight=ft.FontWeight.BOLD),
-        data_text_style=ft.TextStyle(color="#e1e3e3"),
     )
 
     stockCodeTF = ft.TextField(
@@ -377,21 +247,6 @@ def main(page: ft.Page):
         cursor_color="#e1e3e3",
     )
 
-    quantityTF = ft.TextField(
-        label="Enter Quantity",
-        expand=True,
-        border_radius=10,
-        text_style=ft.TextStyle(color="#e1e3e3"),
-        label_style=ft.TextStyle(color="#e1e3e3"),
-        border_width=2,
-        focused_border_width=4,
-        border_color="#004f58",
-        focused_border_color="#d6ca00",
-        bgcolor=ft.colors.TRANSPARENT,
-        focused_bgcolor=ft.colors.TRANSPARENT,
-        cursor_color="#e1e3e3",
-    )
-
     moqTF = ft.TextField(
         label="Enter Minimum Order Quantity",
         expand=True,
@@ -407,23 +262,8 @@ def main(page: ft.Page):
         cursor_color="#e1e3e3",
     )
 
-    onOrderTF = ft.TextField(
-        label="Enter Quantity On Order",
-        expand=True,
-        border_radius=10,
-        text_style=ft.TextStyle(color="#e1e3e3"),
-        label_style=ft.TextStyle(color="#e1e3e3"),
-        border_width=2,
-        focused_border_width=4,
-        border_color="#004f58",
-        focused_border_color="#d6ca00",
-        bgcolor=ft.colors.TRANSPARENT,
-        focused_bgcolor=ft.colors.TRANSPARENT,
-        cursor_color="#e1e3e3",
-    )
-
-    salesTF = ft.TextField(
-        label="Enter Sales from 2018 to 2022 (separated by commas)",
+    quantityTF = ft.TextField(
+        label="Enter Quantity",
         expand=True,
         border_radius=10,
         text_style=ft.TextStyle(color="#e1e3e3"),
@@ -448,6 +288,22 @@ def main(page: ft.Page):
         ),
     )
 
+    addDataTab = ft.Column(
+        [
+            ft.Row([stockCodeTF, addButton]),
+            ft.Row([stockCATTF]),
+            ft.Row([descriptionTF]),
+            ft.Row([moqTF]),
+        ]
+    )
+
+    saleTab = ft.Column(
+        [
+            ft.Row([stockCodeTF, addButton]),
+            ft.Row([quantityTF]),
+        ]
+    )
+
     tabs = ft.Tabs(
         selected_index=0,
         animation_duration=300,
@@ -462,7 +318,7 @@ def main(page: ft.Page):
                 text="Browse",
                 icon=ft.icons.TABLE_ROWS_ROUNDED,
                 content=ft.Column(
-                    [stockLevelsTable, historicalSalesTable],
+                    [stockLevelsTable],
                     scroll=True,
                     expand=True,
                     on_scroll=onScroll,
@@ -471,43 +327,32 @@ def main(page: ft.Page):
             ft.Tab(
                 text="Search",
                 icon=ft.icons.SEARCH_ROUNDED,
-                content=ft.Container(
-                    ft.Column(
-                        [searchStockLevelsTable, searchHistoricalSalesTable],
-                        scroll=True,
-                        expand=True,
-                    ),
-                ),
-            ),
-            ft.Tab(text="Charts", icon=ft.icons.LINE_AXIS_ROUNDED),
-            ft.Tab(
-                text="Add / Edit Data",
-                icon=ft.icons.EDIT_ROUNDED,
-                content=ft.Container(
-                    ft.Column(
-                        [
-                            ft.Row([stockCodeTF, addButton]),
-                            stockCATTF,
-                            descriptionTF,
-                            quantityTF,
-                            moqTF,
-                            onOrderTF,
-                            salesTF,
-                        ]
-                    ),
+                content=ft.Column(
+                    [searchStockLevelsTable],
+                    scroll=True,
                     expand=True,
                 ),
             ),
+            ft.Tab(text="View Sales Patterns", icon=ft.icons.LINE_AXIS_ROUNDED),
+            ft.Tab(
+                text="Add / Edit Product Data",
+                icon=ft.icons.EDIT_ROUNDED,
+                content=ft.Container(addDataTab),
+            ),
+            ft.Tab(
+                text="Make A Sale",
+                icon=ft.icons.ADD_SHOPPING_CART_ROUNDED,
+                content=ft.Container(saleTab),
+            ),
         ],
         expand=True,
-        on_change=search,
+        on_change=tabSwitch,
     )
 
     bar = ft.Column(
         [
             ft.Row([windowDragArea, btnClose]),
-            ft.Row([tableBrowseSelection]),
-            ft.Row([searchBar, tableSearchSelection]),
+            ft.Row([searchBar]),
         ]
     )
 
