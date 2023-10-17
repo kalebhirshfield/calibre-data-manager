@@ -23,7 +23,7 @@ def main(page: ft.Page):
     def fetchStockLevels(limit):
         global offsetStock
         cursor.execute(
-            "SELECT * FROM stockdetails d INNER JOIN stocklevel using(stock_code) INNER JOIN stockbalance using(stock_id) LIMIT %s OFFSET %s",
+            "SELECT * FROM products d INNER JOIN stocklevels using(stock_code) INNER JOIN stockbalance using(stock_id) LIMIT %s OFFSET %s",
             (limit, offsetStock),
         )
         stockLevels = cursor.fetchall()
@@ -34,7 +34,7 @@ def main(page: ft.Page):
     def fetchHistoricalSales(limit):
         global offsetSales
         cursor.execute(
-            "SELECT * FROM stockdetails d INNER JOIN stocksales using(stock_code) LIMIT %s OFFSET %s",
+            "SELECT * FROM products d INNER JOIN sales using(stock_code) LIMIT %s OFFSET %s",
             (limit, offsetSales),
         )
         historicalSales = cursor.fetchall()
@@ -110,9 +110,9 @@ def main(page: ft.Page):
                 ]
                 whereClause = " OR ".join(conditions)
                 table = (
-                    "stockdetails d INNER JOIN stocklevel using(stock_code) INNER JOIN stockbalance using(stock_id)"
+                    "products d INNER JOIN stocklevels using(stock_code) INNER JOIN stockbalance using(stock_id)"
                     if tableSearchSelection.value == "Stock Levels"
-                    else "stockdetails d INNER JOIN stocksales using(stock_code)"
+                    else "products d INNER JOIN sales using(stock_code)"
                 )
                 sqlQuery = f"SELECT * FROM {table} WHERE {whereClause}"
                 params = [f"%{query}%"] * len(columnsToSearch)
@@ -154,7 +154,7 @@ def main(page: ft.Page):
                 fig, ax = plt.subplots()
                 years = [2018, 2019, 2020, 2021, 2022]
                 cursor.execute(
-                    f"SELECT * FROM stockdetails d INNER JOIN stocksales using(stock_code) WHERE stock_code = '{stockCode}'"
+                    f"SELECT * FROM products d INNER JOIN sales using(stock_code) WHERE stock_code = '{stockCode}'"
                 )
                 allSales = cursor.fetchone()
                 if allSales == None:
