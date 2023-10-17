@@ -30,8 +30,6 @@ def main(page: ft.Page):
         offset += limit
         return columnNames, stockLevels
 
-    sem = threading.Semaphore()
-
     def addDataToTable(table: ft.DataTable, fetchFunction, limit, rows):
         columnNames, data = fetchFunction(limit=limit)
         newRows = []
@@ -118,6 +116,8 @@ def main(page: ft.Page):
                 chart = MatplotlibChart(fig, expand=True, transparent=True)
                 tabs.tabs[2].content = ft.Container(chart, expand=True)
                 page.update()
+
+    sem = threading.Semaphore()
 
     page.title = "Calibre Data Manager"
     page.window_width = 1200
