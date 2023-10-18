@@ -114,7 +114,7 @@ def main(page: ft.Page):
                 ax.yaxis.label.set_color("#e1e3e3")
                 ax.title.set_color("#e1e3e3")
                 chart = MatplotlibChart(fig, expand=True, transparent=True)
-                tabs.tabs[2].content = ft.Container(chart, expand=True)
+                tabs.tabs[1].content = ft.Container(chart, expand=True)
                 page.update()
 
     sem = threading.Semaphore()
@@ -287,22 +287,6 @@ def main(page: ft.Page):
         ),
     )
 
-    addDataTab = ft.Column(
-        [
-            ft.Row([stockCodeTF, addButton]),
-            ft.Row([stockCATTF]),
-            ft.Row([descriptionTF]),
-            ft.Row([moqTF]),
-        ]
-    )
-
-    saleTab = ft.Column(
-        [
-            ft.Row([stockCodeTF, addButton]),
-            ft.Row([quantityTF]),
-        ]
-    )
-
     tabs = ft.Tabs(
         selected_index=0,
         animation_duration=300,
@@ -316,23 +300,47 @@ def main(page: ft.Page):
             ft.Tab(
                 text="Browse",
                 icon=ft.icons.TABLE_ROWS_ROUNDED,
-                content=ft.Column(
-                    [stockLevelsTable, searchStockLevelsTable],
-                    scroll=True,
-                    expand=True,
-                    on_scroll=onScroll,
+                content=ft.Container(
+                    ft.Column(
+                        [
+                            ft.Divider(color=ft.colors.BACKGROUND),
+                            stockLevelsTable,
+                            searchStockLevelsTable,
+                        ],
+                        scroll=True,
+                        expand=True,
+                        on_scroll=onScroll,
+                    ),
                 ),
             ),
             ft.Tab(text="View Sales Patterns", icon=ft.icons.LINE_AXIS_ROUNDED),
             ft.Tab(
                 text="Add / Edit Product Data",
                 icon=ft.icons.EDIT_ROUNDED,
-                content=ft.Container(addDataTab),
+                content=ft.Container(
+                    ft.Column(
+                        [
+                            ft.Divider(color=ft.colors.BACKGROUND),
+                            ft.Row([stockCodeTF, addButton]),
+                            ft.Row([stockCATTF]),
+                            ft.Row([descriptionTF]),
+                            ft.Row([moqTF]),
+                        ]
+                    )
+                ),
             ),
             ft.Tab(
-                text="Make A Sale",
+                text="Add Order",
                 icon=ft.icons.ADD_SHOPPING_CART_ROUNDED,
-                content=ft.Container(saleTab),
+                content=ft.Container(
+                    ft.Column(
+                        [
+                            ft.Divider(color=ft.colors.BACKGROUND),
+                            ft.Row([stockCodeTF, addButton]),
+                            ft.Row([quantityTF]),
+                        ]
+                    )
+                ),
             ),
         ],
         expand=True,
