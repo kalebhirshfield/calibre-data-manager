@@ -57,20 +57,19 @@ def main(page: ft.Page):
 
     def tabSwitch(e):
         searchBar.visible = (
-            True if tabs.selected_index == 1 or tabs.selected_index == 2 else False
+            True if tabs.selected_index == 0 or tabs.selected_index == 1 else False
         )
         searchBar.label = (
-            "Enter Stock Code to Display"
-            if tabs.selected_index == 2
-            else "Press Enter to Search"
+            "Enter Stock Code to Display" if tabs.selected_index == 1 else "Search"
         )
         page.update()
 
     def search(e):
-        if tabs.selected_index == 1:
+        if tabs.selected_index == 0:
             query = str(searchBar.value.strip())
             if query != "":
                 searchStockLevelsTable.visible = True
+                stockLevelsTable.visible = False
                 columnsToSearch = [column for column in stockLevelsColumns]
                 conditions = [
                     f"CAST({column} as TEXT) LIKE %s" for column in columnsToSearch
@@ -93,8 +92,9 @@ def main(page: ft.Page):
             else:
                 searchStockLevelsTable.rows = []
                 searchStockLevelsTable.visible = False
+                stockLevelsTable.visible = True
                 page.update()
-        elif tabs.selected_index == 2:
+        elif tabs.selected_index == 1:
             if searchBar.value != "":
                 stockCode = str(searchBar.value.strip().upper())
                 fig, ax = plt.subplots()
@@ -155,7 +155,7 @@ def main(page: ft.Page):
     )
 
     searchBar = ft.TextField(
-        label="Press Enter to Search",
+        label="Search",
         expand=True,
         border_radius=10,
         prefix_icon=ft.icons.SEARCH,
@@ -168,8 +168,7 @@ def main(page: ft.Page):
         bgcolor=ft.colors.TRANSPARENT,
         focused_bgcolor=ft.colors.TRANSPARENT,
         cursor_color="#e1e3e3",
-        visible=False,
-        on_submit=search,
+        on_change=search,
     )
 
     stockLevelsTable = ft.DataTable(
@@ -318,19 +317,10 @@ def main(page: ft.Page):
                 text="Browse",
                 icon=ft.icons.TABLE_ROWS_ROUNDED,
                 content=ft.Column(
-                    [stockLevelsTable],
+                    [stockLevelsTable, searchStockLevelsTable],
                     scroll=True,
                     expand=True,
                     on_scroll=onScroll,
-                ),
-            ),
-            ft.Tab(
-                text="Search",
-                icon=ft.icons.SEARCH_ROUNDED,
-                content=ft.Column(
-                    [searchStockLevelsTable],
-                    scroll=True,
-                    expand=True,
                 ),
             ),
             ft.Tab(text="View Sales Patterns", icon=ft.icons.LINE_AXIS_ROUNDED),
