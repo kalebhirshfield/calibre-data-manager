@@ -7,9 +7,9 @@ from flet import RoundedRectangleBorder
 import matplotlib
 import matplotlib.pyplot as plt
 from flet.matplotlib_chart import MatplotlibChart
+from datetime import date
 
 matplotlib.use("svg")
-
 
 load_dotenv()
 connection = psycopg2.connect(os.getenv("dbURL"))
@@ -51,7 +51,6 @@ def main(page: ft.Page):
                         10,
                         stockLevelsTable.rows,
                     )
-
                 finally:
                     sem.release()
 
@@ -116,6 +115,118 @@ def main(page: ft.Page):
                 chart = MatplotlibChart(fig, expand=True, transparent=True)
                 tabs.tabs[1].content = ft.Container(chart, expand=True)
                 page.update()
+
+    def addNewData(e):
+        if tabs.selected_index == 2:
+            stockCode = str(stockCodeTF.value.strip().upper())
+            stockCAT = int(stockCATTF.value)
+            description = str(descriptionTF.value)
+            quantity = int(quantityTF.value)
+            moq = int(moqTF.value)
+            cursor.execute("SELECT * FROM products WHERE stock_code = %s", (stockCode,))
+            if cursor.rowcount > 0:
+                cursor.execute(
+                    "UPDATE products SET stock_cat = %s WHERE stock_code = %s",
+                    (stockCAT, stockCode),
+                )
+                connection.commit()
+                cursor.execute(
+                    "UPDATE products SET description = %s WHERE stock_code = %s",
+                    (description, stockCode),
+                )
+                connection.commit()
+                cursor.execute(
+                    "UPDATE stocklevels SET quantity = %s WHERE stock_code = %s",
+                    (quantity, stockCode),
+                )
+                connection.commit()
+                cursor.execute(
+                    "UPDATE stocklevels SET moq = %s WHERE stock_code = %s",
+                    (moq, stockCode),
+                )
+                connection.commit()
+                cursor.execute(
+                    "Select stock_id FROM stocklevels WHERE stock_code = %s",
+                    (stockCode,),
+                )
+                stockID = int(cursor.fetchone()[0])
+                cursor.execute(
+                    "SELECT on_order FROM stocklevels WHERE stock_code = %s",
+                    (stockCode,),
+                )
+                onOrder = int(cursor.fetchone()[0])
+                cursor.execute(
+                    "UPDATE stockbalance SET balance = %s WHERE stock_id = %s",
+                    (quantity + moq - onOrder, stockID),
+                )
+                connection.commit()
+            else:
+                cursor.execute(
+                    "INSERT INTO products(stock_code, stock_cat, description) VALUES(%s, %s, %s)",
+                    (stockCode, stockCAT, description),
+                )
+                connection.commit()
+                cursor.execute(
+                    "INSERT INTO stocklevels(stock_code, moq, quantity) VALUES(%s, %s, %s)",
+                    (stockCode, moq, quantity),
+                )
+                connection.commit()
+                cursor.execute(
+                    "Select stock_id FROM stocklevels WHERE stock_code = %s",
+                    (stockCode,),
+                )
+                stockID = int(cursor.fetchone()[0])
+                cursor.execute(
+                    "SELECT on_order FROM stocklevels WHERE stock_code = %s",
+                    (stockCode,),
+                )
+                onOrder = int(cursor.fetchone()[0])
+                cursor.execute(
+                    "INSERT INTO stockbalance(stock_id, balance) VALUES(%s, %s)",
+                    (stockID, quantity + moq - onOrder),
+                )
+                connection.commit()
+            page.update()
+        elif tabs.selected_index == 3:
+            stockCode = str(stockCodeTF.value.strip().upper())
+            quantity = int(orderQuantityTF.value)
+            cursor.execute(
+                "INSERT INTO orders(stock_code, order_quantity, date) VALUES(%s, %s, %s)",
+                (stockCode, quantity, date.today()),
+            )
+            connection.commit()
+            cursor.execute(
+                "SELECT on_order FROM stocklevels WHERE stock_code = %s",
+                (stockCode,),
+            )
+            onOrder = int(cursor.fetchone()[0])
+            cursor.execute(
+                "UPDATE stocklevels SET on_order = %s WHERE stock_code = %s",
+                (onOrder + quantity, stockCode),
+            )
+            connection.commit()
+            onOrder = onOrder + quantity
+            cursor.execute(
+                "SELECT quantity FROM stocklevels WHERE stock_code = %s",
+                (stockCode,),
+            )
+            quantity = int(cursor.fetchone()[0])
+            cursor.execute(
+                "SELECT moq FROM stocklevels WHERE stock_code = %s",
+                (stockCode,),
+            )
+            moq = int(cursor.fetchone()[0])
+            cursor.execute(
+                "Select stock_id FROM stocklevels WHERE stock_code = %s",
+                (stockCode,),
+            )
+            stockID = int(cursor.fetchone()[0])
+            cursor.execute(
+                "UPDATE stockbalance SET balance = %s WHERE stock_id = %s",
+                (quantity + moq - onOrder, stockID),
+            )
+            connection.commit()
+            page.update()
 
     sem = threading.Semaphore()
 
@@ -246,6 +357,21 @@ def main(page: ft.Page):
         cursor_color="#e1e3e3",
     )
 
+    quantityTF = ft.TextField(
+        label="Enter Quantity",
+        expand=True,
+        border_radius=10,
+        text_style=ft.TextStyle(color="#e1e3e3"),
+        label_style=ft.TextStyle(color="#e1e3e3"),
+        border_width=2,
+        focused_border_width=4,
+        border_color="#004f58",
+        focused_border_color="#d6ca00",
+        bgcolor=ft.colors.TRANSPARENT,
+        focused_bgcolor=ft.colors.TRANSPARENT,
+        cursor_color="#e1e3e3",
+    )
+
     moqTF = ft.TextField(
         label="Enter Minimum Order Quantity",
         expand=True,
@@ -261,7 +387,7 @@ def main(page: ft.Page):
         cursor_color="#e1e3e3",
     )
 
-    quantityTF = ft.TextField(
+    orderQuantityTF = ft.TextField(
         label="Enter Quantity",
         expand=True,
         border_radius=10,
@@ -285,6 +411,7 @@ def main(page: ft.Page):
             },
             shape={ft.MaterialState.DEFAULT: RoundedRectangleBorder(radius=10)},
         ),
+        on_click=addNewData,
     )
 
     tabs = ft.Tabs(
@@ -324,6 +451,7 @@ def main(page: ft.Page):
                             ft.Row([stockCodeTF, addButton]),
                             ft.Row([stockCATTF]),
                             ft.Row([descriptionTF]),
+                            ft.Row([quantityTF]),
                             ft.Row([moqTF]),
                         ]
                     )
@@ -337,7 +465,7 @@ def main(page: ft.Page):
                         [
                             ft.Divider(color=ft.colors.BACKGROUND),
                             ft.Row([stockCodeTF, addButton]),
-                            ft.Row([quantityTF]),
+                            ft.Row([orderQuantityTF]),
                         ]
                     )
                 ),
