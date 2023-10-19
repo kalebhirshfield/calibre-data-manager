@@ -59,6 +59,7 @@ def main(page: ft.Page):
         global offset
         offset = 0
         addDataToTable(stockLevelsTable, fetchStockLevels, 10, stockLevelsTable.rows)
+        return fetchStockLevels(1)
 
     def tabSwitch(e):
         searchBar.visible = (
@@ -299,9 +300,7 @@ def main(page: ft.Page):
         data_text_style=ft.TextStyle(color="#e1e3e3"),
     )
 
-    addDataToTable(stockLevelsTable, fetchStockLevels, 10, stockLevelsTable.rows)
-
-    stockLevelsColumns, _ = fetchStockLevels(1)
+    stockLevelsColumns, _ = refreshTable(None)
 
     stockLevelsTable.columns = [
         ft.DataColumn(ft.Text(column)) for column in stockLevelsColumns
