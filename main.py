@@ -54,6 +54,12 @@ def main(page: ft.Page):
                 finally:
                     sem.release()
 
+    def refreshTable(e):
+        stockLevelsTable.rows = []
+        global offset
+        offset = 0
+        addDataToTable(stockLevelsTable, fetchStockLevels, 10, stockLevelsTable.rows)
+
     def tabSwitch(e):
         searchBar.visible = (
             True if tabs.selected_index == 0 or tabs.selected_index == 1 else False
@@ -227,6 +233,7 @@ def main(page: ft.Page):
             )
             connection.commit()
             page.update()
+        refreshTable(e)
 
     sem = threading.Semaphore()
 
