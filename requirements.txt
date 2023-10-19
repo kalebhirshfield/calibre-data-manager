@@ -1,4 +1,4 @@
 flet
-psycopg2-binary
+psycopg
 python-dotenv
 matplotlib

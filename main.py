@@ -1,6 +1,6 @@
 import os
 import threading
-import psycopg2
+import psycopg
 from dotenv import load_dotenv
 import flet as ft
 from flet import RoundedRectangleBorder
@@ -12,7 +12,7 @@ from datetime import date
 matplotlib.use("svg")
 
 load_dotenv()
-connection = psycopg2.connect(os.getenv("dbURL"))
+connection = psycopg.connect(os.getenv("dbURL"))
 cursor = connection.cursor()
 
 offset = 0
