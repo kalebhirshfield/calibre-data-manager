@@ -142,16 +142,6 @@ def main(page: ft.Page):
             description = str(descriptionTF.value)
             quantity = int(quantityTF.value)
             moq = int(moqTF.value)
-            cursor.execute(
-                "Select stock_id FROM stocklevels WHERE stock_code = %s",
-                (stockCode,),
-            )
-            stockID = int(cursor.fetchone()[0])
-            cursor.execute(
-                "SELECT on_order FROM stocklevels WHERE stock_code = %s",
-                (stockCode,),
-            )
-            onOrder = int(cursor.fetchone()[0])
             cursor.execute("SELECT * FROM products WHERE stock_code = %s", (stockCode,))
             if cursor.rowcount > 0:
                 cursor.execute(
@@ -175,6 +165,16 @@ def main(page: ft.Page):
                 )
                 connection.commit()
                 cursor.execute(
+                    "Select stock_id FROM stocklevels WHERE stock_code = %s",
+                    (stockCode,),
+                )
+                stockID = int(cursor.fetchone()[0])
+                cursor.execute(
+                    "SELECT on_order FROM stocklevels WHERE stock_code = %s",
+                    (stockCode,),
+                )
+                onOrder = int(cursor.fetchone()[0])
+                cursor.execute(
                     "UPDATE stockbalance SET balance = %s WHERE stock_id = %s",
                     (quantity + moq - onOrder, stockID),
                 )
@@ -190,6 +190,16 @@ def main(page: ft.Page):
                     (stockCode, moq, quantity),
                 )
                 connection.commit()
+                cursor.execute(
+                    "Select stock_id FROM stocklevels WHERE stock_code = %s",
+                    (stockCode,),
+                )
+                stockID = int(cursor.fetchone()[0])
+                cursor.execute(
+                    "SELECT on_order FROM stocklevels WHERE stock_code = %s",
+                    (stockCode,),
+                )
+                onOrder = int(cursor.fetchone()[0])
                 cursor.execute(
                     "INSERT INTO stockbalance(stock_id, balance) VALUES(%s, %s)",
                     (stockID, quantity + moq - onOrder),
