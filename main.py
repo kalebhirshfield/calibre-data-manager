@@ -461,7 +461,6 @@ def main(page: ft.Page):
         horizontal_lines=ft.border.BorderSide(1, "#00677f"),
         heading_text_style=ft.TextStyle(color="#001f2a", weight=ft.FontWeight.BOLD),
         data_text_style=ft.TextStyle(color="#001f2a"),
-        column_spacing=65,
     )
 
     stockLevelsColumns, _ = refreshTable(None)
@@ -479,7 +478,6 @@ def main(page: ft.Page):
         horizontal_lines=ft.border.BorderSide(1, "#00677f"),
         heading_text_style=ft.TextStyle(color="#001f2a", weight=ft.FontWeight.BOLD),
         data_text_style=ft.TextStyle(color="#001f2a"),
-        column_spacing=65,
         visible=False,
     )
 
@@ -660,7 +658,7 @@ def main(page: ft.Page):
                     ft.Column(
                         [
                             ft.Text(
-                                "Add Product",
+                                "Add / Edit Product",
                                 weight=ft.FontWeight.BOLD,
                                 color="#001f2a",
                             ),
