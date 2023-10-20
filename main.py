@@ -183,8 +183,8 @@ def main(page: ft.Page):
                     )
                     connection.commit()
                     cursor.execute(
-                        "INSERT INTO stocklevels(stock_code, moq, quantity) VALUES(%s, %s, %s)",
-                        (stockCode, moq, quantity),
+                        "INSERT INTO stocklevels(stock_code, moq, quantity, on_order) VALUES(%s, %s, %s, %s)",
+                        (stockCode, moq, quantity, 0),
                     )
                     connection.commit()
                     cursor.execute(
@@ -217,6 +217,7 @@ def main(page: ft.Page):
         quantityTF.value = ""
         moqTF.value = ""
         refreshTable(e)
+        search(e) if searchStockLevelsTable.visible == True else None
 
     def addOrderData(e):
         stockCode = str(stockCodeTF.value) if stockCodeTF.value != "" else None
@@ -336,6 +337,7 @@ def main(page: ft.Page):
         nameTF.value = ""
         addressTF.value = ""
         refreshTable(e)
+        search(e) if searchStockLevelsTable.visible == True else None
 
     def removeProductData(e):
         stock_code = str(stockCodeTF.value)
@@ -377,6 +379,7 @@ def main(page: ft.Page):
         quantityTF.value = ""
         moqTF.value = ""
         refreshTable(e)
+        search(e) if searchStockLevelsTable.visible == True else None
 
     def removeOrderData(e):
         stock_code = str(stockCodeTF.value)
@@ -398,6 +401,7 @@ def main(page: ft.Page):
         nameTF.value = ""
         addressTF.value = ""
         refreshTable(e)
+        search(e) if searchStockLevelsTable.visible == True else None
 
     sem = threading.Semaphore()
 
