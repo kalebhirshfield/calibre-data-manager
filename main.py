@@ -117,9 +117,7 @@ def main(page: ft.Page):
             page.update()
 
     def addProductData(e):
-        stockCode = (
-            str(stockCodeTF.value.strip().upper()) if stockCodeTF.value != "" else None
-        )
+        stockCode = str(stockCodeTF.value) if stockCodeTF.value != "" else None
         stockCAT = int(stockCATTF.value) if stockCATTF.value != "" else None
         description = str(descriptionTF.value) if descriptionTF.value != "" else None
         quantity = int(quantityTF.value) if quantityTF.value != "" else None
@@ -198,7 +196,7 @@ def main(page: ft.Page):
                         "SELECT on_order FROM stocklevels WHERE stock_code = %s",
                         (stockCode,),
                     )
-                    onOrder = int(cursor.fetchone()[0])
+                    onOrder = 0
                     cursor.execute(
                         "INSERT INTO stockbalance(stock_id, balance) VALUES(%s, %s)",
                         (stockID, quantity + moq - onOrder),
@@ -221,9 +219,7 @@ def main(page: ft.Page):
         refreshTable(e)
 
     def addOrderData(e):
-        stockCode = (
-            str(stockCodeTF.value.strip().upper()) if stockCodeTF.value != "" else None
-        )
+        stockCode = str(stockCodeTF.value) if stockCodeTF.value != "" else None
         quantity = int(orderQuantityTF.value) if orderQuantityTF.value != "" else None
         name = str(nameTF.value) if nameTF.value != "" else None
         address = str(addressTF.value) if addressTF.value != "" else None
@@ -342,7 +338,7 @@ def main(page: ft.Page):
         refreshTable(e)
 
     def removeProductData(e):
-        stock_code = str(stockCodeTF.value.strip().upper())
+        stock_code = str(stockCodeTF.value)
         if stock_code != "":
             cursor.execute(
                 "SELECT * FROM products WHERE stock_code = %s", (stock_code,)
@@ -383,7 +379,7 @@ def main(page: ft.Page):
         refreshTable(e)
 
     def removeOrderData(e):
-        stock_code = str(stockCodeTF.value.strip().upper())
+        stock_code = str(stockCodeTF.value)
         if stock_code != "":
             cursor.execute("SELECT * FROM orders WHERE stock_code = %s", (stock_code,))
             if cursor.rowcount > 0:
