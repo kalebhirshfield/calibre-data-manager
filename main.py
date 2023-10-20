@@ -661,7 +661,7 @@ def main(page: ft.Page):
         padding=10,
         bgcolor="#00677f",
         expand=True,
-        border_radius=ft.border_radius.only(top_left=10, top_right=10),
+        border_radius=10,
     )
 
     forms = ft.Container(
@@ -720,7 +720,7 @@ def main(page: ft.Page):
     )
 
     formPlaceholder = ft.Container(
-        ft.Column([ft.Divider(color="#70787c")]), padding=10, visible=False
+        ft.Column([ft.Divider(color="#dbe4e8")]), padding=10, visible=False
     )
 
     page.add(
