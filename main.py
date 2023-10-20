@@ -364,7 +364,6 @@ def main(page: ft.Page):
                     else:
                         showBanner(e, "Please fill in all fields")
                     page.update()
-
             else:
                 showBanner(e, "Stock Code does not exist")
                 page.update()
