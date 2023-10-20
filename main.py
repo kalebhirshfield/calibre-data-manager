@@ -146,73 +146,41 @@ def main(page: ft.Page):
 
     def addNewData(e):
         if tabs.selected_index == 2:
-            stockCode = str(stockCodeTF.value.strip().upper())
-            stockCAT = int(stockCATTF.value)
-            description = str(descriptionTF.value)
-            quantity = int(quantityTF.value)
-            moq = int(moqTF.value)
-            cursor.execute("SELECT * FROM products WHERE stock_code = %s", (stockCode,))
-            if cursor.rowcount > 0:
+            stockCode = (
+                str(stockCodeTF.value.strip().upper())
+                if stockCodeTF.value != ""
+                else None
+            )
+            stockCAT = int(stockCATTF.value) if stockCATTF.value != "" else None
+            description = (
+                str(descriptionTF.value) if descriptionTF.value != "" else None
+            )
+            quantity = int(quantityTF.value) if quantityTF.value != "" else None
+            moq = int(moqTF.value) if moqTF.value != "" else None
+            if stockCode != None:
                 cursor.execute(
-                    "UPDATE products SET stock_cat = %s WHERE stock_code = %s",
-                    (stockCAT, stockCode),
-                ) if stockCAT != "" else None
-                connection.commit()
-                cursor.execute(
-                    "UPDATE products SET description = %s WHERE stock_code = %s",
-                    (description, stockCode),
-                ) if description != "" else None
-                connection.commit()
-                cursor.execute(
-                    "UPDATE stocklevels SET quantity = %s WHERE stock_code = %s",
-                    (quantity, stockCode),
-                ) if quantity != "" else None
-                connection.commit()
-                cursor.execute(
-                    "UPDATE stocklevels SET moq = %s WHERE stock_code = %s",
-                    (moq, stockCode),
-                ) if moq != "" else None
-                connection.commit()
-                cursor.execute(
-                    "Select stock_id FROM stocklevels WHERE stock_code = %s",
-                    (stockCode,),
+                    "SELECT * FROM products WHERE stock_code = %s", (stockCode,)
                 )
-                stockID = int(cursor.fetchone()[0])
-                cursor.execute(
-                    "SELECT quantity FROM stocklevels WHERE stock_code = %s",
-                    (stockCode,),
-                )
-                quantity = int(cursor.fetchone()[0])
-                cursor.execute(
-                    "SELECT on_order FROM stocklevels WHERE stock_code = %s",
-                    (stockCode,),
-                )
-                onOrder = int(cursor.fetchone()[0])
-                cursor.execute(
-                    "SELECT moq FROM stocklevels WHERE stock_code = %s", (stockCode,)
-                )
-                moq = int(cursor.fetchone()[0])
-                cursor.execute(
-                    "UPDATE stockbalance SET balance = %s WHERE stock_id = %s",
-                    (quantity + moq - onOrder, stockID),
-                )
-                connection.commit()
-            else:
-                if (
-                    stockCAT != None
-                    and description != None
-                    and quantity != None
-                    and moq != None
-                ):
+                if cursor.rowcount > 0:
                     cursor.execute(
-                        "INSERT INTO products(stock_code, stock_cat, description) VALUES(%s, %s, %s)",
-                        (stockCode, stockCAT, description),
-                    )
+                        "UPDATE products SET stock_cat = %s WHERE stock_code = %s",
+                        (stockCAT, stockCode),
+                    ) if stockCAT != None else None
                     connection.commit()
                     cursor.execute(
-                        "INSERT INTO stocklevels(stock_code, moq, quantity) VALUES(%s, %s, %s)",
-                        (stockCode, moq, quantity),
-                    )
+                        "UPDATE products SET description = %s WHERE stock_code = %s",
+                        (description, stockCode),
+                    ) if description != None else None
+                    connection.commit()
+                    cursor.execute(
+                        "UPDATE stocklevels SET quantity = %s WHERE stock_code = %s",
+                        (quantity, stockCode),
+                    ) if quantity != None else None
+                    connection.commit()
+                    cursor.execute(
+                        "UPDATE stocklevels SET moq = %s WHERE stock_code = %s",
+                        (moq, stockCode),
+                    ) if moq != None else None
                     connection.commit()
                     cursor.execute(
                         "Select stock_id FROM stocklevels WHERE stock_code = %s",
@@ -220,78 +188,145 @@ def main(page: ft.Page):
                     )
                     stockID = int(cursor.fetchone()[0])
                     cursor.execute(
+                        "SELECT quantity FROM stocklevels WHERE stock_code = %s",
+                        (stockCode,),
+                    )
+                    quantity = int(cursor.fetchone()[0])
+                    cursor.execute(
                         "SELECT on_order FROM stocklevels WHERE stock_code = %s",
                         (stockCode,),
                     )
                     onOrder = int(cursor.fetchone()[0])
                     cursor.execute(
-                        "INSERT INTO stockbalance(stock_id, balance) VALUES(%s, %s)",
-                        (stockID, quantity + moq - onOrder),
+                        "SELECT moq FROM stocklevels WHERE stock_code = %s",
+                        (stockCode,),
+                    )
+                    moq = int(cursor.fetchone()[0])
+                    cursor.execute(
+                        "UPDATE stockbalance SET balance = %s WHERE stock_id = %s",
+                        (quantity + moq - onOrder, stockID),
                     )
                     connection.commit()
                 else:
-                    showBanner(e, "Please fill in all fields")
+                    if (
+                        stockCAT != None
+                        and description != None
+                        and quantity != None
+                        and moq != None
+                    ):
+                        cursor.execute(
+                            "INSERT INTO products(stock_code, stock_cat, description) VALUES(%s, %s, %s)",
+                            (stockCode, stockCAT, description),
+                        )
+                        connection.commit()
+                        cursor.execute(
+                            "INSERT INTO stocklevels(stock_code, moq, quantity) VALUES(%s, %s, %s)",
+                            (stockCode, moq, quantity),
+                        )
+                        connection.commit()
+                        cursor.execute(
+                            "Select stock_id FROM stocklevels WHERE stock_code = %s",
+                            (stockCode,),
+                        )
+                        stockID = int(cursor.fetchone()[0])
+                        cursor.execute(
+                            "SELECT on_order FROM stocklevels WHERE stock_code = %s",
+                            (stockCode,),
+                        )
+                        onOrder = int(cursor.fetchone()[0])
+                        cursor.execute(
+                            "INSERT INTO stockbalance(stock_id, balance) VALUES(%s, %s)",
+                            (stockID, quantity + moq - onOrder),
+                        )
+                        connection.commit()
+                    else:
+                        showBanner(
+                            e,
+                            "Please fill in all fields as there is no stock code match",
+                        )
+                    page.update()
+            elif stockCode == None:
+                showBanner(e, "Please fill in the stock code field")
                 page.update()
         elif tabs.selected_index == 3:
-            stockCode = str(stockCodeTF.value.strip().upper())
-            quantity = int(orderQuantityTF.value)
-            name = str(nameTF.value)
-            address = str(addressTF.value)
-            cursor.execute("SELECT * FROM customers WHERE name = %s", (name,))
-            if cursor.rowcount == 0 and address != "":
-                cursor.execute(
-                    "INSERT INTO customers(name, address) VALUES(%s, %s)",
-                    (name, address),
-                )
-                connection.commit()
-            elif cursor.rowcount == 0 and address == "":
-                showBanner(e, "Please fill in the address field")
-            cursor.execute("SELECT address FROM customers WHERE name = %s", (name,))
-            address = str(cursor.fetchone()[0])
-            if stockCode != "" and quantity != "" and name != "" and address != "":
-                cursor.execute(
-                    "SELECT customer_id FROM customers WHERE name = %s", (name,)
-                )
-                customerID = int(cursor.fetchone()[0])
-                cursor.execute(
-                    "INSERT INTO orders(stock_code, order_quantity, date, customer_id) VALUES(%s, %s, %s,%s)",
-                    (stockCode, quantity, date.today(), customerID),
-                )
-                connection.commit()
-                cursor.execute(
-                    "SELECT on_order FROM stocklevels WHERE stock_code = %s",
-                    (stockCode,),
-                )
-                onOrder = int(cursor.fetchone()[0])
-                cursor.execute(
-                    "UPDATE stocklevels SET on_order = %s WHERE stock_code = %s",
-                    (onOrder + quantity, stockCode),
-                )
-                connection.commit()
-                onOrder = onOrder + quantity
-                cursor.execute(
-                    "SELECT quantity FROM stocklevels WHERE stock_code = %s",
-                    (stockCode,),
-                )
-                quantity = int(cursor.fetchone()[0])
-                cursor.execute(
-                    "SELECT moq FROM stocklevels WHERE stock_code = %s",
-                    (stockCode,),
-                )
-                moq = int(cursor.fetchone()[0])
-                cursor.execute(
-                    "Select stock_id FROM stocklevels WHERE stock_code = %s",
-                    (stockCode,),
-                )
-                stockID = int(cursor.fetchone()[0])
-                cursor.execute(
-                    "UPDATE stockbalance SET balance = %s WHERE stock_id = %s",
-                    (quantity + moq - onOrder, stockID),
-                )
-                connection.commit()
+            stockCode = (
+                str(stockCodeTF.value.strip().upper())
+                if stockCodeTF.value != ""
+                else None
+            )
+            quantity = (
+                int(orderQuantityTF.value) if orderQuantityTF.value != "" else None
+            )
+            name = str(nameTF.value) if nameTF.value != "" else None
+            address = str(addressTF.value) if addressTF.value != "" else None
+            cursor.execute("SELECT * FROM products WHERE stock_code = %s", (stockCode,))
+            if cursor.rowcount > 0:
+                if name != None:
+                    cursor.execute("SELECT * FROM customers WHERE name = %s", (name,))
+                    if cursor.rowcount == 0 and address != None:
+                        cursor.execute(
+                            "INSERT INTO customers(name, address) VALUES(%s, %s)",
+                            (name, address),
+                        )
+                        connection.commit()
+                    elif cursor.rowcount == 0 and address == None:
+                        showBanner(e, "Please fill in the address field")
+                    cursor.execute(
+                        "SELECT address FROM customers WHERE name = %s", (name,)
+                    )
+                    address = str(cursor.fetchone()[0])
+                    if (
+                        stockCode != None
+                        and quantity != None
+                        and name != None
+                        and address != None
+                    ):
+                        cursor.execute(
+                            "SELECT customer_id FROM customers WHERE name = %s", (name,)
+                        )
+                        customerID = int(cursor.fetchone()[0])
+                        cursor.execute(
+                            "INSERT INTO orders(stock_code, order_quantity, date, customer_id) VALUES(%s, %s, %s,%s)",
+                            (stockCode, quantity, date.today(), customerID),
+                        )
+                        connection.commit()
+                        cursor.execute(
+                            "SELECT on_order FROM stocklevels WHERE stock_code = %s",
+                            (stockCode,),
+                        )
+                        onOrder = int(cursor.fetchone()[0])
+                        cursor.execute(
+                            "UPDATE stocklevels SET on_order = %s WHERE stock_code = %s",
+                            (onOrder + quantity, stockCode),
+                        )
+                        connection.commit()
+                        onOrder = onOrder + quantity
+                        cursor.execute(
+                            "SELECT quantity FROM stocklevels WHERE stock_code = %s",
+                            (stockCode,),
+                        )
+                        quantity = int(cursor.fetchone()[0])
+                        cursor.execute(
+                            "SELECT moq FROM stocklevels WHERE stock_code = %s",
+                            (stockCode,),
+                        )
+                        moq = int(cursor.fetchone()[0])
+                        cursor.execute(
+                            "Select stock_id FROM stocklevels WHERE stock_code = %s",
+                            (stockCode,),
+                        )
+                        stockID = int(cursor.fetchone()[0])
+                        cursor.execute(
+                            "UPDATE stockbalance SET balance = %s WHERE stock_id = %s",
+                            (quantity + moq - onOrder, stockID),
+                        )
+                        connection.commit()
+                    else:
+                        showBanner(e, "Please fill in all fields")
+                    page.update()
             else:
-                showBanner(e, "Please fill in all fields")
-            page.update()
+                showBanner(e, "Stock Code does not exist")
+                page.update()
         stockCodeTF.value = ""
         stockCATTF.value = ""
         descriptionTF.value = ""
