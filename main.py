@@ -123,6 +123,18 @@ def main(page: ft.Page):
                 tabs.tabs[1].content = ft.Container(chart, expand=True)
                 page.update()
 
+    def checkCustomerExists(e):
+        if tabs.selected_index == 3:
+            name = str(nameTF.value)
+            cursor.execute("SELECT * FROM customers WHERE name = %s", (name,))
+            if cursor.rowcount > 0:
+                addressTF.visible = False
+                addressTF.value = ""
+                page.update()
+            else:
+                addressTF.visible = True
+                page.update()
+
     def addNewData(e):
         if tabs.selected_index == 2:
             stockCode = str(stockCodeTF.value.strip().upper())
@@ -130,6 +142,16 @@ def main(page: ft.Page):
             description = str(descriptionTF.value)
             quantity = int(quantityTF.value)
             moq = int(moqTF.value)
+            cursor.execute(
+                "Select stock_id FROM stocklevels WHERE stock_code = %s",
+                (stockCode,),
+            )
+            stockID = int(cursor.fetchone()[0])
+            cursor.execute(
+                "SELECT on_order FROM stocklevels WHERE stock_code = %s",
+                (stockCode,),
+            )
+            onOrder = int(cursor.fetchone()[0])
             cursor.execute("SELECT * FROM products WHERE stock_code = %s", (stockCode,))
             if cursor.rowcount > 0:
                 cursor.execute(
@@ -153,16 +175,6 @@ def main(page: ft.Page):
                 )
                 connection.commit()
                 cursor.execute(
-                    "Select stock_id FROM stocklevels WHERE stock_code = %s",
-                    (stockCode,),
-                )
-                stockID = int(cursor.fetchone()[0])
-                cursor.execute(
-                    "SELECT on_order FROM stocklevels WHERE stock_code = %s",
-                    (stockCode,),
-                )
-                onOrder = int(cursor.fetchone()[0])
-                cursor.execute(
                     "UPDATE stockbalance SET balance = %s WHERE stock_id = %s",
                     (quantity + moq - onOrder, stockID),
                 )
@@ -179,16 +191,6 @@ def main(page: ft.Page):
                 )
                 connection.commit()
                 cursor.execute(
-                    "Select stock_id FROM stocklevels WHERE stock_code = %s",
-                    (stockCode,),
-                )
-                stockID = int(cursor.fetchone()[0])
-                cursor.execute(
-                    "SELECT on_order FROM stocklevels WHERE stock_code = %s",
-                    (stockCode,),
-                )
-                onOrder = int(cursor.fetchone()[0])
-                cursor.execute(
                     "INSERT INTO stockbalance(stock_id, balance) VALUES(%s, %s)",
                     (stockID, quantity + moq - onOrder),
                 )
@@ -197,9 +199,20 @@ def main(page: ft.Page):
         elif tabs.selected_index == 3:
             stockCode = str(stockCodeTF.value.strip().upper())
             quantity = int(orderQuantityTF.value)
+            name = str(nameTF.value)
+            address = str(addressTF.value)
+            cursor.execute("SELECT * FROM customers WHERE name = %s", (name,))
+            if cursor.rowcount == 0:
+                cursor.execute(
+                    "INSERT INTO customers(name, address) VALUES(%s, %s)",
+                    (name, address),
+                )
+                connection.commit()
+            cursor.execute("SELECT customer_id FROM customers WHERE name = %s", (name,))
+            customerID = int(cursor.fetchone()[0])
             cursor.execute(
-                "INSERT INTO orders(stock_code, order_quantity, date) VALUES(%s, %s, %s)",
-                (stockCode, quantity, date.today()),
+                "INSERT INTO orders(stock_code, order_quantity, date, customer_id) VALUES(%s, %s, %s,%s)",
+                (stockCode, quantity, date.today(), customerID),
             )
             connection.commit()
             cursor.execute(
@@ -234,6 +247,14 @@ def main(page: ft.Page):
             )
             connection.commit()
             page.update()
+        stockCodeTF.value = ""
+        stockCATTF.value = ""
+        descriptionTF.value = ""
+        quantityTF.value = ""
+        moqTF.value = ""
+        orderQuantityTF.value = ""
+        nameTF.value = ""
+        addressTF.value = ""
         refreshTable(e)
 
     sem = threading.Semaphore()
@@ -408,6 +429,38 @@ def main(page: ft.Page):
         cursor_color="#e1e3e3",
     )
 
+    nameTF = ft.TextField(
+        label="Enter Customer Name",
+        expand=True,
+        border_radius=10,
+        text_style=ft.TextStyle(color="#e1e3e3"),
+        label_style=ft.TextStyle(color="#e1e3e3"),
+        border_width=2,
+        focused_border_width=4,
+        border_color="#004f58",
+        focused_border_color="#d6ca00",
+        bgcolor=ft.colors.TRANSPARENT,
+        focused_bgcolor=ft.colors.TRANSPARENT,
+        cursor_color="#e1e3e3",
+        on_change=checkCustomerExists,
+    )
+
+    addressTF = ft.TextField(
+        label="Enter Customer Address",
+        expand=True,
+        border_radius=10,
+        text_style=ft.TextStyle(color="#e1e3e3"),
+        label_style=ft.TextStyle(color="#e1e3e3"),
+        border_width=2,
+        focused_border_width=4,
+        border_color="#004f58",
+        focused_border_color="#d6ca00",
+        bgcolor=ft.colors.TRANSPARENT,
+        focused_bgcolor=ft.colors.TRANSPARENT,
+        cursor_color="#e1e3e3",
+        visible=False,
+    )
+
     addButton = ft.IconButton(
         icon=ft.icons.ADD,
         style=ft.ButtonStyle(
@@ -472,6 +525,8 @@ def main(page: ft.Page):
                             ft.Divider(color=ft.colors.BACKGROUND),
                             ft.Row([stockCodeTF, addButton]),
                             ft.Row([orderQuantityTF]),
+                            ft.Row([nameTF]),
+                            ft.Row([addressTF]),
                         ]
                     )
                 ),
