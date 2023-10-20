@@ -377,6 +377,50 @@ def main(page: ft.Page):
         addressTF.value = ""
         refreshTable(e)
 
+    def removeData(e):
+        if tabs.selected_index == 2:
+            stock_code = str(stockCodeTF.value.strip().upper())
+            cursor.execute(
+                "SELECT * FROM products WHERE stock_code = %s", (stock_code,)
+            )
+            if cursor.rowcount > 0:
+                cursor.execute(
+                    "SELECT stock_id FROM stocklevels WHERE stock_code = %s",
+                    (stock_code,),
+                )
+                stock_id = int(cursor.fetchone()[0])
+                cursor.execute(
+                    "DELETE FROM stockbalance WHERE stock_id = %s", (stock_id,)
+                )
+                connection.commit()
+                cursor.execute(
+                    "DELETE FROM stocklevels WHERE stock_code = %s", (stock_code,)
+                )
+                connection.commit()
+                cursor.execute(
+                    "DELETE FROM orders WHERE stock_code = %s", (stock_code,)
+                )
+                connection.commit()
+                cursor.execute(
+                    "DELETE FROM products WHERE stock_code = %s", (stock_code,)
+                )
+                connection.commit()
+            else:
+                showBanner(e, "Stock Code does not exist")
+                page.update()
+        elif tabs.selected_index == 3:
+            stock_code = str(stockCodeTF.value.strip().upper())
+            cursor.execute("SELECT * FROM orders WHERE stock_code = %s", (stock_code,))
+            if cursor.rowcount > 0:
+                cursor.execute(
+                    "DELETE FROM orders WHERE stock_code = %s", (stock_code,)
+                )
+                connection.commit()
+            else:
+                showBanner(e, "Stock Code does not exist")
+                page.update()
+        refreshTable(e)
+
     sem = threading.Semaphore()
 
     page.title = "Calibre Data Manager"
@@ -606,7 +650,7 @@ def main(page: ft.Page):
             },
             shape={ft.MaterialState.DEFAULT: RoundedRectangleBorder(radius=10)},
         ),
-        on_click=addNewData,
+        on_click=removeData,
     )
 
     tabs = ft.Tabs(
