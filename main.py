@@ -380,44 +380,54 @@ def main(page: ft.Page):
     def removeData(e):
         if tabs.selected_index == 2:
             stock_code = str(stockCodeTF.value.strip().upper())
-            cursor.execute(
-                "SELECT * FROM products WHERE stock_code = %s", (stock_code,)
-            )
-            if cursor.rowcount > 0:
+            if stock_code != "":
                 cursor.execute(
-                    "SELECT stock_id FROM stocklevels WHERE stock_code = %s",
-                    (stock_code,),
+                    "SELECT * FROM products WHERE stock_code = %s", (stock_code,)
                 )
-                stock_id = int(cursor.fetchone()[0])
-                cursor.execute(
-                    "DELETE FROM stockbalance WHERE stock_id = %s", (stock_id,)
-                )
-                connection.commit()
-                cursor.execute(
-                    "DELETE FROM stocklevels WHERE stock_code = %s", (stock_code,)
-                )
-                connection.commit()
-                cursor.execute(
-                    "DELETE FROM orders WHERE stock_code = %s", (stock_code,)
-                )
-                connection.commit()
-                cursor.execute(
-                    "DELETE FROM products WHERE stock_code = %s", (stock_code,)
-                )
-                connection.commit()
+                if cursor.rowcount > 0:
+                    cursor.execute(
+                        "SELECT stock_id FROM stocklevels WHERE stock_code = %s",
+                        (stock_code,),
+                    )
+                    stock_id = int(cursor.fetchone()[0])
+                    cursor.execute(
+                        "DELETE FROM stockbalance WHERE stock_id = %s", (stock_id,)
+                    )
+                    connection.commit()
+                    cursor.execute(
+                        "DELETE FROM stocklevels WHERE stock_code = %s", (stock_code,)
+                    )
+                    connection.commit()
+                    cursor.execute(
+                        "DELETE FROM orders WHERE stock_code = %s", (stock_code,)
+                    )
+                    connection.commit()
+                    cursor.execute(
+                        "DELETE FROM products WHERE stock_code = %s", (stock_code,)
+                    )
+                    connection.commit()
+                else:
+                    showBanner(e, "Stock Code does not exist")
+                    page.update()
             else:
-                showBanner(e, "Stock Code does not exist")
+                showBanner(e, "Please fill in the stock code field")
                 page.update()
         elif tabs.selected_index == 3:
             stock_code = str(stockCodeTF.value.strip().upper())
-            cursor.execute("SELECT * FROM orders WHERE stock_code = %s", (stock_code,))
-            if cursor.rowcount > 0:
+            if stock_code != "":
                 cursor.execute(
-                    "DELETE FROM orders WHERE stock_code = %s", (stock_code,)
+                    "SELECT * FROM orders WHERE stock_code = %s", (stock_code,)
                 )
-                connection.commit()
+                if cursor.rowcount > 0:
+                    cursor.execute(
+                        "DELETE FROM orders WHERE stock_code = %s", (stock_code,)
+                    )
+                    connection.commit()
+                else:
+                    showBanner(e, "Stock Code does not exist")
+                    page.update()
             else:
-                showBanner(e, "Stock Code does not exist")
+                showBanner(e, "Please fill in the stock code field")
                 page.update()
         refreshTable(e)
 
