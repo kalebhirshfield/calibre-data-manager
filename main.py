@@ -117,7 +117,9 @@ def main(page: ft.Page):
             page.update()
 
     def addProductData(e):
-        stockCode = str(stockCodeTF.value) if stockCodeTF.value != "" else None
+        stockCode = (
+            str(stockCodeProductTF.value) if stockCodeProductTF.value != "" else None
+        )
         stockCAT = int(stockCATTF.value) if stockCATTF.value != "" else None
         description = str(descriptionTF.value) if descriptionTF.value != "" else None
         quantity = int(quantityTF.value) if quantityTF.value != "" else None
@@ -211,7 +213,7 @@ def main(page: ft.Page):
         elif stockCode == None:
             showBanner(e, "Please fill in the stock code field")
             page.update()
-        stockCodeTF.value = ""
+        stockCodeProductTF.value = ""
         stockCATTF.value = ""
         descriptionTF.value = ""
         quantityTF.value = ""
@@ -220,7 +222,9 @@ def main(page: ft.Page):
         search(e) if searchStockLevelsTable.visible == True else None
 
     def addOrderData(e):
-        stockCode = str(stockCodeTF.value) if stockCodeTF.value != "" else None
+        stockCode = (
+            str(stockCodeOrderTF.value) if stockCodeOrderTF.value != "" else None
+        )
         quantity = int(orderQuantityTF.value) if orderQuantityTF.value != "" else None
         name = str(nameTF.value) if nameTF.value != "" else None
         address = str(addressTF.value) if addressTF.value != "" else None
@@ -332,15 +336,16 @@ def main(page: ft.Page):
         else:
             showBanner(e, "Stock Code does not exist")
             page.update()
-        stockCodeTF.value = ""
+        stockCodeOrderTF.value = ""
         orderQuantityTF.value = ""
         nameTF.value = ""
         addressTF.value = ""
         refreshTable(e)
         search(e) if searchStockLevelsTable.visible == True else None
+        checkCustomerExists(e)
 
     def removeProductData(e):
-        stock_code = str(stockCodeTF.value)
+        stock_code = str(stockCodeProductTF.value)
         if stock_code != "":
             cursor.execute(
                 "SELECT * FROM products WHERE stock_code = %s", (stock_code,)
@@ -373,33 +378,11 @@ def main(page: ft.Page):
         else:
             showBanner(e, "Please fill in the stock code field")
             page.update()
-        stockCodeTF.value = ""
+        stockCodeProductTF.value = ""
         stockCATTF.value = ""
         descriptionTF.value = ""
         quantityTF.value = ""
         moqTF.value = ""
-        refreshTable(e)
-        search(e) if searchStockLevelsTable.visible == True else None
-
-    def removeOrderData(e):
-        stock_code = str(stockCodeTF.value)
-        if stock_code != "":
-            cursor.execute("SELECT * FROM orders WHERE stock_code = %s", (stock_code,))
-            if cursor.rowcount > 0:
-                cursor.execute(
-                    "DELETE FROM orders WHERE stock_code = %s", (stock_code,)
-                )
-                connection.commit()
-            else:
-                showBanner(e, "Stock Code does not exist")
-                page.update()
-        else:
-            showBanner(e, "Please fill in the stock code field")
-            page.update()
-        stockCodeTF.value = ""
-        orderQuantityTF.value = ""
-        nameTF.value = ""
-        addressTF.value = ""
         refreshTable(e)
         search(e) if searchStockLevelsTable.visible == True else None
 
@@ -500,7 +483,21 @@ def main(page: ft.Page):
         visible=False,
     )
 
-    stockCodeTF = ft.TextField(
+    stockCodeProductTF = ft.TextField(
+        hint_text="Stock Code",
+        hint_style=ft.TextStyle(color="#40484c"),
+        expand=True,
+        border_radius=10,
+        text_style=ft.TextStyle(color="#40484c"),
+        label_style=ft.TextStyle(color="#40484c"),
+        border_width=2,
+        focused_border_width=4,
+        border_color=ft.colors.TRANSPARENT,
+        bgcolor="#dbe4e8",
+        cursor_color="#40484c",
+    )
+
+    stockCodeOrderTF = ft.TextField(
         hint_text="Stock Code",
         hint_style=ft.TextStyle(color="#40484c"),
         expand=True,
@@ -637,14 +634,6 @@ def main(page: ft.Page):
         on_click=removeProductData,
     )
 
-    deleteOrderButton = ft.FloatingActionButton(
-        icon=ft.icons.DELETE_ROUNDED,
-        bgcolor="#00677f",
-        shape=RoundedRectangleBorder(radius=10),
-        mini=True,
-        on_click=removeOrderData,
-    )
-
     minimise = ft.IconButton(
         ft.icons.REMOVE_ROUNDED,
         style=ft.ButtonStyle(
@@ -676,7 +665,11 @@ def main(page: ft.Page):
                                 color="#001f2a",
                             ),
                             ft.Row(
-                                [stockCodeTF, addProductButton, deleteProductButton]
+                                [
+                                    stockCodeProductTF,
+                                    addProductButton,
+                                    deleteProductButton,
+                                ]
                             ),
                             ft.Row([descriptionTF]),
                             ft.Row([stockCATTF]),
@@ -699,7 +692,7 @@ def main(page: ft.Page):
                                 weight=ft.FontWeight.BOLD,
                                 color="#001f2a",
                             ),
-                            ft.Row([stockCodeTF, addOrderButton, deleteOrderButton]),
+                            ft.Row([stockCodeOrderTF, addOrderButton]),
                             ft.Row([orderQuantityTF]),
                             ft.Row([nameTF]),
                             ft.Row([addressTF]),
