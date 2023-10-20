@@ -26,7 +26,7 @@ def main(page: ft.Page):
             (limit, offset),
         )
         stockLevels = cursor.fetchall()
-        columnNames = [desc[0] for desc in cursor.description]
+        columnNames = [desc[0] for desc in cursor.description if desc[0] != "stock_id"]
         offset += limit
         return columnNames, stockLevels
 
@@ -546,11 +546,23 @@ def main(page: ft.Page):
     )
 
     addButton = ft.IconButton(
-        icon=ft.icons.ADD,
+        icon=ft.icons.ADD_ROUNDED,
         style=ft.ButtonStyle(
             color={
                 ft.MaterialState.DEFAULT: "#e1e3e3",
                 ft.MaterialState.HOVERED: "#d6ca00",
+            },
+            shape={ft.MaterialState.DEFAULT: RoundedRectangleBorder(radius=10)},
+        ),
+        on_click=addNewData,
+    )
+
+    deleteButton = ft.IconButton(
+        icon=ft.icons.DELETE_ROUNDED,
+        style=ft.ButtonStyle(
+            color={
+                ft.MaterialState.DEFAULT: "#e1e3e3",
+                ft.MaterialState.HOVERED: "#ba1a1a",
             },
             shape={ft.MaterialState.DEFAULT: RoundedRectangleBorder(radius=10)},
         ),
@@ -591,7 +603,7 @@ def main(page: ft.Page):
                     ft.Column(
                         [
                             ft.Divider(color=ft.colors.BACKGROUND),
-                            ft.Row([stockCodeTF, addButton]),
+                            ft.Row([stockCodeTF, addButton, deleteButton]),
                             ft.Row([stockCATTF]),
                             ft.Row([descriptionTF]),
                             ft.Row([quantityTF]),
@@ -607,7 +619,7 @@ def main(page: ft.Page):
                     ft.Column(
                         [
                             ft.Divider(color=ft.colors.BACKGROUND),
-                            ft.Row([stockCodeTF, addButton]),
+                            ft.Row([stockCodeTF, addButton, deleteButton]),
                             ft.Row([orderQuantityTF]),
                             ft.Row([nameTF]),
                             ft.Row([addressTF]),
