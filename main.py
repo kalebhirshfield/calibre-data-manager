@@ -53,7 +53,7 @@ def main(page: ft.Page):
         stockLevelsTable.rows = []
         global offset
         offset = 0
-        addDataToTable(stockLevelsTable, fetchStockLevels, 10, stockLevelsTable.rows)
+        addDataToTable(stockLevelsTable, fetchStockLevels, 20, stockLevelsTable.rows)
         return fetchStockLevels(1)
 
     def showBanner(e, content):
@@ -406,8 +406,8 @@ def main(page: ft.Page):
     sem = threading.Semaphore()
 
     page.title = "Calibre Data Manager"
-    page.window_width = 1000
-    page.window_min_width = 1000
+    page.window_width = 1200
+    page.window_min_width = 1200
     page.window_height = 900
     page.window_min_height = 900
     page.window_title_bar_hidden = True
