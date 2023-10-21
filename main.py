@@ -400,6 +400,7 @@ def main(page: ft.Page):
     page.window_min_height = 500
     page.window_height = 900
     page.bgcolor = "#fafcff"
+    page.padding = 15
     page.banner = ft.Banner(
         bgcolor="#ffdad6",
         leading=ft.Icon(ft.icons.WARNING_AMBER_ROUNDED, color="#410002"),
