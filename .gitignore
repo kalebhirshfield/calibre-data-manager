@@ -1,7 +1,4 @@
-*.venv
-*.env
-*.spec
 build
 dist
-theme.txt
-assets
+*.env
+*.spec

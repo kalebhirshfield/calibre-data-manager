@@ -1,0 +1,28 @@
+primary: #00677f
+on-primary: #ffffff
+primary-container: #b7eaff
+on-primary-container: #001f28
+
+secondary: #00677f
+on-secondary: #ffffff
+secondary-container: #b7eaff
+on-secondary-container: #001f28
+
+tertiary: #705d00
+on-tertiary: #ffffff
+tertiary-container: #ffe173
+on-tertiary-container: #221b00
+
+error: #ba1a1a
+on-error: #ffffff
+error-container: #ffdad6
+on-error-container: #410002
+
+background: #fafcff
+on-background: #001f2a
+surface: #fafcff
+on-surface: #001f2a
+
+outline: #70787c
+surface-varient: #dbe4e8
+on-surface-varient: #40484c
