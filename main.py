@@ -14,79 +14,81 @@ offset = 0
 
 
 def main(page: ft.Page):
-    def fetchStockLevels(limit):
+    def fetch_stock_levels(limit):
         global offset
         cursor.execute(
             "SELECT * FROM products d INNER JOIN stocklevels using(stock_code) INNER JOIN stockbalance using(stock_id) LIMIT %s OFFSET %s",
             (limit, offset),
         )
-        stockLevels = cursor.fetchall()
-        columnNames = [desc[0] for desc in cursor.description]
+        stock_levels = cursor.fetchall()
+        column_names = [desc[0] for desc in cursor.description]
         offset += limit
-        return columnNames, stockLevels
+        return column_names, stock_levels
 
-    def addDataToTable(table: ft.DataTable, fetchFunction, limit, rows):
-        columnNames, data = fetchFunction(limit=limit)
-        newRows = []
+    def add_data_to_table(table: ft.DataTable, fetch_function, limit, rows):
+        column_names, data = fetch_function(limit=limit)
+        new_rows = []
         for row in data:
-            newRows.append(
+            new_rows.append(
                 ft.DataRow(cells=[ft.DataCell(ft.Text(cell)) for cell in row])
             )
-        rows += newRows
+        rows += new_rows
         table.rows = rows
         page.update()
 
-    def onScroll(e: ft.OnScrollEvent):
+    def on_scroll(e: ft.OnScrollEvent):
         if e.pixels >= e.max_scroll_extent - 300:
             if sem.acquire(blocking=False):
                 try:
-                    addDataToTable(
-                        stockLevelsTable,
-                        fetchStockLevels,
+                    add_data_to_table(
+                        stock_levels_table,
+                        fetch_stock_levels,
                         10,
-                        stockLevelsTable.rows,
+                        stock_levels_table.rows,
                     )
                 finally:
                     sem.release()
 
-    def refreshTable(e):
-        stockLevelsTable.rows = []
+    def refresh_table(e):
+        stock_levels_table.rows = []
         global offset
         offset = 0
-        addDataToTable(stockLevelsTable, fetchStockLevels, 20, stockLevelsTable.rows)
-        return fetchStockLevels(1)
+        add_data_to_table(
+            stock_levels_table, fetch_stock_levels, 20, stock_levels_table.rows
+        )
+        return fetch_stock_levels(1)
 
-    def showBanner(e, content):
+    def show_banner(e, content):
         page.banner.open = True
         page.banner.content = ft.Text(content, color="#410002")
         page.update()
 
-    def closeBanner(e):
+    def close_banner(e):
         page.banner.open = False
         page.update()
 
-    def showSearchBar(e):
-        if searchBar.visible == False:
-            searchBar.visible = True
-            searchBar.focus()
+    def show_search_bar(e):
+        if search_bar.visible == False:
+            search_bar.visible = True
+            search_bar.focus()
             page.update()
-        elif searchBar.visible == True and searchBar.value == "":
-            searchBar.visible = False
+        elif search_bar.visible == True and search_bar.value == "":
+            search_bar.visible = False
             page.update()
 
     def search(e):
-        query = str(searchBar.value.strip())
+        query = str(search_bar.value.strip())
         if query != "":
-            searchStockLevelsTable.visible = True
-            stockLevelsTable.visible = False
-            columnsToSearch = [column for column in stockLevelsColumns]
+            search_stock_levels_table.visible = True
+            stock_levels_table.visible = False
+            columns_to_search = [column for column in stock_levels_columns]
             conditions = [
-                f"CAST({column} as TEXT) LIKE %s" for column in columnsToSearch
+                f"CAST({column} as TEXT) LIKE %s" for column in columns_to_search
             ]
             whereClause = " OR ".join(conditions)
             table = "products d INNER JOIN stocklevels using(stock_code) INNER JOIN stockbalance using(stock_id)"
             sqlQuery = f"SELECT * FROM {table} WHERE {whereClause}"
-            params = [f"%{query}%"] * len(columnsToSearch)
+            params = [f"%{query}%"] * len(columns_to_search)
             cursor.execute(sqlQuery, params)
             searchData = cursor.fetchall()
             rows = []
@@ -94,15 +96,15 @@ def main(page: ft.Page):
                 rows.append(
                     ft.DataRow(cells=[ft.DataCell(ft.Text(str(cell))) for cell in row])
                 )
-                searchStockLevelsTable.rows = rows
+                search_stock_levels_table.rows = rows
             page.update()
         else:
-            searchStockLevelsTable.rows = []
-            searchStockLevelsTable.visible = False
-            stockLevelsTable.visible = True
+            search_stock_levels_table.rows = []
+            search_stock_levels_table.visible = False
+            stock_levels_table.visible = True
             page.update()
 
-    def minimiseForms(e):
+    def minimise_forms(e):
         if forms.visible == True:
             forms.visible = False
             minimise.icon = ft.icons.ADD_ROUNDED
@@ -112,25 +114,27 @@ def main(page: ft.Page):
             minimise.icon = ft.icons.REMOVE_ROUNDED
             page.update()
 
-    def checkCustomerExists(e):
-        name = str(nameTF.value)
+    def check_customer_exists(e):
+        name = str(name_tf.value)
         cursor.execute("SELECT * FROM customers WHERE name = %s", (name,))
         if cursor.rowcount > 0:
-            addressTF.visible = False
-            addressTF.value = ""
+            address_tf.visible = False
+            address_tf.value = ""
             page.update()
         else:
-            addressTF.visible = True
+            address_tf.visible = True
             page.update()
 
     def addProductData(e):
         stockCode = (
-            str(stockCodeProductTF.value) if stockCodeProductTF.value != "" else None
+            str(stock_code_product_tf.value)
+            if stock_code_product_tf.value != ""
+            else None
         )
-        stockCAT = int(stockCATTF.value) if stockCATTF.value != "" else None
-        description = str(descriptionTF.value) if descriptionTF.value != "" else None
-        quantity = int(quantityTF.value) if quantityTF.value != "" else None
-        moq = int(moqTF.value) if moqTF.value != "" else None
+        stockCAT = int(stock_cat_tf.value) if stock_cat_tf.value != "" else None
+        description = str(description_tf.value) if description_tf.value != "" else None
+        quantity = int(quantity_tf.value) if quantity_tf.value != "" else None
+        moq = int(moq_tf.value) if moq_tf.value != "" else None
         if stockCode != None:
             cursor.execute("SELECT * FROM products WHERE stock_code = %s", (stockCode,))
             if cursor.rowcount > 0:
@@ -212,81 +216,83 @@ def main(page: ft.Page):
                     )
                     connection.commit()
                 else:
-                    showBanner(
+                    show_banner(
                         e,
                         "Please fill in all fields as there is no stock code match",
                     )
                 page.update()
         elif stockCode == None:
-            showBanner(e, "Please fill in the stock code field")
+            show_banner(e, "Please fill in the stock code field")
             page.update()
-        stockCodeProductTF.value = ""
-        stockCATTF.value = ""
-        descriptionTF.value = ""
-        quantityTF.value = ""
-        moqTF.value = ""
-        refreshTable(e)
-        search(e) if searchStockLevelsTable.visible == True else None
+        stock_code_product_tf.value = ""
+        stock_cat_tf.value = ""
+        description_tf.value = ""
+        quantity_tf.value = ""
+        moq_tf.value = ""
+        refresh_table(e)
+        search(e) if search_stock_levels_table.visible == True else None
 
     def addOrderData(e):
-        stockCode = (
-            str(stockCodeOrderTF.value) if stockCodeOrderTF.value != "" else None
+        stock_code = (
+            str(stock_code_order_tf.value) if stock_code_order_tf.value != "" else None
         )
-        quantity = int(orderQuantityTF.value) if orderQuantityTF.value != "" else None
-        name = str(nameTF.value) if nameTF.value != "" else None
-        address = str(addressTF.value) if addressTF.value != "" else None
-        cursor.execute("SELECT * FROM products WHERE stock_code = %s", (stockCode,))
+        quantity = (
+            int(order_quantity_tf.value) if order_quantity_tf.value != "" else None
+        )
+        name = str(name_tf.value) if name_tf.value != "" else None
+        address = str(address_tf.value) if address_tf.value != "" else None
+        cursor.execute("SELECT * FROM products WHERE stock_code = %s", (stock_code,))
         if cursor.rowcount > 0:
             cursor.execute("SELECT * FROM customers WHERE name = %s", (name,))
             if cursor.rowcount > 0:
-                if stockCode != None and quantity != None and name != None:
+                if stock_code != None and quantity != None and name != None:
                     cursor.execute(
                         "SELECT customer_id FROM customers WHERE name = %s",
                         (name,),
                     )
-                    customerID = int(cursor.fetchone()[0])
+                    customer_id = int(cursor.fetchone()[0])
                     cursor.execute(
                         "INSERT INTO orders(stock_code, order_quantity, date, customer_id) VALUES(%s, %s, %s,%s)",
-                        (stockCode, quantity, date.today(), customerID),
+                        (stock_code, quantity, date.today(), customer_id),
                     )
                     connection.commit()
                     cursor.execute(
                         "SELECT on_order FROM stocklevels WHERE stock_code = %s",
-                        (stockCode,),
+                        (stock_code,),
                     )
-                    onOrder = int(cursor.fetchone()[0])
+                    on_order = int(cursor.fetchone()[0])
                     cursor.execute(
                         "UPDATE stocklevels SET on_order = %s WHERE stock_code = %s",
-                        (onOrder + quantity, stockCode),
+                        (on_order + quantity, stock_code),
                     )
                     connection.commit()
-                    onOrder = onOrder + quantity
+                    on_order = on_order + quantity
                     cursor.execute(
                         "SELECT quantity FROM stocklevels WHERE stock_code = %s",
-                        (stockCode,),
+                        (stock_code,),
                     )
                     quantity = int(cursor.fetchone()[0])
                     cursor.execute(
                         "SELECT moq FROM stocklevels WHERE stock_code = %s",
-                        (stockCode,),
+                        (stock_code,),
                     )
                     moq = int(cursor.fetchone()[0])
                     cursor.execute(
                         "Select stock_id FROM stocklevels WHERE stock_code = %s",
-                        (stockCode,),
+                        (stock_code,),
                     )
-                    stockID = int(cursor.fetchone()[0])
+                    stock_id = int(cursor.fetchone()[0])
                     cursor.execute(
                         "UPDATE stockbalance SET balance = %s WHERE stock_id = %s",
-                        (quantity + moq - onOrder, stockID),
+                        (quantity + moq - on_order, stock_id),
                     )
                     connection.commit()
                 else:
-                    showBanner(e, "Please fill in all fields")
+                    show_banner(e, "Please fill in all fields")
                 page.update()
             else:
                 if (
-                    stockCode != None
+                    stock_code != None
                     and quantity != None
                     and name != None
                     and address != None
@@ -300,59 +306,59 @@ def main(page: ft.Page):
                         "SELECT customer_id FROM customers WHERE name = %s",
                         (name,),
                     )
-                    customerID = int(cursor.fetchone()[0])
+                    customer_id = int(cursor.fetchone()[0])
                     cursor.execute(
                         "INSERT INTO orders(stock_code, order_quantity, date, customer_id) VALUES(%s, %s, %s,%s)",
-                        (stockCode, quantity, date.today(), customerID),
+                        (stock_code, quantity, date.today(), customer_id),
                     )
                     connection.commit()
                     cursor.execute(
                         "SELECT on_order FROM stocklevels WHERE stock_code = %s",
-                        (stockCode,),
+                        (stock_code,),
                     )
-                    onOrder = int(cursor.fetchone()[0])
+                    on_order = int(cursor.fetchone()[0])
                     cursor.execute(
                         "UPDATE stocklevels SET on_order = %s WHERE stock_code = %s",
-                        (onOrder + quantity, stockCode),
+                        (on_order + quantity, stock_code),
                     )
                     connection.commit()
-                    onOrder = onOrder + quantity
+                    on_order = on_order + quantity
                     cursor.execute(
                         "SELECT quantity FROM stocklevels WHERE stock_code = %s",
-                        (stockCode,),
+                        (stock_code,),
                     )
                     quantity = int(cursor.fetchone()[0])
                     cursor.execute(
                         "SELECT moq FROM stocklevels WHERE stock_code = %s",
-                        (stockCode,),
+                        (stock_code,),
                     )
                     moq = int(cursor.fetchone()[0])
                     cursor.execute(
                         "Select stock_id FROM stocklevels WHERE stock_code = %s",
-                        (stockCode,),
+                        (stock_code,),
                     )
-                    stockID = int(cursor.fetchone()[0])
+                    stock_id = int(cursor.fetchone()[0])
                     cursor.execute(
                         "UPDATE stockbalance SET balance = %s WHERE stock_id = %s",
-                        (quantity + moq - onOrder, stockID),
+                        (quantity + moq - on_order, stock_id),
                     )
                     connection.commit()
                 else:
-                    showBanner(e, "Please fill in all fields")
+                    show_banner(e, "Please fill in all fields")
                 page.update()
         else:
-            showBanner(e, "Stock Code does not exist")
+            show_banner(e, "Stock Code does not exist")
             page.update()
-        stockCodeOrderTF.value = ""
-        orderQuantityTF.value = ""
-        nameTF.value = ""
-        addressTF.value = ""
-        refreshTable(e)
-        search(e) if searchStockLevelsTable.visible == True else None
-        checkCustomerExists(e)
+        stock_code_order_tf.value = ""
+        order_quantity_tf.value = ""
+        name_tf.value = ""
+        address_tf.value = ""
+        refresh_table(e)
+        search(e) if search_stock_levels_table.visible == True else None
+        check_customer_exists(e)
 
     def removeProductData(e):
-        stock_code = str(stockCodeProductTF.value)
+        stock_code = str(stock_code_product_tf.value)
         if stock_code != "":
             cursor.execute(
                 "SELECT * FROM products WHERE stock_code = %s", (stock_code,)
@@ -380,18 +386,18 @@ def main(page: ft.Page):
                 )
                 connection.commit()
             else:
-                showBanner(e, "Stock Code does not exist")
+                show_banner(e, "Stock Code does not exist")
                 page.update()
         else:
-            showBanner(e, "Please fill in the stock code field")
+            show_banner(e, "Please fill in the stock code field")
             page.update()
-        stockCodeProductTF.value = ""
-        stockCATTF.value = ""
-        descriptionTF.value = ""
-        quantityTF.value = ""
-        moqTF.value = ""
-        refreshTable(e)
-        search(e) if searchStockLevelsTable.visible == True else None
+        stock_code_product_tf.value = ""
+        stock_cat_tf.value = ""
+        description_tf.value = ""
+        quantity_tf.value = ""
+        moq_tf.value = ""
+        refresh_table(e)
+        search(e) if search_stock_levels_table.visible == True else None
 
     sem = threading.Semaphore()
 
@@ -413,12 +419,12 @@ def main(page: ft.Page):
                     },
                     shape={ft.MaterialState.DEFAULT: RoundedRectangleBorder(radius=8)},
                 ),
-                on_click=closeBanner,
+                on_click=close_banner,
             )
         ],
     )
 
-    titleArea = ft.Container(
+    title_area = ft.Container(
         ft.Text(
             "Calibre Data Manager",
             color="#ffffff",
@@ -428,16 +434,16 @@ def main(page: ft.Page):
         padding=10,
     )
 
-    searchButton = ft.IconButton(
+    search_button = ft.IconButton(
         icon=ft.icons.SEARCH_ROUNDED,
         style=ft.ButtonStyle(
             color={ft.MaterialState.DEFAULT: "#ffffff"},
             shape={ft.MaterialState.DEFAULT: RoundedRectangleBorder(radius=8)},
         ),
-        on_click=showSearchBar,
+        on_click=show_search_bar,
     )
 
-    searchBar = ft.TextField(
+    search_bar = ft.TextField(
         expand=True,
         border_radius=8,
         text_style=ft.TextStyle(color="#dbe4e8"),
@@ -450,7 +456,7 @@ def main(page: ft.Page):
         visible=False,
     )
 
-    stockLevelsTable = ft.DataTable(
+    stock_levels_table = ft.DataTable(
         border=ft.border.all(2, "#dbe4e8"),
         border_radius=8,
         divider_thickness=0,
@@ -461,15 +467,15 @@ def main(page: ft.Page):
         width=10000,
     )
 
-    stockLevelsColumns, _ = refreshTable(None)
+    stock_levels_columns, _ = refresh_table(None)
 
-    stockLevelsTable.columns = [
+    stock_levels_table.columns = [
         ft.DataColumn(ft.Text(str(column).capitalize().replace("_", " ")))
-        for column in stockLevelsColumns
+        for column in stock_levels_columns
     ]
 
-    searchStockLevelsTable = ft.DataTable(
-        columns=[ft.DataColumn(ft.Text(column)) for column in stockLevelsColumns],
+    search_stock_levels_table = ft.DataTable(
+        columns=[ft.DataColumn(ft.Text(column)) for column in stock_levels_columns],
         border=ft.border.all(2, "#dbe4e8"),
         border_radius=8,
         divider_thickness=0,
@@ -480,7 +486,7 @@ def main(page: ft.Page):
         visible=False,
     )
 
-    stockCodeProductTF = ft.TextField(
+    stock_code_product_tf = ft.TextField(
         hint_text="Stock Code",
         hint_style=ft.TextStyle(color="#40484c"),
         expand=True,
@@ -494,7 +500,7 @@ def main(page: ft.Page):
         cursor_color="#40484c",
     )
 
-    stockCodeOrderTF = ft.TextField(
+    stock_code_order_tf = ft.TextField(
         hint_text="Stock Code",
         hint_style=ft.TextStyle(color="#40484c"),
         expand=True,
@@ -508,7 +514,7 @@ def main(page: ft.Page):
         cursor_color="#40484c",
     )
 
-    stockCATTF = ft.TextField(
+    stock_cat_tf = ft.TextField(
         hint_text="Stock CAT",
         hint_style=ft.TextStyle(color="#40484c"),
         expand=True,
@@ -522,7 +528,7 @@ def main(page: ft.Page):
         cursor_color="#40484c",
     )
 
-    descriptionTF = ft.TextField(
+    description_tf = ft.TextField(
         hint_text="Description",
         hint_style=ft.TextStyle(color="#40484c"),
         expand=True,
@@ -536,7 +542,7 @@ def main(page: ft.Page):
         cursor_color="#40484c",
     )
 
-    quantityTF = ft.TextField(
+    quantity_tf = ft.TextField(
         hint_text="Quantity",
         hint_style=ft.TextStyle(color="#40484c"),
         expand=True,
@@ -550,7 +556,7 @@ def main(page: ft.Page):
         cursor_color="#40484c",
     )
 
-    moqTF = ft.TextField(
+    moq_tf = ft.TextField(
         hint_text="MOQ",
         hint_style=ft.TextStyle(color="#40484c"),
         expand=True,
@@ -564,7 +570,7 @@ def main(page: ft.Page):
         cursor_color="#40484c",
     )
 
-    orderQuantityTF = ft.TextField(
+    order_quantity_tf = ft.TextField(
         hint_text="Quantity",
         hint_style=ft.TextStyle(color="#40484c"),
         expand=True,
@@ -578,7 +584,7 @@ def main(page: ft.Page):
         cursor_color="#40484c",
     )
 
-    nameTF = ft.TextField(
+    name_tf = ft.TextField(
         hint_text="Customer Name",
         hint_style=ft.TextStyle(color="#40484c"),
         expand=True,
@@ -590,10 +596,10 @@ def main(page: ft.Page):
         border_color=ft.colors.TRANSPARENT,
         bgcolor="#dbe4e8",
         cursor_color="#40484c",
-        on_change=checkCustomerExists,
+        on_change=check_customer_exists,
     )
 
-    addressTF = ft.TextField(
+    address_tf = ft.TextField(
         hint_text="Customer Address",
         hint_style=ft.TextStyle(color="#40484c"),
         expand=True,
@@ -607,7 +613,7 @@ def main(page: ft.Page):
         cursor_color="#40484c",
     )
 
-    addProductButton = ft.FloatingActionButton(
+    add_product_button = ft.FloatingActionButton(
         icon=ft.icons.ADD_ROUNDED,
         bgcolor="#00677f",
         shape=RoundedRectangleBorder(radius=8),
@@ -615,7 +621,7 @@ def main(page: ft.Page):
         on_click=addProductData,
     )
 
-    addOrderButton = ft.FloatingActionButton(
+    add_order_button = ft.FloatingActionButton(
         icon=ft.icons.ADD_ROUNDED,
         bgcolor="#00677f",
         shape=RoundedRectangleBorder(radius=8),
@@ -623,7 +629,7 @@ def main(page: ft.Page):
         on_click=addOrderData,
     )
 
-    deleteProductButton = ft.FloatingActionButton(
+    delete_product_button = ft.FloatingActionButton(
         icon=ft.icons.DELETE_ROUNDED,
         bgcolor="#00677f",
         shape=RoundedRectangleBorder(radius=8),
@@ -639,11 +645,11 @@ def main(page: ft.Page):
             },
             shape={ft.MaterialState.DEFAULT: RoundedRectangleBorder(radius=8)},
         ),
-        on_click=minimiseForms,
+        on_click=minimise_forms,
     )
 
     bar = ft.Container(
-        ft.Row([titleArea, searchButton, searchBar], alignment="center"),
+        ft.Row([title_area, search_button, search_bar], alignment="center"),
         padding=10,
         bgcolor="#00677f",
         expand=True,
@@ -667,14 +673,14 @@ def main(page: ft.Page):
                             ),
                             ft.Row(
                                 [
-                                    stockCodeProductTF,
-                                    addProductButton,
-                                    deleteProductButton,
+                                    stock_code_product_tf,
+                                    add_product_button,
+                                    delete_product_button,
                                 ]
                             ),
-                            ft.Row([descriptionTF]),
-                            ft.Row([stockCATTF]),
-                            ft.Row([quantityTF, moqTF]),
+                            ft.Row([description_tf]),
+                            ft.Row([stock_cat_tf]),
+                            ft.Row([quantity_tf, moq_tf]),
                         ],
                         expand=True,
                         scroll=True,
@@ -694,10 +700,10 @@ def main(page: ft.Page):
                                 weight=ft.FontWeight.BOLD,
                                 color="#001f2a",
                             ),
-                            ft.Row([stockCodeOrderTF, addOrderButton]),
-                            ft.Row([orderQuantityTF]),
-                            ft.Row([nameTF]),
-                            ft.Row([addressTF]),
+                            ft.Row([stock_code_order_tf, add_order_button]),
+                            ft.Row([order_quantity_tf]),
+                            ft.Row([name_tf]),
+                            ft.Row([address_tf]),
                         ],
                         expand=True,
                         scroll=True,
@@ -715,25 +721,23 @@ def main(page: ft.Page):
         alignment=ft.Alignment(0, -1),
     )
 
-    formPlaceholder = ft.Container(
-        ft.Column([minimise, ft.Divider(color="#dbe4e8", thickness=2)]),
-        padding=10,
-    )
-
     page.add(
         ft.Container(bar),
         forms,
-        formPlaceholder,
+        ft.Container(
+            ft.Column([minimise, ft.Divider(color="#dbe4e8", thickness=2)]),
+            padding=10,
+        ),
         ft.Column(
             [
                 ft.Container(
-                    stockLevelsTable,
+                    stock_levels_table,
                     clip_behavior=ft.ClipBehavior.HARD_EDGE,
                 ),
-                searchStockLevelsTable,
+                search_stock_levels_table,
             ],
             scroll=True,
-            on_scroll=onScroll,
+            on_scroll=on_scroll,
             expand=True,
             alignment=ft.Alignment(0, -1),
         ),
