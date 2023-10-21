@@ -65,6 +65,15 @@ def main(page: ft.Page):
         page.banner.open = False
         page.update()
 
+    def showSearchBar(e):
+        if searchBar.visible == False:
+            searchBar.visible = True
+            searchBar.focus()
+            page.update()
+        elif searchBar.visible == True and searchBar.value == "":
+            searchBar.visible = False
+            page.update()
+
     def search(e):
         query = str(searchBar.value.strip())
         if query != "":
@@ -418,15 +427,25 @@ def main(page: ft.Page):
         padding=10,
     )
 
+    searchButton = ft.IconButton(
+        icon=ft.icons.SEARCH_ROUNDED,
+        style=ft.ButtonStyle(
+            color={ft.MaterialState.DEFAULT: "#ffffff"},
+            shape={ft.MaterialState.DEFAULT: RoundedRectangleBorder(radius=8)},
+        ),
+        on_click=showSearchBar,
+    )
+
     searchBar = ft.TextField(
-        prefix_icon=ft.icons.SEARCH_ROUNDED,
         expand=True,
         border_radius=8,
         text_style=ft.TextStyle(color="#dbe4e8"),
         border_color=ft.colors.TRANSPARENT,
         cursor_color="#dbe4e8",
+        bgcolor="#00566f",
         content_padding=10,
         on_change=search,
+        visible=False,
     )
 
     stockLevelsTable = ft.DataTable(
@@ -443,7 +462,8 @@ def main(page: ft.Page):
     stockLevelsColumns, _ = refreshTable(None)
 
     stockLevelsTable.columns = [
-        ft.DataColumn(ft.Text(column)) for column in stockLevelsColumns
+        ft.DataColumn(ft.Text(str(column).capitalize().replace("_", " ")))
+        for column in stockLevelsColumns
     ]
 
     searchStockLevelsTable = ft.DataTable(
@@ -621,7 +641,7 @@ def main(page: ft.Page):
     )
 
     bar = ft.Container(
-        ft.Row([titleArea, searchBar]),
+        ft.Row([titleArea, searchButton, searchBar], alignment="center"),
         padding=10,
         bgcolor="#00677f",
         expand=True,
@@ -661,7 +681,7 @@ def main(page: ft.Page):
                     border=ft.border.all(2, "#dbe4e8"),
                     border_radius=8,
                     padding=15,
-                    height=340,
+                    height=320,
                     clip_behavior=ft.ClipBehavior.HARD_EDGE,
                 ),
                 ft.Container(
@@ -684,7 +704,7 @@ def main(page: ft.Page):
                     border=ft.border.all(2, "#dbe4e8"),
                     border_radius=8,
                     padding=15,
-                    height=340,
+                    height=320,
                     clip_behavior=ft.ClipBehavior.HARD_EDGE,
                 ),
             ]
