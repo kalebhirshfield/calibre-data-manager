@@ -446,6 +446,7 @@ def main(page: ft.Page):
         bgcolor="#00566f",
         content_padding=10,
         on_change=search,
+        height=40,
         visible=False,
     )
 
