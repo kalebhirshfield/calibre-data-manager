@@ -7,7 +7,7 @@ from flet import RoundedRectangleBorder
 from datetime import date
 
 load_dotenv()
-connection = psycopg.connect(os.getenv("dbURL"))
+connection = psycopg.connect(os.getenv("DATABASE_URL"))
 cursor = connection.cursor()
 
 offset = 0
