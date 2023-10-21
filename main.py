@@ -400,8 +400,8 @@ def main(page: ft.Page):
 
     sem = threading.Semaphore()
 
-    page.window_min_width = 1000
-    page.window_width = 1200
+    page.window_min_width = 950
+    page.window_width = 950
     page.window_min_height = 500
     page.window_height = 900
     page.bgcolor = "#fafcff"
