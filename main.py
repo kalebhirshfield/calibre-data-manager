@@ -17,11 +17,11 @@ def main(page: ft.Page):
     def fetch_stock_levels(limit):
         global offset
         cursor.execute(
-            "SELECT * FROM products d INNER JOIN stocklevels using(stock_code) INNER JOIN stockbalance using(stock_id) LIMIT %s OFFSET %s",
+            "SELECT d.*, stocklevels.quantity, stocklevels.moq, stocklevels.on_order, stockbalance.balance FROM products d INNER JOIN stocklevels using(stock_code) INNER JOIN stockbalance using(stock_id) LIMIT %s OFFSET %s",
             (limit, offset),
         )
         stock_levels = cursor.fetchall()
-        column_names = [desc[0] for desc in cursor.description]
+        column_names = [desc[0] for desc in cursor.description if desc[0] != "stock_id"]
         offset += limit
         return column_names, stock_levels
 
@@ -85,11 +85,10 @@ def main(page: ft.Page):
             conditions = [
                 f"CAST({column} as TEXT) LIKE %s" for column in columns_to_search
             ]
-            whereClause = " OR ".join(conditions)
-            table = "products d INNER JOIN stocklevels using(stock_code) INNER JOIN stockbalance using(stock_id)"
-            sqlQuery = f"SELECT * FROM {table} WHERE {whereClause}"
+            where_clause = " OR ".join(conditions)
+            sql_query = f"SELECT d.*, stocklevels.quantity, stocklevels.moq, stocklevels.on_order, stockbalance.balance FROM products d INNER JOIN stocklevels using(stock_code) INNER JOIN stockbalance using(stock_id) WHERE {where_clause}"
             params = [f"%{query}%"] * len(columns_to_search)
-            cursor.execute(sqlQuery, params)
+            cursor.execute(sql_query, params)
             searchData = cursor.fetchall()
             rows = []
             for row in searchData:
@@ -475,7 +474,10 @@ def main(page: ft.Page):
     ]
 
     search_stock_levels_table = ft.DataTable(
-        columns=[ft.DataColumn(ft.Text(column)) for column in stock_levels_columns],
+        columns=[
+            ft.DataColumn(ft.Text(str(column).capitalize().replace("_", " ")))
+            for column in stock_levels_columns
+        ],
         border=ft.border.all(2, "#dbe4e8"),
         border_radius=8,
         divider_thickness=0,
@@ -484,6 +486,7 @@ def main(page: ft.Page):
         heading_text_style=ft.TextStyle(color="#001f2a", weight=ft.FontWeight.BOLD),
         data_text_style=ft.TextStyle(color="#001f2a"),
         visible=False,
+        width=10000,
     )
 
     stock_code_product_tf = ft.TextField(
