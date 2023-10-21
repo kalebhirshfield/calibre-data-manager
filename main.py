@@ -725,8 +725,7 @@ def main(page: ft.Page):
         ft.Container(bar),
         forms,
         ft.Container(
-            ft.Column([minimise, ft.Divider(color="#dbe4e8", thickness=2)]),
-            padding=10,
+            ft.Column([ft.Divider(color="#dbe4e8", thickness=2), minimise]), padding=10
         ),
         ft.Column(
             [
