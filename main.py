@@ -72,8 +72,10 @@ def main(page: ft.Page):
             search_bar.visible = True
             search_bar.focus()
             page.update()
-        elif search_bar.visible == True and search_bar.value == "":
+        elif search_bar.visible == True:
             search_bar.visible = False
+            search_bar.value = ""
+            search(e)
             page.update()
 
     def search(e):
