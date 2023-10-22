@@ -32,6 +32,7 @@ def main(page: ft.Page):
         description_tf.value = row[2]
         quantity_tf.value = row[3]
         moq_tf.value = row[4]
+        stock_code_order_tf.value = row[0]
         page.update()
 
     def add_data_to_table(table: ft.DataTable, fetch_function, limit, rows):
