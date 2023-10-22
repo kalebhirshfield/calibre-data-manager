@@ -142,7 +142,22 @@ def main(page: ft.Page):
             address_tf.visible = True
             page.update()
 
-    def addProductData(e):
+    def clear_product_form(e):
+        stock_code_product_tf.value = ""
+        stock_cat_tf.value = ""
+        description_tf.value = ""
+        quantity_tf.value = ""
+        moq_tf.value = ""
+        page.update()
+
+    def clear_order_form(e):
+        stock_code_order_tf.value = ""
+        order_quantity_tf.value = ""
+        name_tf.value = ""
+        address_tf.value = ""
+        page.update()
+
+    def add_product_data(e):
         stockCode = (
             str(stock_code_product_tf.value)
             if stock_code_product_tf.value != ""
@@ -241,15 +256,11 @@ def main(page: ft.Page):
         elif stockCode == None:
             show_banner(e, "Please fill in the stock code field")
             page.update()
-        stock_code_product_tf.value = ""
-        stock_cat_tf.value = ""
-        description_tf.value = ""
-        quantity_tf.value = ""
-        moq_tf.value = ""
+        clear_product_form(e)
         refresh_table(e)
         search(e) if search_stock_levels_table.visible == True else None
 
-    def addOrderData(e):
+    def add_order_data(e):
         stock_code = (
             str(stock_code_order_tf.value) if stock_code_order_tf.value != "" else None
         )
@@ -366,15 +377,12 @@ def main(page: ft.Page):
         else:
             show_banner(e, "Stock Code does not exist")
             page.update()
-        stock_code_order_tf.value = ""
-        order_quantity_tf.value = ""
-        name_tf.value = ""
-        address_tf.value = ""
+        clear_order_form(e)
         refresh_table(e)
         search(e) if search_stock_levels_table.visible == True else None
         check_customer_exists(e)
 
-    def removeProductData(e):
+    def remove_product_data(e):
         stock_code = str(stock_code_product_tf.value)
         if stock_code != "":
             cursor.execute(
@@ -408,11 +416,7 @@ def main(page: ft.Page):
         else:
             show_banner(e, "Please fill in the stock code field")
             page.update()
-        stock_code_product_tf.value = ""
-        stock_cat_tf.value = ""
-        description_tf.value = ""
-        quantity_tf.value = ""
-        moq_tf.value = ""
+        clear_product_form(e)
         refresh_table(e)
         search(e) if search_stock_levels_table.visible == True else None
 
@@ -639,7 +643,7 @@ def main(page: ft.Page):
         bgcolor="#00677f",
         shape=RoundedRectangleBorder(radius=8),
         mini=True,
-        on_click=addProductData,
+        on_click=add_product_data,
     )
 
     add_order_button = ft.FloatingActionButton(
@@ -647,7 +651,7 @@ def main(page: ft.Page):
         bgcolor="#00677f",
         shape=RoundedRectangleBorder(radius=8),
         mini=True,
-        on_click=addOrderData,
+        on_click=add_order_data,
     )
 
     delete_product_button = ft.FloatingActionButton(
@@ -655,7 +659,23 @@ def main(page: ft.Page):
         bgcolor="#00677f",
         shape=RoundedRectangleBorder(radius=8),
         mini=True,
-        on_click=removeProductData,
+        on_click=remove_product_data,
+    )
+
+    clear_product_form_button = ft.FloatingActionButton(
+        icon=ft.icons.CLEAR_ROUNDED,
+        bgcolor="#00677f",
+        shape=RoundedRectangleBorder(radius=8),
+        mini=True,
+        on_click=clear_product_form,
+    )
+
+    clear_order_form_button = ft.FloatingActionButton(
+        icon=ft.icons.CLEAR_ROUNDED,
+        bgcolor="#00677f",
+        shape=RoundedRectangleBorder(radius=8),
+        mini=True,
+        on_click=clear_order_form,
     )
 
     minimise = ft.IconButton(
@@ -697,6 +717,7 @@ def main(page: ft.Page):
                                     stock_code_product_tf,
                                     add_product_button,
                                     delete_product_button,
+                                    clear_product_form_button,
                                 ]
                             ),
                             ft.Row([description_tf]),
@@ -721,7 +742,13 @@ def main(page: ft.Page):
                                 weight=ft.FontWeight.BOLD,
                                 color="#001f2a",
                             ),
-                            ft.Row([stock_code_order_tf, add_order_button]),
+                            ft.Row(
+                                [
+                                    stock_code_order_tf,
+                                    add_order_button,
+                                    clear_order_form_button,
+                                ]
+                            ),
                             ft.Row([order_quantity_tf]),
                             ft.Row([name_tf]),
                             ft.Row([address_tf]),
