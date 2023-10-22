@@ -420,6 +420,64 @@ def main(page: ft.Page):
         refresh_table(e)
         search(e) if search_stock_levels_table.visible == True else None
 
+    def remove_order_data(e):
+        try:
+            order_id = int(order_id_tf.value)
+        except:
+            order_id = None
+        if order_id != None:
+            cursor.execute("SELECT * FROM orders WHERE order_id = %s", (order_id,))
+            if cursor.rowcount > 0:
+                cursor.execute(
+                    "SELECT stock_code FROM orders WHERE order_id = %s", (order_id,)
+                )
+                stock_code = str(cursor.fetchone()[0])
+                cursor.execute(
+                    "SELECT on_order FROM stocklevels WHERE stock_code = %s",
+                    (stock_code,),
+                )
+                on_order = int(cursor.fetchone()[0])
+                cursor.execute(
+                    "SELECT order_quantity FROM orders WHERE order_id = %s", (order_id,)
+                )
+                order_quantity = int(cursor.fetchone()[0])
+                cursor.execute(
+                    "UPDATE stocklevels SET on_order = %s WHERE stock_code = %s",
+                    (on_order - order_quantity, stock_code),
+                )
+                connection.commit()
+                on_order = on_order - order_quantity
+                cursor.execute(
+                    "SELECT quantity FROM stocklevels WHERE stock_code = %s",
+                    (stock_code,),
+                )
+                quantity = int(cursor.fetchone()[0])
+                cursor.execute(
+                    "SELECT moq FROM stocklevels WHERE stock_code = %s", (stock_code,)
+                )
+                moq = int(cursor.fetchone()[0])
+                cursor.execute(
+                    "Select stock_id FROM stocklevels WHERE stock_code = %s",
+                    (stock_code,),
+                )
+                stock_id = int(cursor.fetchone()[0])
+                cursor.execute(
+                    "UPDATE stockbalance SET balance = %s WHERE stock_id = %s",
+                    (quantity + moq - on_order, stock_id),
+                )
+                connection.commit()
+                cursor.execute("DELETE FROM orders WHERE order_id = %s", (order_id,))
+                connection.commit()
+            else:
+                show_banner(e, "Order ID does not exist")
+                page.update()
+        else:
+            show_banner(e, "Please fill in the order ID field")
+            page.update()
+        clear_order_form(e)
+        refresh_table(e)
+        search(e) if search_stock_levels_table.visible == True else None
+
     sem = threading.Semaphore()
 
     page.window_min_width = 950
@@ -485,6 +543,7 @@ def main(page: ft.Page):
         horizontal_lines=ft.border.BorderSide(1, "#00677f"),
         heading_text_style=ft.TextStyle(color="#001f2a", weight=ft.FontWeight.BOLD),
         data_text_style=ft.TextStyle(color="#001f2a"),
+        data_row_color={ft.MaterialState.HOVERED: "#dbe4e8"},
         width=10000,
     )
 
@@ -507,6 +566,7 @@ def main(page: ft.Page):
         horizontal_lines=ft.border.BorderSide(1, "#00677f"),
         heading_text_style=ft.TextStyle(color="#001f2a", weight=ft.FontWeight.BOLD),
         data_text_style=ft.TextStyle(color="#001f2a"),
+        data_row_color={ft.MaterialState.HOVERED: "#dbe4e8"},
         visible=False,
         width=10000,
     )
@@ -527,6 +587,20 @@ def main(page: ft.Page):
 
     stock_code_order_tf = ft.TextField(
         hint_text="Stock Code",
+        hint_style=ft.TextStyle(color="#40484c"),
+        expand=True,
+        border_radius=8,
+        text_style=ft.TextStyle(color="#40484c"),
+        label_style=ft.TextStyle(color="#40484c"),
+        border_width=2,
+        focused_border_width=4,
+        border_color=ft.colors.TRANSPARENT,
+        bgcolor="#dbe4e8",
+        cursor_color="#40484c",
+    )
+
+    order_id_tf = ft.TextField(
+        hint_text="Order ID",
         hint_style=ft.TextStyle(color="#40484c"),
         expand=True,
         border_radius=8,
@@ -662,6 +736,14 @@ def main(page: ft.Page):
         on_click=remove_product_data,
     )
 
+    delete_order_button = ft.FloatingActionButton(
+        icon=ft.icons.DELETE_ROUNDED,
+        bgcolor="#00677f",
+        shape=RoundedRectangleBorder(radius=8),
+        mini=True,
+        on_click=remove_order_data,
+    )
+
     clear_product_form_button = ft.FloatingActionButton(
         icon=ft.icons.CLEAR_ROUNDED,
         bgcolor="#00677f",
@@ -744,12 +826,13 @@ def main(page: ft.Page):
                             ),
                             ft.Row(
                                 [
-                                    stock_code_order_tf,
+                                    order_id_tf,
                                     add_order_button,
+                                    delete_order_button,
                                     clear_order_form_button,
                                 ]
                             ),
-                            ft.Row([order_quantity_tf]),
+                            ft.Row([stock_code_order_tf, order_quantity_tf]),
                             ft.Row([name_tf]),
                             ft.Row([address_tf]),
                         ],
