@@ -731,6 +731,7 @@ def main(page: ft.Page):
         bgcolor="#00677f",
         shape=RoundedRectangleBorder(radius=8),
         mini=True,
+        tooltip="Add Product",
         on_click=add_product_data,
     )
 
@@ -739,6 +740,7 @@ def main(page: ft.Page):
         bgcolor="#00677f",
         shape=RoundedRectangleBorder(radius=8),
         mini=True,
+        tooltip="Add Order",
         on_click=add_order_data,
     )
 
@@ -747,6 +749,7 @@ def main(page: ft.Page):
         bgcolor="#00677f",
         shape=RoundedRectangleBorder(radius=8),
         mini=True,
+        tooltip="Delete Product",
         on_click=remove_product_data,
     )
 
@@ -755,6 +758,7 @@ def main(page: ft.Page):
         bgcolor="#00677f",
         shape=RoundedRectangleBorder(radius=8),
         mini=True,
+        tooltip="Delete Order",
         on_click=remove_order_data,
     )
 
@@ -763,6 +767,7 @@ def main(page: ft.Page):
         bgcolor="#00677f",
         shape=RoundedRectangleBorder(radius=8),
         mini=True,
+        tooltip="Clear Form",
         on_click=clear_product_form,
     )
 
@@ -771,6 +776,7 @@ def main(page: ft.Page):
         bgcolor="#00677f",
         shape=RoundedRectangleBorder(radius=8),
         mini=True,
+        tooltip="Clear Form",
         on_click=clear_order_form,
     )
 
@@ -782,6 +788,7 @@ def main(page: ft.Page):
             },
             shape={ft.MaterialState.DEFAULT: RoundedRectangleBorder(radius=8)},
         ),
+        tooltip="Minimise Forms",
         on_click=minimise_forms,
     )
 
