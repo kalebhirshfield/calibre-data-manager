@@ -11,6 +11,7 @@ connection = psycopg.connect(os.getenv("DATABASE_URL"))
 cursor = connection.cursor()
 
 offset = 0
+current_row = 0
 
 
 def main(page: ft.Page):
@@ -25,12 +26,23 @@ def main(page: ft.Page):
         offset += limit
         return column_names, stock_levels
 
+    def load_data(row):
+        stock_code_product_tf.value = row[0]
+        stock_cat_tf.value = row[1]
+        description_tf.value = row[2]
+        quantity_tf.value = row[3]
+        moq_tf.value = row[4]
+        page.update()
+
     def add_data_to_table(table: ft.DataTable, fetch_function, limit, rows):
         column_names, data = fetch_function(limit=limit)
         new_rows = []
         for row in data:
             new_rows.append(
-                ft.DataRow(cells=[ft.DataCell(ft.Text(cell)) for cell in row])
+                ft.DataRow(
+                    cells=[ft.DataCell(ft.Text(cell)) for cell in row],
+                    on_select_changed=lambda e, row=row: load_data(row),
+                )
             )
         rows += new_rows
         table.rows = rows
@@ -95,7 +107,10 @@ def main(page: ft.Page):
             rows = []
             for row in searchData:
                 rows.append(
-                    ft.DataRow(cells=[ft.DataCell(ft.Text(str(cell))) for cell in row])
+                    ft.DataRow(
+                        cells=[ft.DataCell(ft.Text(str(cell))) for cell in row],
+                        on_select_changed=lambda e, row=row: load_data(row),
+                    )
                 )
                 search_stock_levels_table.rows = rows
             page.update()
