@@ -731,7 +731,7 @@ def main(page: ft.Page):
         bgcolor="#00677f",
         shape=RoundedRectangleBorder(radius=8),
         mini=True,
-        tooltip="Add Product",
+        tooltip="Add / Edit Product",
         on_click=add_product_data,
     )
 
@@ -788,7 +788,7 @@ def main(page: ft.Page):
             },
             shape={ft.MaterialState.DEFAULT: RoundedRectangleBorder(radius=8)},
         ),
-        tooltip="Minimise Forms",
+        tooltip="Minimise / Maximise Forms",
         on_click=minimise_forms,
     )
 
