@@ -74,7 +74,7 @@ def main(page: ft.Page):
 
     def show_banner(e, content):
         page.banner.open = True
-        page.banner.content = ft.Text(content, color="#410002")
+        page.banner.content = ft.Text(content, color=ft.colors.ON_ERROR_CONTAINER)
         page.update()
 
     def close_banner(e):
@@ -497,17 +497,49 @@ def main(page: ft.Page):
     page.window_width = 950
     page.window_min_height = 500
     page.window_height = 900
-    page.bgcolor = "#fafcff"
     page.padding = 15
+    page.theme = ft.Theme(
+        visual_density=ft.ThemeVisualDensity.COMPACT,
+        use_material3=True,
+        color_scheme=ft.ColorScheme(
+            primary="#00677f",
+            on_primary="#ffffff",
+            primary_container="#b6eaff",
+            on_primary_container="#001f28",
+            secondary="#4c626a",
+            on_secondary="#ffffff",
+            secondary_container="#cfe6f1",
+            on_secondary_container="#071e26",
+            tertiary="#5a5c7e",
+            on_tertiary="#ffffff",
+            tertiary_container="#e0e0ff",
+            on_tertiary_container="#171937",
+            error="#ba1a1a",
+            on_error="#ffffff",
+            error_container="#ffdad6",
+            on_error_container="#410002",
+            background="#fbfcfe",
+            on_background="#191c1d",
+            surface="#fbfcfe",
+            on_surface="#191c1d",
+            outline="#70787c",
+            surface_variant="#dbe4e8",
+            on_surface_variant="#40484c",
+        ),
+    )
+    page.theme_mode = ft.ThemeMode.LIGHT
+    page.bgcolor = ft.colors.BACKGROUND
     page.banner = ft.Banner(
-        bgcolor="#ffdad6",
-        leading=ft.Icon(ft.icons.WARNING_AMBER_ROUNDED, color="#410002"),
+        bgcolor=ft.colors.ERROR_CONTAINER,
+        leading=ft.Icon(
+            ft.icons.WARNING_AMBER_ROUNDED, color=ft.colors.ON_ERROR_CONTAINER
+        ),
         actions=[
             ft.IconButton(
                 icon=ft.icons.CLOSE,
                 style=ft.ButtonStyle(
                     color={
-                        ft.MaterialState.DEFAULT: "#410002",
+                        ft.MaterialState.DEFAULT: ft.colors.ON_ERROR_CONTAINER,
                     },
                     shape={ft.MaterialState.DEFAULT: RoundedRectangleBorder(radius=8)},
                 ),
@@ -519,7 +551,7 @@ def main(page: ft.Page):
     title_area = ft.Container(
         ft.Text(
             "Calibre Data Manager",
-            color="#ffffff",
+            color=ft.colors.ON_PRIMARY,
             text_align="left",
             weight=ft.FontWeight.BOLD,
         ),
@@ -529,7 +561,7 @@ def main(page: ft.Page):
     search_button = ft.IconButton(
         icon=ft.icons.SEARCH_ROUNDED,
         style=ft.ButtonStyle(
-            color={ft.MaterialState.DEFAULT: "#ffffff"},
+            color={ft.MaterialState.DEFAULT: ft.colors.ON_PRIMARY},
             shape={ft.MaterialState.DEFAULT: RoundedRectangleBorder(radius=8)},
         ),
         on_click=show_search_bar,
@@ -538,10 +570,10 @@ def main(page: ft.Page):
     search_bar = ft.TextField(
         expand=True,
         border_radius=8,
-        text_style=ft.TextStyle(color="#dbe4e8"),
+        text_style=ft.TextStyle(color=ft.colors.ON_PRIMARY_CONTAINER),
         border_color=ft.colors.TRANSPARENT,
-        cursor_color="#dbe4e8",
-        bgcolor="#00566f",
+        cursor_color=ft.colors.ON_PRIMARY_CONTAINER,
+        bgcolor=ft.colors.PRIMARY_CONTAINER,
         content_padding=10,
         on_change=search,
         height=40,
@@ -549,14 +581,16 @@ def main(page: ft.Page):
     )
 
     stock_levels_table = ft.DataTable(
-        border=ft.border.all(2, "#dbe4e8"),
+        border=ft.border.all(2, ft.colors.SURFACE_VARIANT),
         border_radius=8,
         divider_thickness=0,
         heading_row_height=75,
-        horizontal_lines=ft.border.BorderSide(1, "#00677f"),
-        heading_text_style=ft.TextStyle(color="#001f2a", weight=ft.FontWeight.BOLD),
-        data_text_style=ft.TextStyle(color="#001f2a"),
-        data_row_color={ft.MaterialState.HOVERED: "#dbe4e8"},
+        horizontal_lines=ft.border.BorderSide(1, ft.colors.PRIMARY),
+        heading_text_style=ft.TextStyle(
+            color=ft.colors.ON_BACKGROUND, weight=ft.FontWeight.BOLD
+        ),
+        data_text_style=ft.TextStyle(color=ft.colors.ON_BACKGROUND),
+        data_row_color={ft.MaterialState.HOVERED: ft.colors.SURFACE_VARIANT},
         width=10000,
     )
 
@@ -572,230 +606,232 @@ def main(page: ft.Page):
             ft.DataColumn(ft.Text(str(column).capitalize().replace("_", " ")))
             for column in stock_levels_columns
         ],
-        border=ft.border.all(2, "#dbe4e8"),
+        border=ft.border.all(2, ft.colors.SURFACE_VARIANT),
         border_radius=8,
         divider_thickness=0,
         heading_row_height=75,
-        horizontal_lines=ft.border.BorderSide(1, "#00677f"),
-        heading_text_style=ft.TextStyle(color="#001f2a", weight=ft.FontWeight.BOLD),
-        data_text_style=ft.TextStyle(color="#001f2a"),
-        data_row_color={ft.MaterialState.HOVERED: "#dbe4e8"},
+        horizontal_lines=ft.border.BorderSide(1, ft.colors.PRIMARY),
+        heading_text_style=ft.TextStyle(
+            color=ft.colors.ON_BACKGROUND, weight=ft.FontWeight.BOLD
+        ),
+        data_text_style=ft.TextStyle(color=ft.colors.ON_BACKGROUND),
+        data_row_color={ft.MaterialState.HOVERED: ft.colors.SURFACE_VARIANT},
         visible=False,
         width=10000,
     )
 
     stock_code_product_tf = ft.TextField(
         hint_text="Stock Code",
-        hint_style=ft.TextStyle(color="#40484c"),
+        hint_style=ft.TextStyle(color=ft.colors.ON_SURFACE_VARIANT),
         expand=True,
         border_radius=8,
-        text_style=ft.TextStyle(color="#40484c"),
-        label_style=ft.TextStyle(color="#40484c"),
-        border_width=2,
-        focused_border_width=4,
+        text_style=ft.TextStyle(color=ft.colors.ON_SURFACE_VARIANT),
+        label_style=ft.TextStyle(color=ft.colors.ON_SURFACE_VARIANT),
         border_color=ft.colors.TRANSPARENT,
-        bgcolor="#dbe4e8",
-        cursor_color="#40484c",
+        bgcolor=ft.colors.SURFACE_VARIANT,
+        cursor_color=ft.colors.ON_SURFACE_VARIANT,
         on_change=check_stock_code_exists,
     )
 
     stock_code_order_tf = ft.TextField(
         hint_text="Stock Code",
-        hint_style=ft.TextStyle(color="#40484c"),
+        hint_style=ft.TextStyle(color=ft.colors.ON_SURFACE_VARIANT),
         expand=True,
         border_radius=8,
-        text_style=ft.TextStyle(color="#40484c"),
-        label_style=ft.TextStyle(color="#40484c"),
-        border_width=2,
-        focused_border_width=4,
+        text_style=ft.TextStyle(color=ft.colors.ON_SURFACE_VARIANT),
+        label_style=ft.TextStyle(color=ft.colors.ON_SURFACE_VARIANT),
         border_color=ft.colors.TRANSPARENT,
-        bgcolor="#dbe4e8",
-        cursor_color="#40484c",
+        bgcolor=ft.colors.SURFACE_VARIANT,
+        cursor_color=ft.colors.ON_SURFACE_VARIANT,
     )
 
     order_id_tf = ft.TextField(
         hint_text="Order ID",
-        hint_style=ft.TextStyle(color="#40484c"),
+        hint_style=ft.TextStyle(color=ft.colors.ON_SURFACE_VARIANT),
         expand=True,
         border_radius=8,
-        text_style=ft.TextStyle(color="#40484c"),
-        label_style=ft.TextStyle(color="#40484c"),
-        border_width=2,
-        focused_border_width=4,
+        text_style=ft.TextStyle(color=ft.colors.ON_SURFACE_VARIANT),
+        label_style=ft.TextStyle(color=ft.colors.ON_SURFACE_VARIANT),
         border_color=ft.colors.TRANSPARENT,
-        bgcolor="#dbe4e8",
-        cursor_color="#40484c",
+        bgcolor=ft.colors.SURFACE_VARIANT,
+        cursor_color=ft.colors.ON_SURFACE_VARIANT,
     )
 
     stock_cat_tf = ft.TextField(
         hint_text="Stock CAT",
-        hint_style=ft.TextStyle(color="#40484c"),
+        hint_style=ft.TextStyle(color=ft.colors.ON_SURFACE_VARIANT),
         expand=True,
         border_radius=8,
-        text_style=ft.TextStyle(color="#40484c"),
-        label_style=ft.TextStyle(color="#40484c"),
-        border_width=2,
-        focused_border_width=4,
+        text_style=ft.TextStyle(color=ft.colors.ON_SURFACE_VARIANT),
+        label_style=ft.TextStyle(color=ft.colors.ON_SURFACE_VARIANT),
         border_color=ft.colors.TRANSPARENT,
-        bgcolor="#dbe4e8",
-        cursor_color="#40484c",
+        bgcolor=ft.colors.SURFACE_VARIANT,
+        cursor_color=ft.colors.ON_SURFACE_VARIANT,
     )
 
     description_tf = ft.TextField(
         hint_text="Description",
-        hint_style=ft.TextStyle(color="#40484c"),
+        hint_style=ft.TextStyle(color=ft.colors.ON_SURFACE_VARIANT),
         expand=True,
         border_radius=8,
-        text_style=ft.TextStyle(color="#40484c"),
-        label_style=ft.TextStyle(color="#40484c"),
-        border_width=2,
-        focused_border_width=4,
+        text_style=ft.TextStyle(color=ft.colors.ON_SURFACE_VARIANT),
+        label_style=ft.TextStyle(color=ft.colors.ON_SURFACE_VARIANT),
         border_color=ft.colors.TRANSPARENT,
-        bgcolor="#dbe4e8",
-        cursor_color="#40484c",
+        bgcolor=ft.colors.SURFACE_VARIANT,
+        cursor_color=ft.colors.ON_SURFACE_VARIANT,
     )
 
     quantity_tf = ft.TextField(
         hint_text="Quantity",
-        hint_style=ft.TextStyle(color="#40484c"),
+        hint_style=ft.TextStyle(color=ft.colors.ON_SURFACE_VARIANT),
         expand=True,
         border_radius=8,
-        text_style=ft.TextStyle(color="#40484c"),
-        label_style=ft.TextStyle(color="#40484c"),
-        border_width=2,
-        focused_border_width=4,
+        text_style=ft.TextStyle(color=ft.colors.ON_SURFACE_VARIANT),
+        label_style=ft.TextStyle(color=ft.colors.ON_SURFACE_VARIANT),
         border_color=ft.colors.TRANSPARENT,
-        bgcolor="#dbe4e8",
-        cursor_color="#40484c",
+        bgcolor=ft.colors.SURFACE_VARIANT,
+        cursor_color=ft.colors.ON_SURFACE_VARIANT,
     )
 
     moq_tf = ft.TextField(
         hint_text="MOQ",
-        hint_style=ft.TextStyle(color="#40484c"),
+        hint_style=ft.TextStyle(color=ft.colors.ON_SURFACE_VARIANT),
         expand=True,
         border_radius=8,
-        text_style=ft.TextStyle(color="#40484c"),
-        label_style=ft.TextStyle(color="#40484c"),
-        border_width=2,
-        focused_border_width=4,
+        text_style=ft.TextStyle(color=ft.colors.ON_SURFACE_VARIANT),
+        label_style=ft.TextStyle(color=ft.colors.ON_SURFACE_VARIANT),
         border_color=ft.colors.TRANSPARENT,
-        bgcolor="#dbe4e8",
-        cursor_color="#40484c",
+        bgcolor=ft.colors.SURFACE_VARIANT,
+        cursor_color=ft.colors.ON_SURFACE_VARIANT,
     )
 
     order_quantity_tf = ft.TextField(
         hint_text="Quantity",
-        hint_style=ft.TextStyle(color="#40484c"),
+        hint_style=ft.TextStyle(color=ft.colors.ON_SURFACE_VARIANT),
         expand=True,
         border_radius=8,
-        text_style=ft.TextStyle(color="#40484c"),
-        label_style=ft.TextStyle(color="#40484c"),
-        border_width=2,
-        focused_border_width=4,
+        text_style=ft.TextStyle(color=ft.colors.ON_SURFACE_VARIANT),
+        label_style=ft.TextStyle(color=ft.colors.ON_SURFACE_VARIANT),
         border_color=ft.colors.TRANSPARENT,
-        bgcolor="#dbe4e8",
-        cursor_color="#40484c",
+        bgcolor=ft.colors.SURFACE_VARIANT,
+        cursor_color=ft.colors.ON_SURFACE_VARIANT,
     )
 
     name_tf = ft.TextField(
         hint_text="Customer Name",
-        hint_style=ft.TextStyle(color="#40484c"),
+        hint_style=ft.TextStyle(color=ft.colors.ON_SURFACE_VARIANT),
         expand=True,
         border_radius=8,
-        text_style=ft.TextStyle(color="#40484c"),
-        label_style=ft.TextStyle(color="#40484c"),
-        border_width=2,
-        focused_border_width=4,
+        text_style=ft.TextStyle(color=ft.colors.ON_SURFACE_VARIANT),
+        label_style=ft.TextStyle(color=ft.colors.ON_SURFACE_VARIANT),
         border_color=ft.colors.TRANSPARENT,
-        bgcolor="#dbe4e8",
-        cursor_color="#40484c",
+        bgcolor=ft.colors.SURFACE_VARIANT,
+        cursor_color=ft.colors.ON_SURFACE_VARIANT,
         on_change=check_customer_exists,
     )
 
     address_tf = ft.TextField(
         hint_text="Customer Address",
-        hint_style=ft.TextStyle(color="#40484c"),
+        hint_style=ft.TextStyle(color=ft.colors.ON_SURFACE_VARIANT),
         expand=True,
         border_radius=8,
-        text_style=ft.TextStyle(color="#40484c"),
-        label_style=ft.TextStyle(color="#40484c"),
-        border_width=2,
-        focused_border_width=4,
+        text_style=ft.TextStyle(color=ft.colors.ON_SURFACE_VARIANT),
+        label_style=ft.TextStyle(color=ft.colors.ON_SURFACE_VARIANT),
         border_color=ft.colors.TRANSPARENT,
-        bgcolor="#dbe4e8",
-        cursor_color="#40484c",
+        bgcolor=ft.colors.SURFACE_VARIANT,
+        cursor_color=ft.colors.ON_SURFACE_VARIANT,
     )
 
-    add_product_button = ft.FloatingActionButton(
-        icon=ft.icons.ADD_ROUNDED,
-        bgcolor="#00677f",
-        shape=RoundedRectangleBorder(radius=8),
-        mini=True,
-        tooltip="Add / Edit Product",
-        on_click=add_product_data,
+    add_product_button = ft.Container(
+        ft.IconButton(
+            icon=ft.icons.ADD_ROUNDED,
+            style=ft.ButtonStyle(
+                color={ft.MaterialState.DEFAULT: ft.colors.ON_PRIMARY},
+                shape={ft.MaterialState.DEFAULT: RoundedRectangleBorder(radius=8)},
+            ),
+            on_click=add_product_data,
+        ),
+        bgcolor=ft.colors.PRIMARY,
+        border_radius=8,
     )
 
-    add_order_button = ft.FloatingActionButton(
-        icon=ft.icons.ADD_ROUNDED,
-        bgcolor="#00677f",
-        shape=RoundedRectangleBorder(radius=8),
-        mini=True,
-        tooltip="Add Order",
-        on_click=add_order_data,
+    add_order_button = ft.Container(
+        ft.IconButton(
+            icon=ft.icons.ADD_ROUNDED,
+            style=ft.ButtonStyle(
+                color={ft.MaterialState.DEFAULT: ft.colors.ON_PRIMARY},
+                shape={ft.MaterialState.DEFAULT: RoundedRectangleBorder(radius=8)},
+            ),
+            on_click=add_order_data,
+        ),
+        bgcolor=ft.colors.PRIMARY,
+        border_radius=8,
     )
 
-    delete_product_button = ft.FloatingActionButton(
-        icon=ft.icons.DELETE_ROUNDED,
-        bgcolor="#00677f",
-        shape=RoundedRectangleBorder(radius=8),
-        mini=True,
-        tooltip="Delete Product",
-        on_click=remove_product_data,
+    delete_product_button = ft.Container(
+        ft.IconButton(
+            icon=ft.icons.DELETE_ROUNDED,
+            style=ft.ButtonStyle(
+                color={ft.MaterialState.DEFAULT: ft.colors.ON_PRIMARY},
+                shape={ft.MaterialState.DEFAULT: RoundedRectangleBorder(radius=8)},
+            ),
+            on_click=remove_product_data,
+        ),
+        bgcolor=ft.colors.PRIMARY,
+        border_radius=8,
     )
 
-    delete_order_button = ft.FloatingActionButton(
-        icon=ft.icons.DELETE_ROUNDED,
-        bgcolor="#00677f",
-        shape=RoundedRectangleBorder(radius=8),
-        mini=True,
-        tooltip="Delete Order",
-        on_click=remove_order_data,
+    delete_order_button = ft.Container(
+        ft.IconButton(
+            icon=ft.icons.DELETE_ROUNDED,
+            style=ft.ButtonStyle(
+                color={ft.MaterialState.DEFAULT: ft.colors.ON_PRIMARY},
+                shape={ft.MaterialState.DEFAULT: RoundedRectangleBorder(radius=8)},
+            ),
+            on_click=remove_order_data,
+        ),
+        bgcolor=ft.colors.PRIMARY,
+        border_radius=8,
     )
 
-    clear_product_form_button = ft.FloatingActionButton(
-        icon=ft.icons.CLEAR_ROUNDED,
-        bgcolor="#00677f",
-        shape=RoundedRectangleBorder(radius=8),
-        mini=True,
-        tooltip="Clear Form",
-        on_click=clear_product_form,
+    clear_product_form_button = ft.Container(
+        ft.IconButton(
+            icon=ft.icons.CLEAR_ROUNDED,
+            style=ft.ButtonStyle(
+                color={ft.MaterialState.DEFAULT: ft.colors.ON_PRIMARY},
+                shape={ft.MaterialState.DEFAULT: RoundedRectangleBorder(radius=8)},
+            ),
+            on_click=clear_product_form,
+        ),
+        bgcolor=ft.colors.PRIMARY,
+        border_radius=8,
     )
 
-    clear_order_form_button = ft.FloatingActionButton(
-        icon=ft.icons.CLEAR_ROUNDED,
-        bgcolor="#00677f",
-        shape=RoundedRectangleBorder(radius=8),
-        mini=True,
-        tooltip="Clear Form",
-        on_click=clear_order_form,
+    clear_order_form_button = ft.Container(
+        ft.IconButton(
+            icon=ft.icons.CLEAR_ROUNDED,
+            style=ft.ButtonStyle(
+                color={ft.MaterialState.DEFAULT: ft.colors.ON_PRIMARY},
+                shape={ft.MaterialState.DEFAULT: RoundedRectangleBorder(radius=8)},
+            ),
+            on_click=clear_product_form,
+        ),
+        bgcolor=ft.colors.PRIMARY,
+        border_radius=8,
     )
-
     minimise = ft.IconButton(
         ft.icons.REMOVE_ROUNDED,
         style=ft.ButtonStyle(
-            color={
-                ft.MaterialState.DEFAULT: "#00677f",
-            },
+            color={ft.MaterialState.DEFAULT: ft.colors.PRIMARY},
             shape={ft.MaterialState.DEFAULT: RoundedRectangleBorder(radius=8)},
         ),
-        tooltip="Minimise / Maximise Forms",
         on_click=minimise_forms,
     )
 
     bar = ft.Container(
         ft.Row([title_area, search_button, search_bar], alignment="center"),
         padding=10,
-        bgcolor="#00677f",
+        bgcolor=ft.colors.PRIMARY,
         expand=True,
         border_radius=ft.border_radius.only(top_left=8, top_right=8),
     )
@@ -811,7 +847,7 @@ def main(page: ft.Page):
                                     ft.Text(
                                         "Add / Edit Product",
                                         weight=ft.FontWeight.BOLD,
-                                        color="#001f2a",
+                                        color=ft.colors.ON_BACKGROUND,
                                     ),
                                 ]
                             ),
@@ -831,7 +867,7 @@ def main(page: ft.Page):
                         scroll=True,
                     ),
                     expand=True,
-                    border=ft.border.all(2, "#dbe4e8"),
+                    border=ft.border.all(2, ft.colors.SURFACE_VARIANT),
                     border_radius=8,
                     padding=15,
                     height=320,
@@ -843,7 +879,7 @@ def main(page: ft.Page):
                             ft.Text(
                                 "Add Order",
                                 weight=ft.FontWeight.BOLD,
-                                color="#001f2a",
+                                color=ft.colors.ON_BACKGROUND,
                             ),
                             ft.Row(
                                 [
@@ -861,7 +897,7 @@ def main(page: ft.Page):
                         scroll=True,
                     ),
                     expand=True,
-                    border=ft.border.all(2, "#dbe4e8"),
+                    border=ft.border.all(2, ft.colors.SURFACE_VARIANT),
                     border_radius=8,
                     padding=15,
                     height=320,
@@ -877,7 +913,10 @@ def main(page: ft.Page):
         ft.Container(bar),
         forms,
         ft.Container(
-            ft.Column([ft.Divider(color="#dbe4e8", thickness=2), minimise]), padding=10
+            ft.Column(
+                [ft.Divider(color=ft.colors.SURFACE_VARIANT, thickness=2), minimise]
+            ),
+            padding=10,
         ),
         ft.Column(
             [
