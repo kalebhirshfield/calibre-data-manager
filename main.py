@@ -33,7 +33,6 @@ def main(page: ft.Page):
         quantity_tf.value = row[3]
         moq_tf.value = row[4]
         stock_code_order_tf.value = row[0]
-        check_stock_code_exists(row)
         page.update()
 
     def add_data_to_table(table: ft.DataTable, fetch_function, limit, rows):
@@ -141,18 +140,6 @@ def main(page: ft.Page):
             page.update()
         else:
             address_tf.visible = True
-            page.update()
-
-    def check_stock_code_exists(e):
-        stock_code = str(stock_code_product_tf.value)
-        cursor.execute(
-            "SELECT stock_code FROM products WHERE stock_code = %s", (stock_code,)
-        )
-        if cursor.rowcount > 0:
-            add_product_button.icon = ft.icons.UPDATE_ROUNDED
-            page.update()
-        else:
-            add_product_button.icon = ft.icons.ADD_ROUNDED
             page.update()
 
     def clear_product_form(e):
@@ -630,7 +617,6 @@ def main(page: ft.Page):
         border_color=ft.colors.TRANSPARENT,
         bgcolor=ft.colors.SURFACE_VARIANT,
         cursor_color=ft.colors.ON_SURFACE_VARIANT,
-        on_change=check_stock_code_exists,
     )
 
     stock_code_order_tf = ft.TextField(
@@ -924,7 +910,10 @@ def main(page: ft.Page):
                     stock_levels_table,
                     clip_behavior=ft.ClipBehavior.HARD_EDGE,
                 ),
-                search_stock_levels_table,
+                ft.Container(
+                    search_stock_levels_table,
+                    clip_behavior=ft.ClipBehavior.HARD_EDGE,
+                ),
             ],
             scroll=True,
             on_scroll=on_scroll,
