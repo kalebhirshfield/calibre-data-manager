@@ -800,7 +800,7 @@ def main(page: ft.Page):
                 color={ft.MaterialState.DEFAULT: ft.colors.ON_PRIMARY},
                 shape={ft.MaterialState.DEFAULT: RoundedRectangleBorder(radius=8)},
             ),
-            on_click=clear_product_form,
+            on_click=clear_order_form,
         ),
         bgcolor=ft.colors.PRIMARY,
         border_radius=8,
