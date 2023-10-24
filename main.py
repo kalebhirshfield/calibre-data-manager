@@ -483,10 +483,9 @@ def main(page: ft.Page):
     page.window_min_width = 950
     page.window_width = 950
     page.window_min_height = 500
-    page.window_height = 900
+    page.window_height = 1000
     page.padding = 15
     page.theme = ft.Theme(
-        visual_density=ft.ThemeVisualDensity.COMPACT,
         use_material3=True,
         color_scheme=ft.ColorScheme(
             primary="#00677f",
@@ -555,15 +554,17 @@ def main(page: ft.Page):
     )
 
     search_bar = ft.TextField(
+        hint_text="Search",
+        hint_style=ft.TextStyle(color=ft.colors.ON_PRIMARY),
+        capitalization=ft.TextCapitalization.WORDS,
+        border_width=2,
         expand=True,
         border_radius=8,
-        text_style=ft.TextStyle(color=ft.colors.ON_PRIMARY_CONTAINER),
-        border_color=ft.colors.TRANSPARENT,
-        cursor_color=ft.colors.ON_PRIMARY_CONTAINER,
-        bgcolor=ft.colors.PRIMARY_CONTAINER,
+        text_style=ft.TextStyle(color=ft.colors.ON_PRIMARY, weight=ft.FontWeight.W_600),
+        border_color=ft.colors.ON_PRIMARY,
+        cursor_color=ft.colors.ON_PRIMARY,
         content_padding=10,
         on_change=search,
-        height=40,
         visible=False,
     )
 
@@ -820,6 +821,7 @@ def main(page: ft.Page):
         bgcolor=ft.colors.PRIMARY,
         expand=True,
         border_radius=ft.border_radius.only(top_left=8, top_right=8),
+        height=75,
     )
 
     forms = ft.Container(
@@ -856,7 +858,7 @@ def main(page: ft.Page):
                     border=ft.border.all(2, ft.colors.SURFACE_VARIANT),
                     border_radius=8,
                     padding=15,
-                    height=320,
+                    height=350,
                     clip_behavior=ft.ClipBehavior.HARD_EDGE,
                 ),
                 ft.Container(
@@ -886,7 +888,7 @@ def main(page: ft.Page):
                     border=ft.border.all(2, ft.colors.SURFACE_VARIANT),
                     border_radius=8,
                     padding=15,
-                    height=320,
+                    height=350,
                     clip_behavior=ft.ClipBehavior.HARD_EDGE,
                 ),
             ]
