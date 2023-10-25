@@ -605,7 +605,9 @@ def main(page: ft.Page):
         heading_text_style=ft.TextStyle(
             color=ft.colors.ON_BACKGROUND, weight=ft.FontWeight.BOLD
         ),
-        data_text_style=ft.TextStyle(color=ft.colors.ON_BACKGROUND),
+        data_text_style=ft.TextStyle(
+            color=ft.colors.ON_BACKGROUND, weight=ft.FontWeight.W_600
+        ),
         data_row_color={ft.MaterialState.HOVERED: ft.colors.SURFACE_VARIANT},
         visible=False,
         width=10000,
