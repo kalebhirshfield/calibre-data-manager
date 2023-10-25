@@ -534,16 +534,6 @@ def main(page: ft.Page):
         ],
     )
 
-    title_area = ft.Container(
-        ft.Text(
-            "Calibre Data Manager",
-            color=ft.colors.ON_PRIMARY,
-            text_align="left",
-            weight=ft.FontWeight.BOLD,
-        ),
-        padding=10,
-    )
-
     search_button = ft.IconButton(
         icon=ft.icons.SEARCH_ROUNDED,
         style=ft.ButtonStyle(
@@ -830,15 +820,6 @@ def main(page: ft.Page):
         on_click=minimise_forms,
     )
 
-    bar = ft.Container(
-        ft.Row([title_area, search_button, search_bar], alignment="center"),
-        padding=10,
-        bgcolor=ft.colors.PRIMARY,
-        expand=True,
-        border_radius=ft.border_radius.only(top_left=8, top_right=8),
-        height=75,
-    )
-
     forms = ft.Container(
         ft.Row(
             [
@@ -913,7 +894,28 @@ def main(page: ft.Page):
     )
 
     page.add(
-        ft.Container(bar),
+        ft.Container(
+            ft.Row(
+                [
+                    ft.Container(
+                        ft.Text(
+                            "Calibre Data Manager",
+                            color=ft.colors.ON_PRIMARY,
+                            text_align="left",
+                            weight=ft.FontWeight.BOLD,
+                        ),
+                        padding=10,
+                    ),
+                    search_button,
+                    search_bar,
+                ],
+                alignment="center",
+            ),
+            padding=10,
+            bgcolor=ft.colors.PRIMARY,
+            border_radius=ft.border_radius.only(top_left=8, top_right=8),
+            height=75,
+        ),
         forms,
         ft.Container(
             ft.Column(
