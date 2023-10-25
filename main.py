@@ -5,11 +5,6 @@ from dotenv import load_dotenv
 import flet as ft
 from flet import RoundedRectangleBorder
 from datetime import date
-import matplotlib
-import matplotlib.pyplot as plt
-from flet.matplotlib_chart import MatplotlibChart
-
-matplotlib.use("svg")
 
 load_dotenv()
 connection = psycopg.connect(os.getenv("DATABASE_URL"))
@@ -31,32 +26,6 @@ def main(page: ft.Page):
         offset += limit
         return column_names, stock_levels
 
-    def create_chart(e):
-        stock_code = str(stock_code_product_tf.value.strip().upper())
-        cursor.execute("SELECT date from orders WHERE stock_code = %s", (stock_code,))
-        sale_dates = cursor.fetchall()
-        sale_years = [int(str(date[0])[:4]) for date in sale_dates]
-        sales_by_year = [sale_years.count(year) for year in sale_years]
-        fig, ax = plt.subplots()
-        ax.plot(sale_years, sales_by_year)
-        ax.set_xlabel("Years")
-        ax.set_ylabel("Sales")
-        ax.xaxis.set_major_locator(matplotlib.ticker.MultipleLocator(1))
-        ax.set_title("Sales by Year")
-        ax.grid(True)
-        ax.set_facecolor("#fbfcfe")
-        ax.tick_params(axis="x", colors="#191c1d")
-        ax.tick_params(axis="y", colors="#191c1d")
-        ax.spines["bottom"].set_color("#191c1d")
-        ax.spines["top"].set_color("#191c1d")
-        ax.spines["left"].set_color("#191c1d")
-        ax.spines["right"].set_color("#191c1d")
-        ax.xaxis.label.set_color("#191c1d")
-        ax.yaxis.label.set_color("#191c1d")
-        ax.title.set_color("#191c1d")
-        chart = MatplotlibChart(fig, expand=True, transparent=True)
-        return chart
-
     def load_data(row):
         stock_code_product_tf.value = row[0]
         stock_cat_tf.value = row[1]
@@ -64,7 +33,6 @@ def main(page: ft.Page):
         quantity_tf.value = row[3]
         moq_tf.value = row[4]
         stock_code_order_tf.value = row[0]
-        create_chart(None)
         page.update()
 
     def add_data_to_table(table: ft.DataTable, fetch_function, limit, rows):
@@ -116,11 +84,12 @@ def main(page: ft.Page):
         if search_bar.visible == False:
             search_bar.visible = True
             search_bar.focus()
+            page.update()
         elif search_bar.visible == True:
             search_bar.visible = False
             search_bar.value = ""
             search(e)
-        page.update()
+            page.update()
 
     def search(e):
         query = str(search_bar.value.strip())
@@ -145,11 +114,12 @@ def main(page: ft.Page):
                     )
                 )
                 search_stock_levels_table.rows = rows
+            page.update()
         else:
             search_stock_levels_table.rows = []
             search_stock_levels_table.visible = False
             stock_levels_table.visible = True
-        page.update()
+            page.update()
 
     def minimise_forms(e):
         if forms.visible == True:
@@ -635,9 +605,7 @@ def main(page: ft.Page):
         heading_text_style=ft.TextStyle(
             color=ft.colors.ON_BACKGROUND, weight=ft.FontWeight.BOLD
         ),
-        data_text_style=ft.TextStyle(
-            color=ft.colors.ON_BACKGROUND, weight=ft.FontWeight.W_600
-        ),
+        data_text_style=ft.TextStyle(color=ft.colors.ON_BACKGROUND),
         data_row_color={ft.MaterialState.HOVERED: ft.colors.SURFACE_VARIANT},
         visible=False,
         width=10000,
@@ -860,6 +828,15 @@ def main(page: ft.Page):
         on_click=minimise_forms,
     )
 
+    bar = ft.Container(
+        ft.Row([title_area, search_button, search_bar], alignment="center"),
+        padding=10,
+        bgcolor=ft.colors.PRIMARY,
+        expand=True,
+        border_radius=ft.border_radius.only(top_left=8, top_right=8),
+        height=75,
+    )
+
     forms = ft.Container(
         ft.Row(
             [
@@ -933,135 +910,32 @@ def main(page: ft.Page):
         alignment=ft.Alignment(0, -1),
     )
 
-    def route_change(route):
-        page.views.clear()
-        page.views.append(
-            ft.View(
-                "/",
-                [
-                    ft.Container(
-                        ft.Row(
-                            [
-                                ft.IconButton(
-                                    icon=ft.icons.INSIGHTS_ROUNDED,
-                                    style=ft.ButtonStyle(
-                                        color={
-                                            ft.MaterialState.DEFAULT: ft.colors.ON_PRIMARY
-                                        },
-                                        shape={
-                                            ft.MaterialState.DEFAULT: RoundedRectangleBorder(
-                                                radius=8
-                                            )
-                                        },
-                                    ),
-                                    on_click=lambda e: page.go("/charts"),
-                                ),
-                                title_area,
-                                search_button,
-                                search_bar,
-                            ],
-                            alignment="center",
-                        ),
-                        padding=10,
-                        bgcolor=ft.colors.PRIMARY,
-                        border_radius=ft.border_radius.only(top_left=8, top_right=8),
-                        height=75,
-                    ),
-                    forms,
-                    ft.Container(
-                        ft.Column(
-                            [
-                                ft.Divider(
-                                    color=ft.colors.SURFACE_VARIANT, thickness=2
-                                ),
-                                minimise,
-                            ]
-                        ),
-                        padding=10,
-                    ),
-                    ft.Column(
-                        [
-                            ft.Container(
-                                stock_levels_table,
-                                clip_behavior=ft.ClipBehavior.HARD_EDGE,
-                            ),
-                            ft.Container(
-                                search_stock_levels_table,
-                                clip_behavior=ft.ClipBehavior.HARD_EDGE,
-                            ),
-                        ],
-                        scroll=True,
-                        on_scroll=on_scroll,
-                        expand=True,
-                        alignment=ft.Alignment(0, -1),
-                    ),
-                ],
-            )
-        )
-        if page.route == "/charts":
-            chart = create_chart(None)
-            page.views.append(
-                ft.View(
-                    "/charts",
-                    [
-                        ft.Container(
-                            ft.Container(
-                                ft.Row(
-                                    [
-                                        ft.IconButton(
-                                            icon=ft.icons.INSIGHTS_OUTLINED,
-                                            style=ft.ButtonStyle(
-                                                color={
-                                                    ft.MaterialState.DEFAULT: ft.colors.ON_PRIMARY
-                                                },
-                                                shape={
-                                                    ft.MaterialState.DEFAULT: RoundedRectangleBorder(
-                                                        radius=8
-                                                    )
-                                                },
-                                            ),
-                                            on_click=lambda e: page.go("/"),
-                                        ),
-                                        title_area,
-                                        search_button,
-                                        search_bar,
-                                    ],
-                                    alignment="center",
-                                ),
-                                padding=10,
-                                bgcolor=ft.colors.PRIMARY,
-                                expand=True,
-                                border_radius=ft.border_radius.only(
-                                    top_left=8, top_right=8
-                                ),
-                                height=75,
-                            )
-                        ),
-                        chart,
-                        ft.Divider(color=ft.colors.SURFACE_VARIANT, thickness=2),
-                        ft.Column(
-                            [
-                                ft.Container(
-                                    stock_levels_table,
-                                    clip_behavior=ft.ClipBehavior.HARD_EDGE,
-                                ),
-                                ft.Container(
-                                    search_stock_levels_table,
-                                    clip_behavior=ft.ClipBehavior.HARD_EDGE,
-                                ),
-                            ],
-                            scroll=True,
-                            on_scroll=on_scroll,
-                            expand=True,
-                            alignment=ft.Alignment(0, -1),
-                        ),
-                    ],
-                )
-            )
-        page.update()
-
-    page.on_route_change = route_change
-    page.go("/")
+    page.add(
+        ft.Container(bar),
+        forms,
+        ft.Container(
+            ft.Column(
+                [ft.Divider(color=ft.colors.SURFACE_VARIANT, thickness=2), minimise]
+            ),
+            padding=10,
+        ),
+        ft.Column(
+            [
+                ft.Container(
+                    stock_levels_table,
+                    clip_behavior=ft.ClipBehavior.HARD_EDGE,
+                ),
+                ft.Container(
+                    search_stock_levels_table,
+                    clip_behavior=ft.ClipBehavior.HARD_EDGE,
+                ),
+            ],
+            scroll=True,
+            on_scroll=on_scroll,
+            expand=True,
+            alignment=ft.Alignment(0, -1),
+        ),
+    )
 
 
 if __name__ == "__main__":
