@@ -4,6 +4,7 @@ import psycopg
 from dotenv import load_dotenv
 import flet as ft
 from flet import RoundedRectangleBorder
+from controls import FormField, Table, FormButton
 from datetime import date
 
 load_dotenv()
@@ -14,7 +15,7 @@ offset = 0
 current_row = 0
 
 
-def main(page: ft.Page):
+def main(page: ft.Page) -> None:
     def fetch_stock_levels(limit):
         global offset
         cursor.execute(
@@ -104,9 +105,9 @@ def main(page: ft.Page):
             sql_query = f"SELECT d.*, stocklevels.quantity, stocklevels.moq, stocklevels.on_order, stockbalance.balance FROM products d INNER JOIN stocklevels using(stock_code) INNER JOIN stockbalance using(stock_id) WHERE {where_clause}"
             params = [f"%{query}%"] * len(columns_to_search)
             cursor.execute(sql_query, params)
-            searchData = cursor.fetchall()
+            search_data = cursor.fetchall()
             rows = []
-            for row in searchData:
+            for row in search_data:
                 rows.append(
                     ft.DataRow(
                         cells=[ft.DataCell(ft.Text(str(cell))) for cell in row],
@@ -122,7 +123,7 @@ def main(page: ft.Page):
             page.update()
 
     def minimise_forms(e):
-        if forms.visible == True:
+        if forms.visible:
             forms.visible = False
             minimise.icon = ft.icons.ADD_ROUNDED
             page.update()
@@ -158,102 +159,97 @@ def main(page: ft.Page):
         page.update()
 
     def add_product_data(e):
-        stockCode = (
+        stock_code = (
             str(stock_code_product_tf.value)
             if stock_code_product_tf.value != ""
             else None
         )
-        stockCAT = int(stock_cat_tf.value) if stock_cat_tf.value != "" else None
+        stock_cat = int(stock_cat_tf.value) if stock_cat_tf.value != "" else None
         description = str(description_tf.value) if description_tf.value != "" else None
         quantity = int(quantity_tf.value) if quantity_tf.value != "" else None
         moq = int(moq_tf.value) if moq_tf.value != "" else None
-        if stockCode != None:
-            cursor.execute("SELECT * FROM products WHERE stock_code = %s", (stockCode,))
+        if stock_code is not None:
+            cursor.execute("SELECT * FROM products WHERE stock_code = %s", (stock_code,))
             if cursor.rowcount > 0:
                 cursor.execute(
                     "UPDATE products SET stock_cat = %s WHERE stock_code = %s",
-                    (stockCAT, stockCode),
-                ) if stockCAT != None else None
+                    (stock_cat, stock_code),
+                ) if stock_cat is not None else None
                 connection.commit()
                 cursor.execute(
                     "UPDATE products SET description = %s WHERE stock_code = %s",
-                    (description, stockCode),
-                ) if description != None else None
+                    (description, stock_code),
+                ) if description is not None else None
                 connection.commit()
                 cursor.execute(
                     "UPDATE stocklevels SET quantity = %s WHERE stock_code = %s",
-                    (quantity, stockCode),
-                ) if quantity != None else None
+                    (quantity, stock_code),
+                ) if quantity is not None else None
                 connection.commit()
                 cursor.execute(
                     "UPDATE stocklevels SET moq = %s WHERE stock_code = %s",
-                    (moq, stockCode),
-                ) if moq != None else None
+                    (moq, stock_code),
+                ) if moq is not None else None
                 connection.commit()
                 cursor.execute(
                     "Select stock_id FROM stocklevels WHERE stock_code = %s",
-                    (stockCode,),
+                    (stock_code,),
                 )
-                stockID = int(cursor.fetchone()[0])
+                stock_id = int(cursor.fetchone()[0])
                 cursor.execute(
                     "SELECT quantity FROM stocklevels WHERE stock_code = %s",
-                    (stockCode,),
+                    (stock_code,),
                 )
                 quantity = int(cursor.fetchone()[0])
                 cursor.execute(
                     "SELECT on_order FROM stocklevels WHERE stock_code = %s",
-                    (stockCode,),
+                    (stock_code,),
                 )
-                onOrder = int(cursor.fetchone()[0])
+                on_order = int(cursor.fetchone()[0])
                 cursor.execute(
                     "SELECT moq FROM stocklevels WHERE stock_code = %s",
-                    (stockCode,),
+                    (stock_code,),
                 )
                 moq = int(cursor.fetchone()[0])
                 cursor.execute(
                     "UPDATE stockbalance SET balance = %s WHERE stock_id = %s",
-                    (quantity + moq - onOrder, stockID),
+                    (quantity + moq - on_order, stock_id),
                 )
                 connection.commit()
             else:
-                if (
-                    stockCAT != None
-                    and description != None
-                    and quantity != None
-                    and moq != None
-                ):
-                    cursor.execute(
-                        "INSERT INTO products(stock_code, stock_cat, description) VALUES(%s, %s, %s)",
-                        (stockCode, stockCAT, description),
-                    )
-                    connection.commit()
-                    cursor.execute(
-                        "INSERT INTO stocklevels(stock_code, moq, quantity, on_order) VALUES(%s, %s, %s, %s)",
-                        (stockCode, moq, quantity, 0),
-                    )
-                    connection.commit()
-                    cursor.execute(
-                        "Select stock_id FROM stocklevels WHERE stock_code = %s",
-                        (stockCode,),
-                    )
-                    stockID = int(cursor.fetchone()[0])
-                    cursor.execute(
-                        "SELECT on_order FROM stocklevels WHERE stock_code = %s",
-                        (stockCode,),
-                    )
-                    onOrder = 0
-                    cursor.execute(
-                        "INSERT INTO stockbalance(stock_id, balance) VALUES(%s, %s)",
-                        (stockID, quantity + moq - onOrder),
-                    )
-                    connection.commit()
-                else:
+                if stock_cat is None or description is None or quantity is None or moq is None:
                     show_banner(
                         e,
                         "Please fill in all fields as there is no stock code match",
                     )
+                else:
+                    cursor.execute(
+                        "INSERT INTO products(stock_code, stock_cat, description) VALUES(%s, %s, %s)",
+                        (stock_code, stock_cat, description),
+                    )
+                    connection.commit()
+                    cursor.execute(
+                        "INSERT INTO stocklevels(stock_code, moq, quantity, on_order) VALUES(%s, %s, %s, %s)",
+                        (stock_code, moq, quantity, 0),
+                    )
+                    connection.commit()
+                    cursor.execute(
+                        "Select stock_id FROM stocklevels WHERE stock_code = %s",
+                        (stock_code,),
+                    )
+                    stock_id = int(cursor.fetchone()[0])
+                    cursor.execute(
+                        "SELECT on_order FROM stocklevels WHERE stock_code = %s",
+                        (stock_code,),
+                    )
+                    on_order = 0
+                    cursor.execute(
+                        "INSERT INTO stockbalance(stock_id, balance) VALUES(%s, %s)",
+                        (stock_id, quantity + moq - on_order),
+                    )
+                    connection.commit()
                 page.update()
-        elif stockCode == None:
+        elif stock_code is None:
             show_banner(e, "Please fill in the stock code field")
             page.update()
         clear_product_form(e)
@@ -273,7 +269,7 @@ def main(page: ft.Page):
         if cursor.rowcount > 0:
             cursor.execute("SELECT * FROM customers WHERE name = %s", (name,))
             if cursor.rowcount > 0:
-                if stock_code != None and quantity != None and name != None:
+                if stock_code is not None and quantity is not None and name is not None:
                     cursor.execute(
                         "SELECT customer_id FROM customers WHERE name = %s",
                         (name,),
@@ -319,12 +315,9 @@ def main(page: ft.Page):
                     show_banner(e, "Please fill in all fields")
                 page.update()
             else:
-                if (
-                    stock_code != None
-                    and quantity != None
-                    and name != None
-                    and address != None
-                ):
+                if stock_code is None or quantity is None or name is None or address is None:
+                    show_banner(e, "Please fill in all fields")
+                else:
                     cursor.execute(
                         "INSERT INTO customers(name, address) VALUES(%s, %s)",
                         (name, address),
@@ -371,15 +364,14 @@ def main(page: ft.Page):
                         (quantity + moq - on_order, stock_id),
                     )
                     connection.commit()
-                else:
-                    show_banner(e, "Please fill in all fields")
                 page.update()
         else:
             show_banner(e, "Stock Code does not exist")
             page.update()
         clear_order_form(e)
         refresh_table(e)
-        search(e) if search_stock_levels_table.visible == True else None
+        if search_stock_levels_table is True:
+            search(e)
         check_customer_exists(e)
 
     def remove_product_data(e):
@@ -418,14 +410,12 @@ def main(page: ft.Page):
             page.update()
         clear_product_form(e)
         refresh_table(e)
-        search(e) if search_stock_levels_table.visible == True else None
+        if search_stock_levels_table.visible is True:
+            search(e)
 
     def remove_order_data(e):
-        try:
-            order_id = int(order_id_tf.value)
-        except:
-            order_id = None
-        if order_id != None:
+        order_id = int(order_id_tf.value) if order_id_tf.value is not None else None
+        if order_id is not None:
             cursor.execute("SELECT * FROM orders WHERE order_id = %s", (order_id,))
             if cursor.rowcount > 0:
                 cursor.execute(
@@ -534,46 +524,11 @@ def main(page: ft.Page):
         ],
     )
 
-    search_button = ft.IconButton(
-        icon=ft.icons.SEARCH_ROUNDED,
-        style=ft.ButtonStyle(
-            color={ft.MaterialState.DEFAULT: ft.colors.ON_PRIMARY},
-            shape={ft.MaterialState.DEFAULT: RoundedRectangleBorder(radius=8)},
-        ),
-        on_click=show_search_bar,
-    )
+    search_button = FormButton(ft.icons.SEARCH_ROUNDED, show_search_bar, ft.colors.ON_PRIMARY)
 
-    search_bar = ft.TextField(
-        hint_text="Search",
-        hint_style=ft.TextStyle(color=ft.colors.ON_PRIMARY),
-        capitalization=ft.TextCapitalization.WORDS,
-        selection_color=ft.colors.ON_PRIMARY,
-        border_width=2,
-        expand=True,
-        border_radius=8,
-        text_style=ft.TextStyle(color=ft.colors.ON_PRIMARY, weight=ft.FontWeight.W_600),
-        border_color=ft.colors.ON_PRIMARY,
-        cursor_color=ft.colors.ON_PRIMARY,
-        content_padding=10,
-        on_change=search,
-        visible=False,
-    )
+    search_bar = FormField("Search", ft.colors.ON_PRIMARY, ft.colors.TRANSPARENT, ft.colors.ON_PRIMARY, search, False)
 
-    stock_levels_table = ft.DataTable(
-        border=ft.border.all(2, ft.colors.SURFACE_VARIANT),
-        border_radius=8,
-        divider_thickness=0,
-        heading_row_height=75,
-        horizontal_lines=ft.border.BorderSide(1, ft.colors.PRIMARY),
-        heading_text_style=ft.TextStyle(
-            color=ft.colors.ON_BACKGROUND, weight=ft.FontWeight.BOLD
-        ),
-        data_text_style=ft.TextStyle(
-            color=ft.colors.ON_BACKGROUND, weight=ft.FontWeight.W_600
-        ),
-        data_row_color={ft.MaterialState.HOVERED: ft.colors.SURFACE_VARIANT},
-        width=10000,
-    )
+    stock_levels_table = Table()
 
     stock_levels_columns, _ = refresh_table(None)
 
@@ -582,243 +537,31 @@ def main(page: ft.Page):
         for column in stock_levels_columns
     ]
 
-    search_stock_levels_table = ft.DataTable(
-        columns=[
-            ft.DataColumn(ft.Text(str(column).capitalize().replace("_", " ")))
-            for column in stock_levels_columns
-        ],
-        border=ft.border.all(2, ft.colors.SURFACE_VARIANT),
-        border_radius=8,
-        divider_thickness=0,
-        heading_row_height=75,
-        horizontal_lines=ft.border.BorderSide(1, ft.colors.PRIMARY),
-        heading_text_style=ft.TextStyle(
-            color=ft.colors.ON_BACKGROUND, weight=ft.FontWeight.BOLD
-        ),
-        data_text_style=ft.TextStyle(
-            color=ft.colors.ON_BACKGROUND, weight=ft.FontWeight.W_600
-        ),
-        data_row_color={ft.MaterialState.HOVERED: ft.colors.SURFACE_VARIANT},
-        visible=False,
-        width=10000,
-    )
+    search_stock_levels_table = Table()
 
-    stock_code_product_tf = ft.TextField(
-        hint_text="Stock Code",
-        hint_style=ft.TextStyle(color=ft.colors.ON_SURFACE_VARIANT),
-        expand=True,
-        border_radius=8,
-        text_style=ft.TextStyle(
-            color=ft.colors.ON_SURFACE_VARIANT, weight=ft.FontWeight.W_600
-        ),
-        border_color=ft.colors.TRANSPARENT,
-        bgcolor=ft.colors.SURFACE_VARIANT,
-        cursor_color=ft.colors.ON_SURFACE_VARIANT,
-    )
+    search_stock_levels_table.columns = [
+        ft.DataColumn(ft.Text(str(column).capitalize().replace("_", " ")))
+        for column in stock_levels_columns
+    ]
 
-    stock_code_order_tf = ft.TextField(
-        hint_text="Stock Code",
-        hint_style=ft.TextStyle(color=ft.colors.ON_SURFACE_VARIANT),
-        expand=True,
-        border_radius=8,
-        text_style=ft.TextStyle(
-            color=ft.colors.ON_SURFACE_VARIANT, weight=ft.FontWeight.W_600
-        ),
-        border_color=ft.colors.TRANSPARENT,
-        bgcolor=ft.colors.SURFACE_VARIANT,
-        cursor_color=ft.colors.ON_SURFACE_VARIANT,
-    )
+    stock_code_product_tf = FormField("Stock Code", ft.colors.TRANSPARENT, ft.colors.SURFACE_VARIANT, ft.colors.ON_SURFACE_VARIANT, None, True)
+    stock_code_order_tf = FormField("Stock Code", ft.colors.TRANSPARENT, ft.colors.SURFACE_VARIANT, ft.colors.ON_SURFACE_VARIANT, None, True)
+    order_id_tf = FormField("Order ID", ft.colors.TRANSPARENT, ft.colors.SURFACE_VARIANT, ft.colors.ON_SURFACE_VARIANT, None, True)
+    stock_cat_tf = FormField("Stock Category", ft.colors.TRANSPARENT, ft.colors.SURFACE_VARIANT, ft.colors.ON_SURFACE_VARIANT, None, True)
+    description_tf = FormField("Description", ft.colors.TRANSPARENT, ft.colors.SURFACE_VARIANT, ft.colors.ON_SURFACE_VARIANT, None, True)
+    quantity_tf = FormField("Quantity", ft.colors.TRANSPARENT, ft.colors.SURFACE_VARIANT, ft.colors.ON_SURFACE_VARIANT, None, True)
+    moq_tf = FormField("MOQ", ft.colors.TRANSPARENT, ft.colors.SURFACE_VARIANT, ft.colors.ON_SURFACE_VARIANT, None, True)
+    order_quantity_tf = FormField("Order Quantity", ft.colors.TRANSPARENT, ft.colors.SURFACE_VARIANT, ft.colors.ON_SURFACE_VARIANT, None, True)
+    name_tf = FormField("Customer Name", ft.colors.TRANSPARENT, ft.colors.SURFACE_VARIANT, ft.colors.ON_SURFACE_VARIANT, None, True)
+    address_tf = FormField("Customer Address", ft.colors.TRANSPARENT, ft.colors.SURFACE_VARIANT, ft.colors.ON_SURFACE_VARIANT, None, True)
 
-    order_id_tf = ft.TextField(
-        hint_text="Order ID",
-        hint_style=ft.TextStyle(color=ft.colors.ON_SURFACE_VARIANT),
-        expand=True,
-        border_radius=8,
-        text_style=ft.TextStyle(
-            color=ft.colors.ON_SURFACE_VARIANT, weight=ft.FontWeight.W_600
-        ),
-        border_color=ft.colors.TRANSPARENT,
-        bgcolor=ft.colors.SURFACE_VARIANT,
-        cursor_color=ft.colors.ON_SURFACE_VARIANT,
-    )
-
-    stock_cat_tf = ft.TextField(
-        hint_text="Stock CAT",
-        hint_style=ft.TextStyle(color=ft.colors.ON_SURFACE_VARIANT),
-        expand=True,
-        border_radius=8,
-        text_style=ft.TextStyle(
-            color=ft.colors.ON_SURFACE_VARIANT, weight=ft.FontWeight.W_600
-        ),
-        border_color=ft.colors.TRANSPARENT,
-        bgcolor=ft.colors.SURFACE_VARIANT,
-        cursor_color=ft.colors.ON_SURFACE_VARIANT,
-    )
-
-    description_tf = ft.TextField(
-        hint_text="Description",
-        hint_style=ft.TextStyle(color=ft.colors.ON_SURFACE_VARIANT),
-        expand=True,
-        border_radius=8,
-        text_style=ft.TextStyle(
-            color=ft.colors.ON_SURFACE_VARIANT, weight=ft.FontWeight.W_600
-        ),
-        border_color=ft.colors.TRANSPARENT,
-        bgcolor=ft.colors.SURFACE_VARIANT,
-        cursor_color=ft.colors.ON_SURFACE_VARIANT,
-    )
-
-    quantity_tf = ft.TextField(
-        hint_text="Quantity",
-        hint_style=ft.TextStyle(color=ft.colors.ON_SURFACE_VARIANT),
-        expand=True,
-        border_radius=8,
-        text_style=ft.TextStyle(
-            color=ft.colors.ON_SURFACE_VARIANT, weight=ft.FontWeight.W_600
-        ),
-        border_color=ft.colors.TRANSPARENT,
-        bgcolor=ft.colors.SURFACE_VARIANT,
-        cursor_color=ft.colors.ON_SURFACE_VARIANT,
-    )
-
-    moq_tf = ft.TextField(
-        hint_text="MOQ",
-        hint_style=ft.TextStyle(color=ft.colors.ON_SURFACE_VARIANT),
-        expand=True,
-        border_radius=8,
-        text_style=ft.TextStyle(
-            color=ft.colors.ON_SURFACE_VARIANT, weight=ft.FontWeight.W_600
-        ),
-        border_color=ft.colors.TRANSPARENT,
-        bgcolor=ft.colors.SURFACE_VARIANT,
-        cursor_color=ft.colors.ON_SURFACE_VARIANT,
-    )
-
-    order_quantity_tf = ft.TextField(
-        hint_text="Quantity",
-        hint_style=ft.TextStyle(color=ft.colors.ON_SURFACE_VARIANT),
-        expand=True,
-        border_radius=8,
-        text_style=ft.TextStyle(
-            color=ft.colors.ON_SURFACE_VARIANT, weight=ft.FontWeight.W_600
-        ),
-        border_color=ft.colors.TRANSPARENT,
-        bgcolor=ft.colors.SURFACE_VARIANT,
-        cursor_color=ft.colors.ON_SURFACE_VARIANT,
-    )
-
-    name_tf = ft.TextField(
-        hint_text="Customer Name",
-        hint_style=ft.TextStyle(color=ft.colors.ON_SURFACE_VARIANT),
-        expand=True,
-        border_radius=8,
-        text_style=ft.TextStyle(
-            color=ft.colors.ON_SURFACE_VARIANT, weight=ft.FontWeight.W_600
-        ),
-        border_color=ft.colors.TRANSPARENT,
-        bgcolor=ft.colors.SURFACE_VARIANT,
-        cursor_color=ft.colors.ON_SURFACE_VARIANT,
-        on_change=check_customer_exists,
-    )
-
-    address_tf = ft.TextField(
-        hint_text="Customer Address",
-        hint_style=ft.TextStyle(color=ft.colors.ON_SURFACE_VARIANT),
-        expand=True,
-        border_radius=8,
-        text_style=ft.TextStyle(
-            color=ft.colors.ON_SURFACE_VARIANT, weight=ft.FontWeight.W_600
-        ),
-        border_color=ft.colors.TRANSPARENT,
-        bgcolor=ft.colors.SURFACE_VARIANT,
-        cursor_color=ft.colors.ON_SURFACE_VARIANT,
-    )
-
-    add_product_button = ft.Container(
-        ft.IconButton(
-            icon=ft.icons.ADD_ROUNDED,
-            style=ft.ButtonStyle(
-                color={ft.MaterialState.DEFAULT: ft.colors.ON_PRIMARY},
-                shape={ft.MaterialState.DEFAULT: RoundedRectangleBorder(radius=8)},
-            ),
-            on_click=add_product_data,
-        ),
-        bgcolor=ft.colors.PRIMARY,
-        border_radius=8,
-    )
-
-    add_order_button = ft.Container(
-        ft.IconButton(
-            icon=ft.icons.ADD_ROUNDED,
-            style=ft.ButtonStyle(
-                color={ft.MaterialState.DEFAULT: ft.colors.ON_PRIMARY},
-                shape={ft.MaterialState.DEFAULT: RoundedRectangleBorder(radius=8)},
-            ),
-            on_click=add_order_data,
-        ),
-        bgcolor=ft.colors.PRIMARY,
-        border_radius=8,
-    )
-
-    delete_product_button = ft.Container(
-        ft.IconButton(
-            icon=ft.icons.DELETE_ROUNDED,
-            style=ft.ButtonStyle(
-                color={ft.MaterialState.DEFAULT: ft.colors.ON_PRIMARY},
-                shape={ft.MaterialState.DEFAULT: RoundedRectangleBorder(radius=8)},
-            ),
-            on_click=remove_product_data,
-        ),
-        bgcolor=ft.colors.PRIMARY,
-        border_radius=8,
-    )
-
-    delete_order_button = ft.Container(
-        ft.IconButton(
-            icon=ft.icons.DELETE_ROUNDED,
-            style=ft.ButtonStyle(
-                color={ft.MaterialState.DEFAULT: ft.colors.ON_PRIMARY},
-                shape={ft.MaterialState.DEFAULT: RoundedRectangleBorder(radius=8)},
-            ),
-            on_click=remove_order_data,
-        ),
-        bgcolor=ft.colors.PRIMARY,
-        border_radius=8,
-    )
-
-    clear_product_form_button = ft.Container(
-        ft.IconButton(
-            icon=ft.icons.CLEAR_ROUNDED,
-            style=ft.ButtonStyle(
-                color={ft.MaterialState.DEFAULT: ft.colors.ON_PRIMARY},
-                shape={ft.MaterialState.DEFAULT: RoundedRectangleBorder(radius=8)},
-            ),
-            on_click=clear_product_form,
-        ),
-        bgcolor=ft.colors.PRIMARY,
-        border_radius=8,
-    )
-
-    clear_order_form_button = ft.Container(
-        ft.IconButton(
-            icon=ft.icons.CLEAR_ROUNDED,
-            style=ft.ButtonStyle(
-                color={ft.MaterialState.DEFAULT: ft.colors.ON_PRIMARY},
-                shape={ft.MaterialState.DEFAULT: RoundedRectangleBorder(radius=8)},
-            ),
-            on_click=clear_order_form,
-        ),
-        bgcolor=ft.colors.PRIMARY,
-        border_radius=8,
-    )
-    minimise = ft.IconButton(
-        ft.icons.REMOVE_ROUNDED,
-        style=ft.ButtonStyle(
-            color={ft.MaterialState.DEFAULT: ft.colors.PRIMARY},
-            shape={ft.MaterialState.DEFAULT: RoundedRectangleBorder(radius=8)},
-        ),
-        on_click=minimise_forms,
-    )
+    add_product_button = ft.Container(FormButton(ft.icons.ADD_ROUNDED, add_product_data, ft.colors.ON_PRIMARY), bgcolor=ft.colors.PRIMARY, border_radius=8)
+    add_order_button = ft.Container(FormButton(ft.icons.ADD_ROUNDED, add_order_data, ft.colors.ON_PRIMARY), bgcolor=ft.colors.PRIMARY, border_radius=8)
+    delete_product_button = ft.Container(FormButton(ft.icons.DELETE_ROUNDED, remove_product_data, ft.colors.ON_PRIMARY), bgcolor=ft.colors.PRIMARY, border_radius=8)
+    delete_order_button = ft.Container(FormButton(ft.icons.DELETE_ROUNDED, remove_order_data, ft.colors.ON_PRIMARY), bgcolor=ft.colors.PRIMARY, border_radius=8)
+    clear_product_form_button = ft.Container(FormButton(ft.icons.CLEAR_ROUNDED, clear_product_form, ft.colors.ON_PRIMARY), bgcolor=ft.colors.PRIMARY, border_radius=8)
+    clear_order_form_button = ft.Container(FormButton(ft.icons.CLEAR_ROUNDED, clear_order_form, ft.colors.ON_PRIMARY), bgcolor=ft.colors.PRIMARY, border_radius=8)
+    minimise = FormButton(ft.icons.REMOVE_ROUNDED, minimise_forms, ft.colors.PRIMARY)
 
     forms = ft.Container(
         ft.Row(

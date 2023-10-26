@@ -1,4 +1,3 @@
 flet
 psycopg[binary]
 python-dotenv
-matplotlib
