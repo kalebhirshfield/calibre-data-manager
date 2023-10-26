@@ -111,7 +111,7 @@ def main(page: ft.Page) -> None:
                 rows.append(
                     ft.DataRow(
                         cells=[ft.DataCell(ft.Text(str(cell))) for cell in row],
-                        on_select_changed=lambda e, row: load_data(row),
+                        on_select_changed=lambda e, row=row: load_data(row),
                     )
                 )
                 search_stock_levels_table.rows = rows
@@ -130,17 +130,6 @@ def main(page: ft.Page) -> None:
         else:
             forms.visible = True
             minimise.icon = ft.icons.REMOVE_ROUNDED
-            page.update()
-
-    def check_customer_exists(e):
-        name = str(name_tf.value)
-        cursor.execute("SELECT * FROM customers WHERE name = %s", (name,))
-        if cursor.rowcount > 0:
-            address_tf.visible = False
-            address_tf.value = ""
-            page.update()
-        else:
-            address_tf.visible = True
             page.update()
 
     def clear_product_form(e):
@@ -268,53 +257,7 @@ def main(page: ft.Page) -> None:
         cursor.execute("SELECT * FROM products WHERE stock_code = %s", (stock_code,))
         if cursor.rowcount > 0:
             cursor.execute("SELECT * FROM customers WHERE name = %s", (name,))
-            if cursor.rowcount > 0:
-                if stock_code is not None and quantity is not None and name is not None:
-                    cursor.execute(
-                        "SELECT customer_id FROM customers WHERE name = %s",
-                        (name,),
-                    )
-                    customer_id = int(cursor.fetchone()[0])
-                    cursor.execute(
-                        "INSERT INTO orders(stock_code, order_quantity, date, customer_id) VALUES(%s, %s, %s,%s)",
-                        (stock_code, quantity, date.today(), customer_id),
-                    )
-                    connection.commit()
-                    cursor.execute(
-                        "SELECT on_order FROM stocklevels WHERE stock_code = %s",
-                        (stock_code,),
-                    )
-                    on_order = int(cursor.fetchone()[0])
-                    cursor.execute(
-                        "UPDATE stocklevels SET on_order = %s WHERE stock_code = %s",
-                        (on_order + quantity, stock_code),
-                    )
-                    connection.commit()
-                    on_order = on_order + quantity
-                    cursor.execute(
-                        "SELECT quantity FROM stocklevels WHERE stock_code = %s",
-                        (stock_code,),
-                    )
-                    quantity = int(cursor.fetchone()[0])
-                    cursor.execute(
-                        "SELECT moq FROM stocklevels WHERE stock_code = %s",
-                        (stock_code,),
-                    )
-                    moq = int(cursor.fetchone()[0])
-                    cursor.execute(
-                        "Select stock_id FROM stocklevels WHERE stock_code = %s",
-                        (stock_code,),
-                    )
-                    stock_id = int(cursor.fetchone()[0])
-                    cursor.execute(
-                        "UPDATE stockbalance SET balance = %s WHERE stock_id = %s",
-                        (quantity + moq - on_order, stock_id),
-                    )
-                    connection.commit()
-                else:
-                    show_banner("Please fill in all fields")
-                page.update()
-            else:
+            if cursor.rowcount == 0:
                 if stock_code is None or quantity is None or name is None or address is None:
                     show_banner("Please fill in all fields")
                 else:
@@ -323,6 +266,10 @@ def main(page: ft.Page) -> None:
                         (name, address),
                     )
                     connection.commit()
+            try:
+                if stock_code is None or quantity is None or name is None:
+                    show_banner("Please fill in all fields")
+                else:
                     cursor.execute(
                         "SELECT customer_id FROM customers WHERE name = %s",
                         (name,),
@@ -364,6 +311,10 @@ def main(page: ft.Page) -> None:
                         (quantity + moq - on_order, stock_id),
                     )
                     connection.commit()
+            except psycopg.errors.ForeignKeyViolation:
+                show_banner("Customer does not exist")
+                page.update()
+            finally:
                 page.update()
         else:
             show_banner("Stock Code does not exist")
@@ -372,7 +323,6 @@ def main(page: ft.Page) -> None:
         refresh_table()
         if search_stock_levels_table.visible:
             search(e)
-        check_customer_exists(e)
 
     def remove_product_data(e):
         stock_code = str(stock_code_product_tf.value)
