@@ -13,7 +13,7 @@ class FormField(TextField):
         self.border_color = bordercolor
         self.border_width = 2
         self.bgcolor = bg_color
-        self.cursor_color = colors.ON_SURFACE_VARIANT
+        self.cursor_color = textcolor
         self.on_change = change
         self.visible = vis
 
