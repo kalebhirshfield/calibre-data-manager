@@ -36,7 +36,7 @@ class FormField(TextField):
 
 
 class Table(DataTable):
-    def __init__(self) -> None:
+    def __init__(self, vis: bool) -> None:
         super().__init__()
         self.border = border.all(2, colors.SURFACE_VARIANT)
         self.border_radius = 8
@@ -47,6 +47,7 @@ class Table(DataTable):
         self.data_text_style = TextStyle(color=colors.ON_SURFACE_VARIANT, weight=FontWeight.W_600)
         self.data_row_color = {MaterialState.HOVERED: colors.SURFACE_VARIANT}
         self.width = 10000
+        self.visible = vis
 
     def build(self) -> DataTable:
         return DataTable(

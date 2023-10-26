@@ -7,10 +7,12 @@ from flet import RoundedRectangleBorder
 from controls import FormField, Table, FormButton
 from datetime import date
 
+# create database conection
 load_dotenv()
 connection = psycopg.connect(os.getenv("DATABASE_URL"))
 cursor = connection.cursor()
 
+# set database offset and current row
 offset = 0
 current_row = 0
 
@@ -147,6 +149,34 @@ def main(page: ft.Page) -> None:
         address_tf.value = ""
         page.update()
 
+    def obtain_stock_id(stock_code) -> int:
+        cursor.execute(
+            "SELECT stock_id FROM stocklevels WHERE stock_code = %s",
+            (stock_code,),
+        )
+        return int(cursor.fetchone()[0])
+
+    def obtain_quantity(stock_code) -> int:
+        cursor.execute(
+            "SELECT quantity FROM stocklevels WHERE stock_code = %s",
+            (stock_code,),
+        )
+        return int(cursor.fetchone()[0])
+
+    def obtain_moq(stock_code) -> int:
+        cursor.execute(
+            "SELECT moq FROM stocklevels WHERE stock_code = %s",
+            (stock_code,),
+        )
+        return int(cursor.fetchone()[0])
+
+    def obtain_on_order(stock_code) -> int:
+        cursor.execute(
+            "SELECT on_order FROM stocklevels WHERE stock_code = %s",
+            (stock_code,),
+        )
+        return int(cursor.fetchone()[0])
+
     def add_product_data(e):
         stock_code = (
             str(stock_code_product_tf.value)
@@ -180,26 +210,10 @@ def main(page: ft.Page) -> None:
                     (moq, stock_code),
                 ) if moq is not None else None
                 connection.commit()
-                cursor.execute(
-                    "Select stock_id FROM stocklevels WHERE stock_code = %s",
-                    (stock_code,),
-                )
-                stock_id = int(cursor.fetchone()[0])
-                cursor.execute(
-                    "SELECT quantity FROM stocklevels WHERE stock_code = %s",
-                    (stock_code,),
-                )
-                quantity = int(cursor.fetchone()[0])
-                cursor.execute(
-                    "SELECT on_order FROM stocklevels WHERE stock_code = %s",
-                    (stock_code,),
-                )
-                on_order = int(cursor.fetchone()[0])
-                cursor.execute(
-                    "SELECT moq FROM stocklevels WHERE stock_code = %s",
-                    (stock_code,),
-                )
-                moq = int(cursor.fetchone()[0])
+                stock_id = obtain_stock_id(stock_code)
+                quantity = obtain_quantity(stock_code)
+                on_order = obtain_on_order(stock_code)
+                moq = obtain_moq(stock_code)
                 cursor.execute(
                     "UPDATE stockbalance SET balance = %s WHERE stock_id = %s",
                     (quantity + moq - on_order, stock_id),
@@ -221,19 +235,10 @@ def main(page: ft.Page) -> None:
                         (stock_code, moq, quantity, 0),
                     )
                     connection.commit()
-                    cursor.execute(
-                        "Select stock_id FROM stocklevels WHERE stock_code = %s",
-                        (stock_code,),
-                    )
-                    stock_id = int(cursor.fetchone()[0])
-                    cursor.execute(
-                        "SELECT on_order FROM stocklevels WHERE stock_code = %s",
-                        (stock_code,),
-                    )
-                    on_order = 0
+                    stock_id = obtain_stock_id(stock_code)
                     cursor.execute(
                         "INSERT INTO stockbalance(stock_id, balance) VALUES(%s, %s)",
-                        (stock_id, quantity + moq - on_order),
+                        (stock_id, quantity + moq),
                     )
                     connection.commit()
                 page.update()
@@ -280,32 +285,16 @@ def main(page: ft.Page) -> None:
                         (stock_code, quantity, date.today(), customer_id),
                     )
                     connection.commit()
-                    cursor.execute(
-                        "SELECT on_order FROM stocklevels WHERE stock_code = %s",
-                        (stock_code,),
-                    )
-                    on_order = int(cursor.fetchone()[0])
+                    on_order = obtain_on_order(stock_code)
                     cursor.execute(
                         "UPDATE stocklevels SET on_order = %s WHERE stock_code = %s",
                         (on_order + quantity, stock_code),
                     )
                     connection.commit()
                     on_order = on_order + quantity
-                    cursor.execute(
-                        "SELECT quantity FROM stocklevels WHERE stock_code = %s",
-                        (stock_code,),
-                    )
-                    quantity = int(cursor.fetchone()[0])
-                    cursor.execute(
-                        "SELECT moq FROM stocklevels WHERE stock_code = %s",
-                        (stock_code,),
-                    )
-                    moq = int(cursor.fetchone()[0])
-                    cursor.execute(
-                        "Select stock_id FROM stocklevels WHERE stock_code = %s",
-                        (stock_code,),
-                    )
-                    stock_id = int(cursor.fetchone()[0])
+                    quantity = obtain_quantity(stock_code)
+                    moq = obtain_moq(stock_code)
+                    stock_id = obtain_stock_id(stock_code)
                     cursor.execute(
                         "UPDATE stockbalance SET balance = %s WHERE stock_id = %s",
                         (quantity + moq - on_order, stock_id),
@@ -331,11 +320,7 @@ def main(page: ft.Page) -> None:
                 "SELECT * FROM products WHERE stock_code = %s", (stock_code,)
             )
             if cursor.rowcount > 0:
-                cursor.execute(
-                    "SELECT stock_id FROM stocklevels WHERE stock_code = %s",
-                    (stock_code,),
-                )
-                stock_id = int(cursor.fetchone()[0])
+                stock_id = obtain_stock_id(stock_code)
                 cursor.execute(
                     "DELETE FROM stockbalance WHERE stock_id = %s", (stock_id,)
                 )
@@ -372,11 +357,7 @@ def main(page: ft.Page) -> None:
                     "SELECT stock_code FROM orders WHERE order_id = %s", (order_id,)
                 )
                 stock_code = str(cursor.fetchone()[0])
-                cursor.execute(
-                    "SELECT on_order FROM stocklevels WHERE stock_code = %s",
-                    (stock_code,),
-                )
-                on_order = int(cursor.fetchone()[0])
+                on_order = obtain_on_order(stock_code)
                 cursor.execute(
                     "SELECT order_quantity FROM orders WHERE order_id = %s", (order_id,)
                 )
@@ -387,20 +368,9 @@ def main(page: ft.Page) -> None:
                 )
                 connection.commit()
                 on_order = on_order - order_quantity
-                cursor.execute(
-                    "SELECT quantity FROM stocklevels WHERE stock_code = %s",
-                    (stock_code,),
-                )
-                quantity = int(cursor.fetchone()[0])
-                cursor.execute(
-                    "SELECT moq FROM stocklevels WHERE stock_code = %s", (stock_code,)
-                )
-                moq = int(cursor.fetchone()[0])
-                cursor.execute(
-                    "Select stock_id FROM stocklevels WHERE stock_code = %s",
-                    (stock_code,),
-                )
-                stock_id = int(cursor.fetchone()[0])
+                quantity = obtain_quantity(stock_code)
+                moq = obtain_moq(stock_code)
+                stock_id = obtain_stock_id(stock_code)
                 cursor.execute(
                     "UPDATE stockbalance SET balance = %s WHERE stock_id = %s",
                     (quantity + moq - on_order, stock_id),
@@ -479,7 +449,7 @@ def main(page: ft.Page) -> None:
 
     search_bar = FormField("Search", ft.colors.ON_PRIMARY, ft.colors.TRANSPARENT, ft.colors.ON_PRIMARY, search, False)
 
-    stock_levels_table = Table()
+    stock_levels_table = Table(True)
 
     stock_levels_columns, _ = refresh_table()
 
@@ -488,7 +458,7 @@ def main(page: ft.Page) -> None:
         for column in stock_levels_columns
     ]
 
-    search_stock_levels_table = Table()
+    search_stock_levels_table = Table(False)
 
     search_stock_levels_table.columns = [
         ft.DataColumn(ft.Text(str(column).capitalize().replace("_", " ")))
