@@ -16,6 +16,7 @@ class FormField(TextField):
         self.cursor_color = textcolor
         self.on_change = change
         self.visible = vis
+        self.content_padding = 10
 
     def build(self) -> TextField:
         return TextField(
@@ -29,7 +30,8 @@ class FormField(TextField):
             bgcolor=self.bgcolor,
             cursor_color=self.cursor_color,
             on_change=self.on_change,
-            visible=self.visible
+            visible=self.visible,
+            content_padding=self.content_padding
         )
 
 

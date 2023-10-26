@@ -63,7 +63,7 @@ def main(page: ft.Page) -> None:
                 finally:
                     sem.release()
 
-    def refresh_table(e):
+    def refresh_table():
         stock_levels_table.rows = []
         global offset
         offset = 0
@@ -72,7 +72,7 @@ def main(page: ft.Page) -> None:
         )
         return fetch_stock_levels(1)
 
-    def show_banner(e, content):
+    def show_banner(content):
         page.banner.open = True
         page.banner.content = ft.Text(content, color=ft.colors.ON_ERROR_CONTAINER)
         page.update()
@@ -82,11 +82,11 @@ def main(page: ft.Page) -> None:
         page.update()
 
     def show_search_bar(e):
-        if search_bar.visible == False:
+        if not search_bar.visible:
             search_bar.visible = True
             search_bar.focus()
             page.update()
-        elif search_bar.visible == True:
+        elif search_bar.visible:
             search_bar.visible = False
             search_bar.value = ""
             search(e)
@@ -102,7 +102,7 @@ def main(page: ft.Page) -> None:
                 f"CAST({column} as TEXT) LIKE %s" for column in columns_to_search
             ]
             where_clause = " OR ".join(conditions)
-            sql_query = f"SELECT d.*, stocklevels.quantity, stocklevels.moq, stocklevels.on_order, stockbalance.balance FROM products d INNER JOIN stocklevels using(stock_code) INNER JOIN stockbalance using(stock_id) WHERE {where_clause}"
+            sql_query: str = f"SELECT d.*, stocklevels.quantity, stocklevels.moq, stocklevels.on_order, stockbalance.balance FROM products d INNER JOIN stocklevels using(stock_code) INNER JOIN stockbalance using(stock_id) WHERE {where_clause}"
             params = [f"%{query}%"] * len(columns_to_search)
             cursor.execute(sql_query, params)
             search_data = cursor.fetchall()
@@ -111,7 +111,7 @@ def main(page: ft.Page) -> None:
                 rows.append(
                     ft.DataRow(
                         cells=[ft.DataCell(ft.Text(str(cell))) for cell in row],
-                        on_select_changed=lambda e, row=row: load_data(row),
+                        on_select_changed=lambda e, row: load_data(row),
                     )
                 )
                 search_stock_levels_table.rows = rows
@@ -219,7 +219,6 @@ def main(page: ft.Page) -> None:
             else:
                 if stock_cat is None or description is None or quantity is None or moq is None:
                     show_banner(
-                        e,
                         "Please fill in all fields as there is no stock code match",
                     )
                 else:
@@ -250,11 +249,12 @@ def main(page: ft.Page) -> None:
                     connection.commit()
                 page.update()
         elif stock_code is None:
-            show_banner(e, "Please fill in the stock code field")
+            show_banner("Please fill in the stock code field")
             page.update()
         clear_product_form(e)
-        refresh_table(e)
-        search(e) if search_stock_levels_table.visible == True else None
+        refresh_table()
+        if search_stock_levels_table.visible:
+            search(e)
 
     def add_order_data(e):
         stock_code = (
@@ -312,11 +312,11 @@ def main(page: ft.Page) -> None:
                     )
                     connection.commit()
                 else:
-                    show_banner(e, "Please fill in all fields")
+                    show_banner("Please fill in all fields")
                 page.update()
             else:
                 if stock_code is None or quantity is None or name is None or address is None:
-                    show_banner(e, "Please fill in all fields")
+                    show_banner("Please fill in all fields")
                 else:
                     cursor.execute(
                         "INSERT INTO customers(name, address) VALUES(%s, %s)",
@@ -366,11 +366,11 @@ def main(page: ft.Page) -> None:
                     connection.commit()
                 page.update()
         else:
-            show_banner(e, "Stock Code does not exist")
+            show_banner("Stock Code does not exist")
             page.update()
         clear_order_form(e)
-        refresh_table(e)
-        if search_stock_levels_table is True:
+        refresh_table()
+        if search_stock_levels_table.visible:
             search(e)
         check_customer_exists(e)
 
@@ -403,14 +403,14 @@ def main(page: ft.Page) -> None:
                 )
                 connection.commit()
             else:
-                show_banner(e, "Stock Code does not exist")
+                show_banner("Stock Code does not exist")
                 page.update()
         else:
-            show_banner(e, "Please fill in the stock code field")
+            show_banner("Please fill in the stock code field")
             page.update()
         clear_product_form(e)
-        refresh_table(e)
-        if search_stock_levels_table.visible is True:
+        refresh_table()
+        if search_stock_levels_table.visible:
             search(e)
 
     def remove_order_data(e):
@@ -459,14 +459,15 @@ def main(page: ft.Page) -> None:
                 cursor.execute("DELETE FROM orders WHERE order_id = %s", (order_id,))
                 connection.commit()
             else:
-                show_banner(e, "Order ID does not exist")
+                show_banner("Order ID does not exist")
                 page.update()
         else:
-            show_banner(e, "Please fill in the order ID field")
+            show_banner("Please fill in the order ID field")
             page.update()
         clear_order_form(e)
-        refresh_table(e)
-        search(e) if search_stock_levels_table.visible == True else None
+        refresh_table()
+        if search_stock_levels_table.visible:
+            search(e)
 
     sem = threading.Semaphore()
 
@@ -530,7 +531,7 @@ def main(page: ft.Page) -> None:
 
     stock_levels_table = Table()
 
-    stock_levels_columns, _ = refresh_table(None)
+    stock_levels_columns, _ = refresh_table()
 
     stock_levels_table.columns = [
         ft.DataColumn(ft.Text(str(column).capitalize().replace("_", " ")))
@@ -544,23 +545,40 @@ def main(page: ft.Page) -> None:
         for column in stock_levels_columns
     ]
 
-    stock_code_product_tf = FormField("Stock Code", ft.colors.TRANSPARENT, ft.colors.SURFACE_VARIANT, ft.colors.ON_SURFACE_VARIANT, None, True)
-    stock_code_order_tf = FormField("Stock Code", ft.colors.TRANSPARENT, ft.colors.SURFACE_VARIANT, ft.colors.ON_SURFACE_VARIANT, None, True)
-    order_id_tf = FormField("Order ID", ft.colors.TRANSPARENT, ft.colors.SURFACE_VARIANT, ft.colors.ON_SURFACE_VARIANT, None, True)
-    stock_cat_tf = FormField("Stock Category", ft.colors.TRANSPARENT, ft.colors.SURFACE_VARIANT, ft.colors.ON_SURFACE_VARIANT, None, True)
-    description_tf = FormField("Description", ft.colors.TRANSPARENT, ft.colors.SURFACE_VARIANT, ft.colors.ON_SURFACE_VARIANT, None, True)
-    quantity_tf = FormField("Quantity", ft.colors.TRANSPARENT, ft.colors.SURFACE_VARIANT, ft.colors.ON_SURFACE_VARIANT, None, True)
-    moq_tf = FormField("MOQ", ft.colors.TRANSPARENT, ft.colors.SURFACE_VARIANT, ft.colors.ON_SURFACE_VARIANT, None, True)
-    order_quantity_tf = FormField("Order Quantity", ft.colors.TRANSPARENT, ft.colors.SURFACE_VARIANT, ft.colors.ON_SURFACE_VARIANT, None, True)
-    name_tf = FormField("Customer Name", ft.colors.TRANSPARENT, ft.colors.SURFACE_VARIANT, ft.colors.ON_SURFACE_VARIANT, None, True)
-    address_tf = FormField("Customer Address", ft.colors.TRANSPARENT, ft.colors.SURFACE_VARIANT, ft.colors.ON_SURFACE_VARIANT, None, True)
+    stock_code_product_tf = FormField("Stock Code", ft.colors.TRANSPARENT, ft.colors.SURFACE_VARIANT,
+                                      ft.colors.ON_SURFACE_VARIANT, None, True)
+    stock_code_order_tf = FormField("Stock Code", ft.colors.TRANSPARENT, ft.colors.SURFACE_VARIANT,
+                                    ft.colors.ON_SURFACE_VARIANT, None, True)
+    order_id_tf = FormField("Order ID", ft.colors.TRANSPARENT, ft.colors.SURFACE_VARIANT, ft.colors.ON_SURFACE_VARIANT,
+                            None, True)
+    stock_cat_tf = FormField("Stock Category", ft.colors.TRANSPARENT, ft.colors.SURFACE_VARIANT,
+                             ft.colors.ON_SURFACE_VARIANT, None, True)
+    description_tf = FormField("Description", ft.colors.TRANSPARENT, ft.colors.SURFACE_VARIANT,
+                               ft.colors.ON_SURFACE_VARIANT, None, True)
+    quantity_tf = FormField("Quantity", ft.colors.TRANSPARENT, ft.colors.SURFACE_VARIANT, ft.colors.ON_SURFACE_VARIANT,
+                            None, True)
+    moq_tf = FormField("MOQ", ft.colors.TRANSPARENT, ft.colors.SURFACE_VARIANT, ft.colors.ON_SURFACE_VARIANT, None,
+                       True)
+    order_quantity_tf = FormField("Order Quantity", ft.colors.TRANSPARENT, ft.colors.SURFACE_VARIANT,
+                                  ft.colors.ON_SURFACE_VARIANT, None, True)
+    name_tf = FormField("Customer Name", ft.colors.TRANSPARENT, ft.colors.SURFACE_VARIANT, ft.colors.ON_SURFACE_VARIANT,
+                        None, True)
+    address_tf = FormField("Customer Address", ft.colors.TRANSPARENT, ft.colors.SURFACE_VARIANT,
+                           ft.colors.ON_SURFACE_VARIANT, None, True)
 
-    add_product_button = ft.Container(FormButton(ft.icons.ADD_ROUNDED, add_product_data, ft.colors.ON_PRIMARY), bgcolor=ft.colors.PRIMARY, border_radius=8)
-    add_order_button = ft.Container(FormButton(ft.icons.ADD_ROUNDED, add_order_data, ft.colors.ON_PRIMARY), bgcolor=ft.colors.PRIMARY, border_radius=8)
-    delete_product_button = ft.Container(FormButton(ft.icons.DELETE_ROUNDED, remove_product_data, ft.colors.ON_PRIMARY), bgcolor=ft.colors.PRIMARY, border_radius=8)
-    delete_order_button = ft.Container(FormButton(ft.icons.DELETE_ROUNDED, remove_order_data, ft.colors.ON_PRIMARY), bgcolor=ft.colors.PRIMARY, border_radius=8)
-    clear_product_form_button = ft.Container(FormButton(ft.icons.CLEAR_ROUNDED, clear_product_form, ft.colors.ON_PRIMARY), bgcolor=ft.colors.PRIMARY, border_radius=8)
-    clear_order_form_button = ft.Container(FormButton(ft.icons.CLEAR_ROUNDED, clear_order_form, ft.colors.ON_PRIMARY), bgcolor=ft.colors.PRIMARY, border_radius=8)
+    add_product_button = ft.Container(FormButton(ft.icons.ADD_ROUNDED, add_product_data, ft.colors.ON_PRIMARY),
+                                      bgcolor=ft.colors.PRIMARY, border_radius=8)
+    add_order_button = ft.Container(FormButton(ft.icons.ADD_ROUNDED, add_order_data, ft.colors.ON_PRIMARY),
+                                    bgcolor=ft.colors.PRIMARY, border_radius=8)
+    delete_product_button = ft.Container(FormButton(ft.icons.DELETE_ROUNDED, remove_product_data, ft.colors.ON_PRIMARY),
+                                         bgcolor=ft.colors.PRIMARY, border_radius=8)
+    delete_order_button = ft.Container(FormButton(ft.icons.DELETE_ROUNDED, remove_order_data, ft.colors.ON_PRIMARY),
+                                       bgcolor=ft.colors.PRIMARY, border_radius=8)
+    clear_product_form_button = ft.Container(
+        FormButton(ft.icons.CLEAR_ROUNDED, clear_product_form, ft.colors.ON_PRIMARY), bgcolor=ft.colors.PRIMARY,
+        border_radius=8)
+    clear_order_form_button = ft.Container(FormButton(ft.icons.CLEAR_ROUNDED, clear_order_form, ft.colors.ON_PRIMARY),
+                                           bgcolor=ft.colors.PRIMARY, border_radius=8)
     minimise = FormButton(ft.icons.REMOVE_ROUNDED, minimise_forms, ft.colors.PRIMARY)
 
     forms = ft.Container(
@@ -591,13 +609,12 @@ def main(page: ft.Page) -> None:
                             ft.Row([quantity_tf, moq_tf]),
                         ],
                         expand=True,
-                        scroll=True,
+                        scroll=ft.ScrollMode.AUTO,
                     ),
                     expand=True,
                     border=ft.border.all(2, ft.colors.SURFACE_VARIANT),
                     border_radius=8,
                     padding=15,
-                    height=350,
                     clip_behavior=ft.ClipBehavior.HARD_EDGE,
                 ),
                 ft.Container(
@@ -621,19 +638,16 @@ def main(page: ft.Page) -> None:
                             ft.Row([address_tf]),
                         ],
                         expand=True,
-                        scroll=True,
+                        scroll=ft.ScrollMode.AUTO,
                     ),
                     expand=True,
                     border=ft.border.all(2, ft.colors.SURFACE_VARIANT),
                     border_radius=8,
                     padding=15,
-                    height=350,
                     clip_behavior=ft.ClipBehavior.HARD_EDGE,
                 ),
             ]
         ),
-        expand=True,
-        alignment=ft.Alignment(0, -1),
     )
 
     page.add(
@@ -644,7 +658,7 @@ def main(page: ft.Page) -> None:
                         ft.Text(
                             "Calibre Data Manager",
                             color=ft.colors.ON_PRIMARY,
-                            text_align="left",
+                            text_align=ft.TextAlign.LEFT,
                             weight=ft.FontWeight.BOLD,
                         ),
                         padding=10,
@@ -652,7 +666,7 @@ def main(page: ft.Page) -> None:
                     search_button,
                     search_bar,
                 ],
-                alignment="center",
+                alignment=ft.MainAxisAlignment.CENTER,
             ),
             padding=10,
             bgcolor=ft.colors.PRIMARY,
@@ -660,11 +674,9 @@ def main(page: ft.Page) -> None:
             height=75,
         ),
         forms,
-        ft.Container(
-            ft.Column(
-                [ft.Divider(color=ft.colors.SURFACE_VARIANT, thickness=2), minimise]
-            ),
-            padding=10,
+        ft.Column(
+            [ft.Divider(color=ft.colors.SURFACE_VARIANT, thickness=2), minimise],
+
         ),
         ft.Column(
             [
@@ -677,10 +689,9 @@ def main(page: ft.Page) -> None:
                     clip_behavior=ft.ClipBehavior.HARD_EDGE,
                 ),
             ],
-            scroll=True,
+            scroll=ft.ScrollMode.AUTO,
             on_scroll=on_scroll,
             expand=True,
-            alignment=ft.Alignment(0, -1),
         ),
     )
 
