@@ -516,6 +516,7 @@ def main(page: ft.Page) -> None:
         None,
         True,
     )
+
     stock_code_order_tf = FormField(
         "Stock Code",
         ft.colors.TRANSPARENT,
@@ -524,6 +525,7 @@ def main(page: ft.Page) -> None:
         None,
         True,
     )
+
     order_id_tf = FormField(
         "Order ID",
         ft.colors.TRANSPARENT,
@@ -532,6 +534,7 @@ def main(page: ft.Page) -> None:
         None,
         True,
     )
+
     stock_cat_tf = FormField(
         "Stock Category",
         ft.colors.TRANSPARENT,
@@ -540,6 +543,7 @@ def main(page: ft.Page) -> None:
         None,
         True,
     )
+
     description_tf = FormField(
         "Description",
         ft.colors.TRANSPARENT,
@@ -548,6 +552,7 @@ def main(page: ft.Page) -> None:
         None,
         True,
     )
+
     quantity_tf = FormField(
         "Quantity",
         ft.colors.TRANSPARENT,
@@ -556,6 +561,7 @@ def main(page: ft.Page) -> None:
         None,
         True,
     )
+
     moq_tf = FormField(
         "MOQ",
         ft.colors.TRANSPARENT,
@@ -564,6 +570,7 @@ def main(page: ft.Page) -> None:
         None,
         True,
     )
+
     order_quantity_tf = FormField(
         "Order Quantity",
         ft.colors.TRANSPARENT,
@@ -572,6 +579,7 @@ def main(page: ft.Page) -> None:
         None,
         True,
     )
+
     name_tf = FormField(
         "Customer Name",
         ft.colors.TRANSPARENT,
@@ -580,6 +588,7 @@ def main(page: ft.Page) -> None:
         None,
         True,
     )
+
     address_tf = FormField(
         "Customer Address",
         ft.colors.TRANSPARENT,
@@ -594,31 +603,37 @@ def main(page: ft.Page) -> None:
         bgcolor=ft.colors.PRIMARY,
         border_radius=8,
     )
+
     add_order_button = ft.Container(
         FormButton(ft.icons.ADD_ROUNDED, add_order_data, ft.colors.ON_PRIMARY),
         bgcolor=ft.colors.PRIMARY,
         border_radius=8,
     )
+
     delete_product_button = ft.Container(
         FormButton(ft.icons.DELETE_ROUNDED, remove_product_data, ft.colors.ON_PRIMARY),
         bgcolor=ft.colors.PRIMARY,
         border_radius=8,
     )
+
     delete_order_button = ft.Container(
         FormButton(ft.icons.DELETE_ROUNDED, remove_order_data, ft.colors.ON_PRIMARY),
         bgcolor=ft.colors.PRIMARY,
         border_radius=8,
     )
+
     clear_product_form_button = ft.Container(
         FormButton(ft.icons.CLEAR_ROUNDED, clear_product_form, ft.colors.ON_PRIMARY),
         bgcolor=ft.colors.PRIMARY,
         border_radius=8,
     )
+
     clear_order_form_button = ft.Container(
         FormButton(ft.icons.CLEAR_ROUNDED, clear_order_form, ft.colors.ON_PRIMARY),
         bgcolor=ft.colors.PRIMARY,
         border_radius=8,
     )
+
     minimise = FormButton(ft.icons.REMOVE_ROUNDED, minimise_forms, ft.colors.PRIMARY)
 
     forms = ft.Container(
