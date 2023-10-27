@@ -9,19 +9,16 @@ from flet import RoundedRectangleBorder
 
 from controls import FormField, Table, FormButton
 
-# create database conection
 load_dotenv()
 connection = psycopg.connect(os.getenv("DATABASE_URL"))
 cursor = connection.cursor()
 
-# set table row offset and current row
 offset = 0
 current_row = 0
 
 
 def main(page: ft.Page) -> None:
-    # obtain data from stocklevels table within the limit from the offset
-    def fetch_stock_levels(limit):
+    def fetch_stock_levels(limit) -> tuple | int:
         global offset
         cursor.execute(
             "SELECT d.*, stocklevels.quantity, stocklevels.moq, stocklevels.on_order, stockbalance.balance FROM products d INNER JOIN stocklevels using(stock_code) INNER JOIN stockbalance using(stock_id) LIMIT %s OFFSET %s",
@@ -32,8 +29,7 @@ def main(page: ft.Page) -> None:
         offset += limit
         return column_names, stock_levels
 
-    # load data from the table into the form fields
-    def load_data(row):
+    def load_data(row) -> None:
         stock_code_product_tf.value = row[0]
         stock_cat_tf.value = row[1]
         description_tf.value = row[2]
@@ -42,8 +38,7 @@ def main(page: ft.Page) -> None:
         stock_code_order_tf.value = row[0]
         page.update()
 
-    # add the fetched data to the table
-    def add_data_to_table(table: ft.DataTable, fetch_function, limit, rows):
+    def add_data_to_table(table: ft.DataTable, fetch_function, limit, rows) -> None:
         column_names, data = fetch_function(limit=limit)
         new_rows = []
         for row in data:
@@ -57,8 +52,7 @@ def main(page: ft.Page) -> None:
         table.rows = rows
         page.update()
 
-    # fetches and adds more data to the table as the user scrolls
-    def on_scroll(e: ft.OnScrollEvent):
+    def on_scroll(e: ft.OnScrollEvent) -> None:
         if e.pixels >= e.max_scroll_extent - 300:
             if sem.acquire(blocking=False):
                 try:
@@ -71,8 +65,7 @@ def main(page: ft.Page) -> None:
                 finally:
                     sem.release()
 
-    # refreshes the table
-    def refresh_table():
+    def refresh_table() -> tuple | int:
         stock_levels_table.rows = []
         global offset
         offset = 0
@@ -81,19 +74,16 @@ def main(page: ft.Page) -> None:
         )
         return fetch_stock_levels(1)
 
-    # shows a banner displaying a given error message
-    def show_banner(content):
+    def show_banner(content) -> None:
         page.banner.open = True
         page.banner.content = ft.Text(content, color=ft.colors.ON_ERROR_CONTAINER)
         page.update()
 
-    # closes the banner
-    def close_banner(e):
+    def close_banner(e) -> None:
         page.banner.open = False
         page.update()
 
-    # shows the search bar
-    def show_search_bar(e):
+    def show_search_bar(e) -> None:
         if not search_bar.visible:
             search_bar.visible = True
             search_bar.focus()
@@ -104,8 +94,7 @@ def main(page: ft.Page) -> None:
             search(e)
             page.update()
 
-    # searches the table for a given query and displays the results in the search table
-    def search(e):
+    def search(e) -> None:
         query = str(search_bar.value.strip())
         if query != "":
             search_stock_levels_table.visible = True
@@ -135,8 +124,7 @@ def main(page: ft.Page) -> None:
             stock_levels_table.visible = True
             page.update()
 
-    # minimises the data entry forms if they are visible or maximises them if they are not
-    def minimise_forms(e):
+    def minimise_forms(e) -> None:
         if forms.visible:
             forms.visible = False
             minimise.icon = ft.icons.ADD_ROUNDED
@@ -146,8 +134,7 @@ def main(page: ft.Page) -> None:
             minimise.icon = ft.icons.REMOVE_ROUNDED
             page.update()
 
-    # clears the product form
-    def clear_product_form(e):
+    def clear_product_form(e) -> None:
         stock_code_product_tf.value = ""
         stock_cat_tf.value = ""
         description_tf.value = ""
@@ -155,15 +142,13 @@ def main(page: ft.Page) -> None:
         moq_tf.value = ""
         page.update()
 
-    # clears the order form
-    def clear_order_form(e):
+    def clear_order_form(e) -> None:
         stock_code_order_tf.value = ""
         order_quantity_tf.value = ""
         name_tf.value = ""
         address_tf.value = ""
         page.update()
 
-    # obtains the stock id of a given stock code
     def obtain_stock_id(stock_code) -> int:
         cursor.execute(
             "SELECT stock_id FROM stocklevels WHERE stock_code = %s",
@@ -179,7 +164,6 @@ def main(page: ft.Page) -> None:
         )
         return int(cursor.fetchone()[0])
 
-    # obtains the moq of a given stock code
     def obtain_moq(stock_code) -> int:
         cursor.execute(
             "SELECT moq FROM stocklevels WHERE stock_code = %s",
@@ -187,7 +171,6 @@ def main(page: ft.Page) -> None:
         )
         return int(cursor.fetchone()[0])
 
-    # obtains the number on order of a given stock code
     def obtain_on_order(stock_code) -> int:
         cursor.execute(
             "SELECT on_order FROM stocklevels WHERE stock_code = %s",
@@ -195,8 +178,7 @@ def main(page: ft.Page) -> None:
         )
         return int(cursor.fetchone()[0])
 
-    # adds or updates product data
-    def add_product_data(e):
+    def add_product_data(e) -> None:
         stock_code: str | None = (
             str(stock_code_product_tf.value)
             if stock_code_product_tf.value != ""
@@ -276,8 +258,7 @@ def main(page: ft.Page) -> None:
         if search_stock_levels_table.visible:
             search(e)
 
-    # adds order data
-    def add_order_data(e):
+    def add_order_data(e) -> None:
         stock_code = (
             str(stock_code_order_tf.value) if stock_code_order_tf.value != "" else None
         )
@@ -345,8 +326,7 @@ def main(page: ft.Page) -> None:
         if search_stock_levels_table.visible:
             search(e)
 
-    # removes product data
-    def remove_product_data(e):
+    def remove_product_data(e) -> None:
         stock_code = str(stock_code_product_tf.value)
         if stock_code != "":
             cursor.execute(
@@ -381,8 +361,7 @@ def main(page: ft.Page) -> None:
         if search_stock_levels_table.visible:
             search(e)
 
-    # removes order data
-    def remove_order_data(e):
+    def remove_order_data(e) -> None:
         order_id = int(order_id_tf.value) if order_id_tf.value is not None else None
         if order_id is not None:
             cursor.execute("SELECT * FROM orders WHERE order_id = %s", (order_id,))
