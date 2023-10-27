@@ -362,7 +362,7 @@ def main(page: ft.Page) -> None:
             search(e)
 
     def remove_order_data(e) -> None:
-        order_id = int(order_id_tf.value) if order_id_tf.value is not None else None
+        order_id = int(order_id_tf.value) if order_id_tf.value != "" else None
         if order_id is not None:
             cursor.execute("SELECT * FROM orders WHERE order_id = %s", (order_id,))
             if cursor.rowcount > 0:
