@@ -1,9 +1,30 @@
 import flet as ft
-from flet import TextStyle, TextField, DataTable, border, colors, FontWeight, MaterialState, IconButton, icons, ButtonStyle, RoundedRectangleBorder, Container
+from flet import (
+    TextStyle,
+    TextField,
+    DataTable,
+    border,
+    colors,
+    FontWeight,
+    MaterialState,
+    IconButton,
+    icons,
+    ButtonStyle,
+    RoundedRectangleBorder,
+    Container,
+)
 
 
 class FormField(TextField):
-    def __init__(self, hint_text: str, bordercolor: colors, bg_color: colors, textcolor: colors, change, vis: bool) -> None:
+    def __init__(
+        self,
+        hint_text: str,
+        bordercolor: colors,
+        bg_color: colors,
+        textcolor: colors,
+        change,
+        vis: bool,
+    ) -> None:
         super().__init__()
         self.hint_text = hint_text
         self.hint_style = TextStyle(color=textcolor)
@@ -31,7 +52,7 @@ class FormField(TextField):
             cursor_color=self.cursor_color,
             on_change=self.on_change,
             visible=self.visible,
-            content_padding=self.content_padding
+            content_padding=self.content_padding,
         )
 
 
@@ -43,8 +64,12 @@ class Table(DataTable):
         self.divider_thickness = 0
         self.heading_row_height = 75
         self.horizontal_lines = border.BorderSide(1, colors.PRIMARY)
-        self.heading_text_style = TextStyle(color=colors.ON_SURFACE_VARIANT, weight=FontWeight.BOLD)
-        self.data_text_style = TextStyle(color=colors.ON_SURFACE_VARIANT, weight=FontWeight.W_600)
+        self.heading_text_style = TextStyle(
+            color=colors.ON_SURFACE_VARIANT, weight=FontWeight.BOLD
+        )
+        self.data_text_style = TextStyle(
+            color=colors.ON_SURFACE_VARIANT, weight=FontWeight.W_600
+        )
         self.data_row_color = {MaterialState.HOVERED: colors.SURFACE_VARIANT}
         self.width = 10000
         self.visible = vis
@@ -59,12 +84,13 @@ class Table(DataTable):
             heading_text_style=self.heading_text_style,
             data_text_style=self.data_text_style,
             data_row_color=self.data_row_color,
-            width=self.width
+            width=self.width,
+            visible=self.visible,
         )
 
 
 class FormButton(IconButton):
-    def __init__(self, icon: icons, click, color: colors) -> None:
+    def __init__(self, icon: icons, click, color: colors, vis: bool) -> None:
         super().__init__()
         self.icon = icon
         self.style = ButtonStyle(
@@ -72,10 +98,7 @@ class FormButton(IconButton):
             shape={MaterialState.DEFAULT: RoundedRectangleBorder(radius=8)},
         )
         self.on_click = click
+        self.visible = vis
 
     def build(self) -> IconButton:
-        return IconButton(
-            icon=self.icon,
-            style=self.style,
-            on_click=self.on_click
-        )
+        return IconButton(icon=self.icon, style=self.style, on_click=self.on_click)

@@ -408,7 +408,6 @@ def main(page: ft.Page) -> None:
     page.window_width = 700
     page.window_min_height = 700
     page.window_height = 700
-    page.padding = 15
     page.theme = ft.Theme(
         use_material3=True,
         color_scheme=ft.ColorScheme(
@@ -459,7 +458,7 @@ def main(page: ft.Page) -> None:
     )
 
     search_button = FormButton(
-        ft.icons.SEARCH_ROUNDED, show_search_bar, ft.colors.ON_PRIMARY
+        ft.icons.SEARCH_ROUNDED, show_search_bar, ft.colors.ON_PRIMARY, False
     )
 
     search_bar = FormField(
@@ -578,42 +577,52 @@ def main(page: ft.Page) -> None:
     )
 
     add_product_button = ft.Container(
-        FormButton(ft.icons.ADD_ROUNDED, add_product_data, ft.colors.ON_PRIMARY),
+        FormButton(ft.icons.ADD_ROUNDED, add_product_data, ft.colors.ON_PRIMARY, True),
         bgcolor=ft.colors.PRIMARY,
         border_radius=8,
     )
 
     add_order_button = ft.Container(
-        FormButton(ft.icons.ADD_ROUNDED, add_order_data, ft.colors.ON_PRIMARY),
+        FormButton(ft.icons.ADD_ROUNDED, add_order_data, ft.colors.ON_PRIMARY, True),
         bgcolor=ft.colors.PRIMARY,
         border_radius=8,
     )
 
     delete_product_button = ft.Container(
-        FormButton(ft.icons.DELETE_ROUNDED, remove_product_data, ft.colors.ON_PRIMARY),
+        FormButton(
+            ft.icons.DELETE_ROUNDED, remove_product_data, ft.colors.ON_PRIMARY, True
+        ),
         bgcolor=ft.colors.PRIMARY,
         border_radius=8,
     )
 
     delete_order_button = ft.Container(
-        FormButton(ft.icons.DELETE_ROUNDED, remove_order_data, ft.colors.ON_PRIMARY),
+        FormButton(
+            ft.icons.DELETE_ROUNDED, remove_order_data, ft.colors.ON_PRIMARY, True
+        ),
         bgcolor=ft.colors.PRIMARY,
         border_radius=8,
     )
 
     clear_product_form_button = ft.Container(
-        FormButton(ft.icons.CLEAR_ROUNDED, clear_product_form, ft.colors.ON_PRIMARY),
+        FormButton(
+            ft.icons.CLEAR_ROUNDED, clear_product_form, ft.colors.ON_PRIMARY, True
+        ),
         bgcolor=ft.colors.PRIMARY,
         border_radius=8,
     )
 
     clear_order_form_button = ft.Container(
-        FormButton(ft.icons.CLEAR_ROUNDED, clear_order_form, ft.colors.ON_PRIMARY),
+        FormButton(
+            ft.icons.CLEAR_ROUNDED, clear_order_form, ft.colors.ON_PRIMARY, True
+        ),
         bgcolor=ft.colors.PRIMARY,
         border_radius=8,
     )
 
-    minimise = FormButton(ft.icons.REMOVE_ROUNDED, minimise_forms, ft.colors.PRIMARY)
+    minimise = FormButton(
+        ft.icons.REMOVE_ROUNDED, minimise_forms, ft.colors.PRIMARY, True
+    )
 
     forms = ft.Container(
         ft.Row(
@@ -684,49 +693,113 @@ def main(page: ft.Page) -> None:
         ),
     )
 
-    page.add(
-        ft.Container(
-            ft.Row(
-                [
-                    ft.Container(
-                        ft.Text(
-                            "Calibre Data Manager",
-                            color=ft.colors.ON_PRIMARY,
-                            text_align=ft.TextAlign.LEFT,
-                            weight=ft.FontWeight.BOLD,
-                        ),
-                        padding=10,
-                    ),
-                    search_button,
-                    search_bar,
-                ],
-                alignment=ft.MainAxisAlignment.CENTER,
-            ),
-            padding=10,
-            bgcolor=ft.colors.PRIMARY,
-            border_radius=ft.border_radius.only(top_left=8, top_right=8),
-            height=75,
-        ),
-        forms,
-        ft.Column(
-            [ft.Divider(color=ft.colors.SURFACE_VARIANT, thickness=2), minimise],
-        ),
+    username_tf = FormField(
+        hint_text="Username",
+        bordercolor=ft.colors.TRANSPARENT,
+        bg_color=ft.colors.SURFACE_VARIANT,
+        textcolor=ft.colors.ON_SURFACE_VARIANT,
+        change=None,
+        vis=True,
+    )
+
+    password_tf = FormField(
+        hint_text="Password",
+        bordercolor=ft.colors.TRANSPARENT,
+        bg_color=ft.colors.SURFACE_VARIANT,
+        textcolor=ft.colors.ON_SURFACE_VARIANT,
+        change=None,
+        vis=True,
+    )
+
+    login_button = ft.Container(
+        FormButton(ft.icons.LOGIN, None, ft.colors.ON_PRIMARY, True),
+        bgcolor=ft.colors.PRIMARY,
+        border_radius=8,
+    )
+
+    login_form = ft.Container(
         ft.Column(
             [
-                ft.Container(
-                    stock_levels_table,
-                    clip_behavior=ft.ClipBehavior.HARD_EDGE,
+                ft.Text(
+                    "Login",
+                    weight=ft.FontWeight.BOLD,
+                    color=ft.colors.ON_BACKGROUND,
                 ),
-                ft.Container(
-                    search_stock_levels_table,
-                    clip_behavior=ft.ClipBehavior.HARD_EDGE,
-                ),
+                ft.Row([username_tf]),
+                ft.Row([password_tf, login_button]),
             ],
             scroll=ft.ScrollMode.AUTO,
-            on_scroll=on_scroll,
-            expand=True,
         ),
+        border=ft.border.all(2, ft.colors.SURFACE_VARIANT),
+        border_radius=8,
+        padding=15,
+        clip_behavior=ft.ClipBehavior.HARD_EDGE,
     )
+
+    app_bar = ft.Container(
+        ft.Row(
+            [
+                ft.Container(
+                    ft.Text(
+                        "Calibre Data Manager",
+                        color=ft.colors.ON_PRIMARY,
+                        text_align=ft.TextAlign.LEFT,
+                        weight=ft.FontWeight.BOLD,
+                    ),
+                    padding=10,
+                ),
+                search_button,
+                search_bar,
+            ],
+            alignment=ft.MainAxisAlignment.CENTER,
+        ),
+        padding=10,
+        bgcolor=ft.colors.PRIMARY,
+        border_radius=ft.border_radius.only(top_left=8, top_right=8),
+        height=75,
+    )
+
+    def route_change(e: ft.RouteChangeEvent) -> None:
+        page.views.clear()
+        page.views.append(ft.View("/login", [app_bar, login_form], padding=15))
+        if page.route == "/":
+            page.views.append(
+                ft.View(
+                    "/",
+                    [
+                        app_bar,
+                        forms,
+                        ft.Column(
+                            [
+                                ft.Divider(
+                                    color=ft.colors.SURFACE_VARIANT, thickness=2
+                                ),
+                                minimise,
+                            ],
+                        ),
+                        ft.Column(
+                            [
+                                ft.Container(
+                                    stock_levels_table,
+                                    clip_behavior=ft.ClipBehavior.HARD_EDGE,
+                                ),
+                                ft.Container(
+                                    search_stock_levels_table,
+                                    clip_behavior=ft.ClipBehavior.HARD_EDGE,
+                                ),
+                            ],
+                            scroll=ft.ScrollMode.AUTO,
+                            on_scroll=on_scroll,
+                            expand=True,
+                        ),
+                    ],
+                    padding=15,
+                )
+            )
+            search_button.visible = True
+
+    page.on_route_change = route_change
+    page.go("/login")
 
 
 if __name__ == "__main__":
