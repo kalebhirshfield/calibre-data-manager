@@ -20,10 +20,10 @@ class FormField(TextField):
         self,
         hint_text: str,
         bordercolor: colors,
-        bg_color: colors,
+        bgcolor: colors,
         textcolor: colors,
         change,
-        vis: bool,
+        visible: bool,
     ) -> None:
         super().__init__()
         self.hint_text = hint_text
@@ -33,11 +33,11 @@ class FormField(TextField):
         self.border_radius = 8
         self.border_color = bordercolor
         self.border_width = 2
-        self.bgcolor = bg_color
+        self.bgcolor = bgcolor
         self.cursor_color = textcolor
-        self.on_change = change
-        self.visible = vis
+        self.on_submit = change
         self.content_padding = 10
+        self.visible = visible
 
     def build(self) -> TextField:
         return TextField(
@@ -51,8 +51,43 @@ class FormField(TextField):
             bgcolor=self.bgcolor,
             cursor_color=self.cursor_color,
             on_change=self.on_change,
-            visible=self.visible,
             content_padding=self.content_padding,
+            visible=self.visible,
+        )
+
+
+class LoginField(TextField):
+    def __init__(self, hint_text: str, password: bool, click) -> None:
+        super().__init__()
+        self.hint_text = hint_text
+        self.hint_style = TextStyle(color=colors.ON_SURFACE_VARIANT)
+        self.text_style = TextStyle(
+            color=colors.ON_SURFACE_VARIANT, weight=FontWeight.W_600
+        )
+        self.expand = True
+        self.border_radius = 8
+        self.border_color = colors.TRANSPARENT
+        self.bgcolor = colors.SURFACE_VARIANT
+        self.cursor_color = colors.ON_SURFACE_VARIANT
+        self.content_padding = 10
+        self.password = password
+        self.can_reveal_password = password
+        self.on_submit = click
+
+    def build(self) -> TextField:
+        return TextField(
+            hint_text=self.hint_text,
+            hint_style=self.hint_style,
+            text_style=self.text_style,
+            expand=self.expand,
+            border_radius=self.border_radius,
+            border_color=self.border_color,
+            bgcolor=self.bgcolor,
+            cursor_color=self.cursor_color,
+            content_padding=self.content_padding,
+            password=self.password,
+            can_reveal_password=self.can_reveal_password,
+            on_submit=self.on_submit,
         )
 
 
@@ -90,7 +125,7 @@ class Table(DataTable):
 
 
 class FormButton(IconButton):
-    def __init__(self, icon: icons, click, color: colors, vis: bool) -> None:
+    def __init__(self, icon: icons, click, color: colors, visible: bool) -> None:
         super().__init__()
         self.icon = icon
         self.style = ButtonStyle(
@@ -98,7 +133,7 @@ class FormButton(IconButton):
             shape={MaterialState.DEFAULT: RoundedRectangleBorder(radius=8)},
         )
         self.on_click = click
-        self.visible = vis
+        self.visible = visible
 
     def build(self) -> IconButton:
         return IconButton(icon=self.icon, style=self.style, on_click=self.on_click)

@@ -7,7 +7,7 @@ import psycopg
 from dotenv import load_dotenv
 from flet import RoundedRectangleBorder
 
-from controls import FormField, Table, FormButton
+from controls import FormField, LoginField, Table, FormButton
 
 load_dotenv()
 connection = psycopg.connect(os.getenv("DATABASE_URL"))
@@ -83,16 +83,29 @@ def main(page: ft.Page) -> None:
         page.banner.open = False
         page.update()
 
-    def show_search_bar(e) -> None:
-        if not search_bar.visible:
-            search_bar.visible = True
-            search_bar.focus()
-            page.update()
-        elif search_bar.visible:
-            search_bar.visible = False
-            search_bar.value = ""
-            search(e)
-            page.update()
+    def login(e) -> None:
+        username = str(username_tf.value) if username_tf.value != "" else None
+        password = str(password_tf.value) if password_tf.value != "" else None
+        if username != "" and password != "":
+            cursor.execute(
+                "SELECT * FROM users WHERE username = %s AND password = %s",
+                (username, password),
+            )
+            if cursor.rowcount > 0:
+                page.route = "/"
+                route_change(e)
+            else:
+                show_banner("Incorrect username or password")
+        else:
+            show_banner("Please fill in all fields")
+        username_tf.value = ""
+        password_tf.value = ""
+        page.update()
+
+    def logout(e) -> None:
+        page.route = "/login"
+        route_change(e)
+        page.update()
 
     def search(e) -> None:
         query = str(search_bar.value.strip())
@@ -404,10 +417,8 @@ def main(page: ft.Page) -> None:
 
     sem = threading.Semaphore()
 
-    page.window_min_width = 700
-    page.window_width = 700
-    page.window_min_height = 700
-    page.window_height = 700
+    page.window_min_width = 400
+    page.window_min_height = 325
     page.theme = ft.Theme(
         use_material3=True,
         color_scheme=ft.ColorScheme(
@@ -457,8 +468,8 @@ def main(page: ft.Page) -> None:
         ],
     )
 
-    search_button = FormButton(
-        ft.icons.SEARCH_ROUNDED, show_search_bar, ft.colors.ON_PRIMARY, False
+    search_icon = ft.Icon(
+        name=ft.icons.SEARCH, color=ft.colors.ON_PRIMARY, visible=False
     )
 
     search_bar = FormField(
@@ -693,26 +704,12 @@ def main(page: ft.Page) -> None:
         ),
     )
 
-    username_tf = FormField(
-        hint_text="Username",
-        bordercolor=ft.colors.TRANSPARENT,
-        bg_color=ft.colors.SURFACE_VARIANT,
-        textcolor=ft.colors.ON_SURFACE_VARIANT,
-        change=None,
-        vis=True,
-    )
+    username_tf = LoginField("Username", False, None)
 
-    password_tf = FormField(
-        hint_text="Password",
-        bordercolor=ft.colors.TRANSPARENT,
-        bg_color=ft.colors.SURFACE_VARIANT,
-        textcolor=ft.colors.ON_SURFACE_VARIANT,
-        change=None,
-        vis=True,
-    )
+    password_tf = LoginField("Password", True, login)
 
     login_button = ft.Container(
-        FormButton(ft.icons.LOGIN, None, ft.colors.ON_PRIMARY, True),
+        FormButton(ft.icons.LOGIN, login, ft.colors.ON_PRIMARY, True),
         bgcolor=ft.colors.PRIMARY,
         border_radius=8,
     )
@@ -736,6 +733,12 @@ def main(page: ft.Page) -> None:
         clip_behavior=ft.ClipBehavior.HARD_EDGE,
     )
 
+    user_button = ft.Container(
+        FormButton(ft.icons.PERSON, logout, ft.colors.ON_PRIMARY, True),
+        bgcolor=ft.colors.PRIMARY,
+        border_radius=8,
+    )
+
     app_bar = ft.Container(
         ft.Row(
             [
@@ -743,13 +746,13 @@ def main(page: ft.Page) -> None:
                     ft.Text(
                         "Calibre Data Manager",
                         color=ft.colors.ON_PRIMARY,
-                        text_align=ft.TextAlign.LEFT,
                         weight=ft.FontWeight.BOLD,
                     ),
                     padding=10,
                 ),
-                search_button,
+                search_icon,
                 search_bar,
+                user_button,
             ],
             alignment=ft.MainAxisAlignment.CENTER,
         ),
@@ -761,8 +764,25 @@ def main(page: ft.Page) -> None:
 
     def route_change(e: ft.RouteChangeEvent) -> None:
         page.views.clear()
+        page.window_width = 400
+        page.window_height = 325
+        page.window_resizable = True
+        page.window_maximizable = False
+        page.window_resizable = False
+        search_icon.visible = False
+        search_bar.visible = False
+        user_button.visible = False
         page.views.append(ft.View("/login", [app_bar, login_form], padding=15))
         if page.route == "/":
+            search_icon.visible = True
+            search_bar.visible = True
+            user_button.visible = True
+            page.update()
+            page.window_width = 700
+            page.window_height = 700
+            page.window_resizable = True
+            page.window_maximizable = True
+            page.update()
             page.views.append(
                 ft.View(
                     "/",
@@ -796,7 +816,7 @@ def main(page: ft.Page) -> None:
                     padding=15,
                 )
             )
-            search_button.visible = True
+        page.update()
 
     page.on_route_change = route_change
     page.go("/login")
