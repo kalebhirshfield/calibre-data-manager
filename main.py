@@ -778,7 +778,7 @@ def main(page: ft.Page) -> None:
             search_bar.visible = True
             user_button.visible = True
             page.update()
-            page.window_width = 700
+            page.window_width = 800
             page.window_height = 700
             page.window_resizable = True
             page.window_maximizable = True
