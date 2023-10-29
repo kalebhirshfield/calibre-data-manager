@@ -16,6 +16,7 @@ cursor = connection.cursor()
 offset = 0
 current_row = 0
 username = ""
+admin = False
 
 
 def main(page: ft.Page) -> None:
@@ -105,6 +106,8 @@ def main(page: ft.Page) -> None:
                 (username, password),
             )
             if cursor.rowcount > 0:
+                global admin
+                admin = True
                 page.route = "/"
                 route_change(e)
             else:
@@ -116,6 +119,8 @@ def main(page: ft.Page) -> None:
         page.update()
 
     def logout(e) -> None:
+        global admin
+        admin = False
         page.route = "/login"
         route_change(e)
         page.update()
@@ -801,12 +806,11 @@ def main(page: ft.Page) -> None:
         user_icon.visible = False
         user_details.visible = False
         page.views.append(ft.View("/login", [app_bar, login_form], padding=15))
-        if page.route == "/":
+        if page.route == "/" and admin:
             search_icon.visible = True
             search_bar.visible = True
             user_icon.visible = True
             user_details.visible = True
-            page.update()
             page.window_width = 800
             page.window_height = 700
             page.window_resizable = True
@@ -845,6 +849,8 @@ def main(page: ft.Page) -> None:
                     padding=15,
                 )
             )
+        else:
+            page.route = "/login"
         page.update()
 
     page.on_route_change = route_change
