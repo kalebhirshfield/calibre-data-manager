@@ -15,6 +15,7 @@ cursor = connection.cursor()
 
 offset = 0
 current_row = 0
+username = ""
 
 
 def main(page: ft.Page) -> None:
@@ -86,6 +87,18 @@ def main(page: ft.Page) -> None:
     def login(e) -> None:
         username = str(username_tf.value) if username_tf.value != "" else None
         password = str(password_tf.value) if password_tf.value != "" else None
+        user_details.content = ft.Row(
+            [
+                ft.Text(
+                    value=username,
+                    color=ft.colors.ON_PRIMARY,
+                    weight=ft.FontWeight.BOLD,
+                ),
+                logout_button,
+            ],
+            alignment=ft.MainAxisAlignment.CENTER,
+            expand=True,
+        )
         if username != "" and password != "":
             cursor.execute(
                 "SELECT * FROM users WHERE username = %s AND password = %s",
@@ -714,6 +727,12 @@ def main(page: ft.Page) -> None:
         border_radius=8,
     )
 
+    logout_button = ft.Container(
+        FormButton(ft.icons.LOGOUT, logout, ft.colors.ON_PRIMARY, True),
+        bgcolor=ft.colors.PRIMARY,
+        border_radius=8,
+    )
+
     login_form = ft.Container(
         ft.Column(
             [
@@ -733,10 +752,17 @@ def main(page: ft.Page) -> None:
         clip_behavior=ft.ClipBehavior.HARD_EDGE,
     )
 
-    user_button = ft.Container(
-        FormButton(ft.icons.PERSON, logout, ft.colors.ON_PRIMARY, True),
-        bgcolor=ft.colors.PRIMARY,
+    user_icon = ft.Icon(
+        name=ft.icons.PERSON,
+        color=ft.colors.ON_PRIMARY,
+        visible=False,
+    )
+
+    user_details = ft.Container(
+        border=ft.border.all(2, ft.colors.ON_PRIMARY),
+        padding=ft.Padding(left=10, right=10, top=2, bottom=2),
         border_radius=8,
+        visible=False,
     )
 
     app_bar = ft.Container(
@@ -752,7 +778,8 @@ def main(page: ft.Page) -> None:
                 ),
                 search_icon,
                 search_bar,
-                user_button,
+                user_icon,
+                user_details,
             ],
             alignment=ft.MainAxisAlignment.CENTER,
         ),
@@ -771,12 +798,14 @@ def main(page: ft.Page) -> None:
         page.window_resizable = False
         search_icon.visible = False
         search_bar.visible = False
-        user_button.visible = False
+        user_icon.visible = False
+        user_details.visible = False
         page.views.append(ft.View("/login", [app_bar, login_form], padding=15))
         if page.route == "/":
             search_icon.visible = True
             search_bar.visible = True
-            user_button.visible = True
+            user_icon.visible = True
+            user_details.visible = True
             page.update()
             page.window_width = 800
             page.window_height = 700
