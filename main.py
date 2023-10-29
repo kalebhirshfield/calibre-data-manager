@@ -760,7 +760,7 @@ def main(page: ft.Page) -> None:
 
     user_details = ft.Container(
         border=ft.border.all(2, ft.colors.ON_PRIMARY),
-        padding=ft.Padding(left=10, right=10, top=2, bottom=2),
+        padding=ft.Padding(left=10, right=2, top=2, bottom=2),
         border_radius=8,
         visible=False,
     )
