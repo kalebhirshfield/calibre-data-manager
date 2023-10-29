@@ -1,12 +1,10 @@
 import os
 import threading
 from datetime import date
-
 import flet as ft
+from flet import RoundedRectangleBorder
 import psycopg
 from dotenv import load_dotenv
-from flet import RoundedRectangleBorder
-
 from controls import FormField, LoginField, Table, FormButton
 
 load_dotenv()
@@ -15,7 +13,6 @@ cursor = connection.cursor()
 
 offset = 0
 current_row = 0
-username = ""
 admin = False
 
 
@@ -23,7 +20,9 @@ def main(page: ft.Page) -> None:
     def fetch_stock_levels(limit) -> tuple | int:
         global offset
         cursor.execute(
-            "SELECT d.*, stocklevels.quantity, stocklevels.moq, stocklevels.on_order, stockbalance.balance FROM products d INNER JOIN stocklevels using(stock_code) INNER JOIN stockbalance using(stock_id) LIMIT %s OFFSET %s",
+            "SELECT d.*, stocklevels.quantity, stocklevels.moq, stocklevels.on_order, stockbalance.balance\
+            FROM products d INNER JOIN stocklevels using(stock_code) INNER JOIN stockbalance using(stock_id)\
+            LIMIT %s OFFSET %s",
             (limit, offset),
         )
         stock_levels = cursor.fetchall()
@@ -40,14 +39,18 @@ def main(page: ft.Page) -> None:
         stock_code_order_tf.value = row[0]
         page.update()
 
-    def add_data_to_table(table: ft.DataTable, fetch_function, limit, rows) -> None:
+    def add_data_to_table(
+        table: ft.DataTable, fetch_function, limit, rows, row=None
+    ) -> None:
         column_names, data = fetch_function(limit=limit)
         new_rows = []
         for row in data:
             new_rows.append(
                 ft.DataRow(
                     cells=[ft.DataCell(ft.Text(cell)) for cell in row],
-                    on_select_changed=lambda e, row=row: load_data(row),
+                    on_select_changed=lambda e, selected_row=row: load_data(
+                        selected_row
+                    ),
                 )
             )
         rows += new_rows
@@ -81,7 +84,7 @@ def main(page: ft.Page) -> None:
         page.banner.content = ft.Text(content, color=ft.colors.ON_ERROR_CONTAINER)
         page.update()
 
-    def close_banner(e) -> None:
+    def close_banner(_) -> None:
         page.banner.open = False
         page.update()
 
@@ -125,7 +128,7 @@ def main(page: ft.Page) -> None:
         route_change(e)
         page.update()
 
-    def search(e) -> None:
+    def search(_) -> None:
         query = str(search_bar.value.strip())
         if query != "":
             search_stock_levels_table.visible = True
@@ -135,7 +138,9 @@ def main(page: ft.Page) -> None:
                 f"CAST({column} as TEXT) LIKE %s" for column in columns_to_search
             ]
             where_clause = " OR ".join(conditions)
-            sql_query: str = f"SELECT d.*, stocklevels.quantity, stocklevels.moq, stocklevels.on_order, stockbalance.balance FROM products d INNER JOIN stocklevels using(stock_code) INNER JOIN stockbalance using(stock_id) WHERE {where_clause}"
+            sql_query = f"SELECT d.*, stocklevels.quantity, stocklevels.moq, stocklevels.on_order,\
+                        stockbalance.balance FROM products d INNER JOIN stocklevels using(stock_code) INNER JOIN\
+                        stockbalance using(stock_id) WHERE {where_clause}"
             params = [f"%{query}%"] * len(columns_to_search)
             cursor.execute(sql_query, params)
             search_data = cursor.fetchall()
@@ -144,7 +149,9 @@ def main(page: ft.Page) -> None:
                 rows.append(
                     ft.DataRow(
                         cells=[ft.DataCell(ft.Text(str(cell))) for cell in row],
-                        on_select_changed=lambda e, row=row: load_data(row),
+                        on_select_changed=lambda _, selected_row=row: load_data(
+                            selected_row
+                        ),
                     )
                 )
                 search_stock_levels_table.rows = rows
@@ -155,7 +162,7 @@ def main(page: ft.Page) -> None:
             stock_levels_table.visible = True
             page.update()
 
-    def minimise_forms(e) -> None:
+    def minimise_forms(_) -> None:
         if forms.visible:
             forms.visible = False
             minimise.icon = ft.icons.ADD_ROUNDED
@@ -165,7 +172,7 @@ def main(page: ft.Page) -> None:
             minimise.icon = ft.icons.REMOVE_ROUNDED
             page.update()
 
-    def clear_product_form(e) -> None:
+    def clear_product_form(_) -> None:
         stock_code_product_tf.value = ""
         stock_cat_tf.value = ""
         description_tf.value = ""
@@ -173,7 +180,7 @@ def main(page: ft.Page) -> None:
         moq_tf.value = ""
         page.update()
 
-    def clear_order_form(e) -> None:
+    def clear_order_form(_) -> None:
         stock_code_order_tf.value = ""
         order_quantity_tf.value = ""
         name_tf.value = ""
@@ -794,7 +801,7 @@ def main(page: ft.Page) -> None:
         height=75,
     )
 
-    def route_change(e: ft.RouteChangeEvent) -> None:
+    def route_change(_) -> None:
         page.views.clear()
         page.window_width = 400
         page.window_height = 325
