@@ -6,6 +6,11 @@ from flet import RoundedRectangleBorder
 import psycopg
 from dotenv import load_dotenv
 from controls import FormField, LoginField, Table, FormButton
+import matplotlib
+import matplotlib.pyplot as plt
+from flet.matplotlib_chart import MatplotlibChart
+
+matplotlib.use("svg")
 
 load_dotenv()
 connection = psycopg.connect(os.getenv("DATABASE_URL"))
@@ -14,6 +19,7 @@ cursor = connection.cursor()
 offset = 0
 current_row = 0
 admin = False
+chart = None
 
 
 def main(page: ft.Page) -> None:
@@ -127,6 +133,72 @@ def main(page: ft.Page) -> None:
         page.route = "/login"
         route_change(e)
         page.update()
+
+    def display_product_chart(_) -> None:
+        global chart
+        cursor.execute(
+            "SELECT stock_cat, SUM(quantity) FROM products INNER JOIN stocklevels using(stock_code) GROUP BY stock_cat"
+        )
+        data = cursor.fetchall()
+        x = []
+        y = []
+        for row in data:
+            x.append(row[0])
+            y.append(row[1])
+        fig, ax = plt.subplots()
+        ax.bar(x, y, color="#00677f")
+        ax.set_xlabel("Stock Category")
+        ax.set_ylabel("Quantity")
+        ax.set_title("Stock Category vs Quantity")
+        ax.set_facecolor("#fbfcfe")
+        ax.tick_params(axis="x", colors="#191c1d")
+        ax.tick_params(axis="y", colors="#191c1d")
+        ax.spines["bottom"].set_color("#dbe4e8")
+        ax.spines["top"].set_color("#dbe4e8")
+        ax.spines["left"].set_color("#dbe4e8")
+        ax.spines["right"].set_color("#dbe4e8")
+        ax.xaxis.label.set_color("#191c1d")
+        ax.yaxis.label.set_color("#191c1d")
+        ax.title.set_color("#191c1d")
+        chart = ft.matplotlib_chart.MatplotlibChart(fig, transparent=True)
+        page.route = "/chart"
+        route_change(_)
+
+    def display_order_chart(_) -> None:
+        global chart
+        cursor.execute(
+            "SELECT stock_code, SUM(order_quantity) FROM orders GROUP BY stock_code"
+        )
+        data = cursor.fetchall()
+        x = []
+        y = []
+        for row in data:
+            x.append(row[0])
+            y.append(row[1])
+        fig, ax = plt.subplots()
+        ax.bar(x, y, color="#00677f")
+        ax.set_xlabel("Stock Code")
+        ax.set_ylabel("Order Quantity")
+        ax.set_title("Stock Code vs Order Quantity")
+        ax.set_facecolor("#fbfcfe")
+        ax.tick_params(axis="x", colors="#191c1d")
+        ax.tick_params(axis="y", colors="#191c1d")
+        ax.spines["bottom"].set_color("#dbe4e8")
+        ax.spines["top"].set_color("#dbe4e8")
+        ax.spines["left"].set_color("#dbe4e8")
+        ax.spines["right"].set_color("#dbe4e8")
+        ax.xaxis.label.set_color("#191c1d")
+        ax.yaxis.label.set_color("#191c1d")
+        ax.title.set_color("#191c1d")
+        chart = ft.matplotlib_chart.MatplotlibChart(fig, transparent=True)
+        page.route = "/chart"
+        route_change(_)
+
+    def back_to_route(_) -> None:
+        global chart
+        chart = None
+        page.route = "/"
+        route_change(_)
 
     def search(_) -> None:
         query = str(search_bar.value.strip())
@@ -656,6 +728,32 @@ def main(page: ft.Page) -> None:
         border_radius=8,
     )
 
+    display_product_chart_button = ft.Container(
+        FormButton(
+            ft.icons.INSIGHTS_ROUNDED,
+            display_product_chart,
+            ft.colors.ON_PRIMARY,
+            True,
+        ),
+        bgcolor=ft.colors.PRIMARY,
+        border_radius=8,
+    )
+
+    display_order_chart_button = ft.Container(
+        FormButton(
+            ft.icons.INSIGHTS_ROUNDED,
+            display_order_chart,
+            ft.colors.ON_PRIMARY,
+            True,
+        ),
+        bgcolor=ft.colors.PRIMARY,
+        border_radius=8,
+    )
+
+    back_button = FormButton(
+        ft.icons.ARROW_BACK, back_to_route, ft.colors.PRIMARY, True
+    )
+
     minimise = FormButton(
         ft.icons.REMOVE_ROUNDED, minimise_forms, ft.colors.PRIMARY, True
     )
@@ -685,7 +783,7 @@ def main(page: ft.Page) -> None:
                             ),
                             ft.Row([description_tf]),
                             ft.Row([stock_cat_tf]),
-                            ft.Row([quantity_tf, moq_tf]),
+                            ft.Row([quantity_tf, moq_tf, display_product_chart_button]),
                         ],
                         expand=True,
                         scroll=ft.ScrollMode.AUTO,
@@ -714,7 +812,7 @@ def main(page: ft.Page) -> None:
                             ),
                             ft.Row([stock_code_order_tf, order_quantity_tf]),
                             ft.Row([name_tf]),
-                            ft.Row([address_tf]),
+                            ft.Row([address_tf, display_order_chart_button]),
                         ],
                         expand=True,
                         scroll=ft.ScrollMode.AUTO,
@@ -814,15 +912,14 @@ def main(page: ft.Page) -> None:
         user_details.visible = False
         page.views.append(ft.View("/login", [app_bar, login_form], padding=15))
         if page.route == "/" and admin:
-            search_icon.visible = True
-            search_bar.visible = True
-            user_icon.visible = True
-            user_details.visible = True
             page.window_width = 800
             page.window_height = 700
             page.window_resizable = True
             page.window_maximizable = True
-            page.update()
+            search_icon.visible = True
+            search_bar.visible = True
+            user_icon.visible = True
+            user_details.visible = True
             page.views.append(
                 ft.View(
                     "/",
@@ -856,12 +953,22 @@ def main(page: ft.Page) -> None:
                     padding=15,
                 )
             )
+        elif page.route == "/chart" and admin:
+            page.window_width = 700
+            page.window_height = 700
+            page.window_resizable = True
+            page.window_maximizable = True
+            page.views.append(
+                ft.View(
+                    "/chart", [app_bar, ft.Container(chart), back_button], padding=15
+                )
+            )
         else:
             page.route = "/login"
         page.update()
 
     page.on_route_change = route_change
-    page.go("/login")
+    page.go(page.route)
 
 
 if __name__ == "__main__":
