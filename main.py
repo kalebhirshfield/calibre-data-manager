@@ -21,7 +21,6 @@ load_dotenv()
 connection = psycopg.connect(os.getenv("DATABASE_URL"))
 cursor = connection.cursor()
 
-
 offset = 0
 current_row = 0
 admin = False
@@ -294,16 +293,23 @@ def main(page: Page) -> None:
         )
         return int(cursor.fetchone()[0])
 
+    def check_value(value) -> str | int | None:
+        return value if value != "" else None
+
+    def refresh_page(_) -> None:
+        clear_product_form(_)
+        clear_order_form(_)
+        refresh_table()
+        if search_stock_levels_table.visible:
+            search(_)
+        page.update()
+
     def add_product_data(e) -> None:
-        stock_code: str | None = (
-            str(stock_code_product_tf.value)
-            if stock_code_product_tf.value != ""
-            else None
-        )
-        stock_cat = int(stock_cat_tf.value) if stock_cat_tf.value != "" else None
-        description = str(description_tf.value) if description_tf.value != "" else None
-        quantity = int(quantity_tf.value) if quantity_tf.value != "" else None
-        moq = int(moq_tf.value) if moq_tf.value != "" else None
+        stock_code = check_value(str(stock_code_product_tf.value))
+        stock_cat = check_value(int(stock_cat_tf.value))
+        description = check_value(str(description_tf.value))
+        quantity = check_value(int(quantity_tf.value))
+        moq = check_value(int(moq_tf.value))
         if stock_code is not None:
             cursor.execute(
                 "SELECT * FROM products WHERE stock_code = %s", (stock_code,)
@@ -339,12 +345,7 @@ def main(page: Page) -> None:
                 )
                 connection.commit()
             else:
-                if (
-                    stock_cat is None
-                    or description is None
-                    or quantity is None
-                    or moq is None
-                ):
+                if None in [stock_cat or description or quantity or moq]:
                     show_banner(
                         "Please fill in all fields as there is no stock code match",
                     )
@@ -365,34 +366,20 @@ def main(page: Page) -> None:
                         (stock_id, quantity + moq),
                     )
                     connection.commit()
-                page.update()
         elif stock_code is None:
             show_banner("Please fill in the stock code field")
-            page.update()
-        clear_product_form(e)
-        refresh_table()
-        if search_stock_levels_table.visible:
-            search(e)
+        refresh_page(_)
 
     def add_order_data(e) -> None:
-        stock_code = (
-            str(stock_code_order_tf.value) if stock_code_order_tf.value != "" else None
-        )
-        quantity = (
-            int(order_quantity_tf.value) if order_quantity_tf.value != "" else None
-        )
-        name = str(name_tf.value) if name_tf.value != "" else None
-        address = str(address_tf.value) if address_tf.value != "" else None
+        stock_code = check_value(str(stock_code_order_tf.value))
+        quantity = check_value(int(order_quantity_tf.value))
+        name = check_value(str(name_tf.value))
+        address = check_value(str(address_tf.value))
         cursor.execute("SELECT * FROM products WHERE stock_code = %s", (stock_code,))
         if cursor.rowcount > 0:
             cursor.execute("SELECT * FROM customers WHERE name = %s", (name,))
             if cursor.rowcount == 0:
-                if (
-                    stock_code is None
-                    or quantity is None
-                    or name is None
-                    or address is None
-                ):
+                if None in [stock_code or quantity or name or address]:
                     show_banner("Please fill in all fields")
                 else:
                     cursor.execute(
@@ -400,47 +387,37 @@ def main(page: Page) -> None:
                         (name, address),
                     )
                     connection.commit()
-            try:
-                if stock_code is None or quantity is None or name is None:
-                    show_banner("Please fill in all fields")
-                else:
-                    cursor.execute(
-                        "SELECT customer_id FROM customers WHERE name = %s",
-                        (name,),
-                    )
-                    customer_id = int(cursor.fetchone()[0])
-                    cursor.execute(
-                        "INSERT INTO orders(stock_code, order_quantity, date, customer_id) VALUES(%s, %s, %s,%s)",
-                        (stock_code, quantity, date.today(), customer_id),
-                    )
-                    connection.commit()
-                    on_order = obtain_on_order(stock_code)
-                    cursor.execute(
-                        "UPDATE stocklevels SET on_order = %s WHERE stock_code = %s",
-                        (on_order + quantity, stock_code),
-                    )
-                    connection.commit()
-                    on_order = on_order + quantity
-                    quantity = obtain_quantity(stock_code)
-                    moq = obtain_moq(stock_code)
-                    stock_id = obtain_stock_id(stock_code)
-                    cursor.execute(
-                        "UPDATE stockbalance SET balance = %s WHERE stock_id = %s",
-                        (quantity + moq - on_order, stock_id),
-                    )
-                    connection.commit()
-            except psycopg.errors.ForeignKeyViolation:
-                show_banner("Customer does not exist")
-                page.update()
-            finally:
-                page.update()
+            if None in [stock_code or quantity or name]:
+                show_banner("Please fill in all fields")
+            else:
+                cursor.execute(
+                    "SELECT customer_id FROM customers WHERE name = %s",
+                    (name,),
+                )
+                customer_id = int(cursor.fetchone()[0])
+                cursor.execute(
+                    "INSERT INTO orders(stock_code, order_quantity, date, customer_id) VALUES(%s, %s, %s,%s)",
+                    (stock_code, quantity, date.today(), customer_id),
+                )
+                connection.commit()
+                on_order = obtain_on_order(stock_code)
+                cursor.execute(
+                    "UPDATE stocklevels SET on_order = %s WHERE stock_code = %s",
+                    (on_order + quantity, stock_code),
+                )
+                connection.commit()
+                on_order = on_order + quantity
+                quantity = obtain_quantity(stock_code)
+                moq = obtain_moq(stock_code)
+                stock_id = obtain_stock_id(stock_code)
+                cursor.execute(
+                    "UPDATE stockbalance SET balance = %s WHERE stock_id = %s",
+                    (quantity + moq - on_order, stock_id),
+                )
+                connection.commit()
         else:
             show_banner("Stock Code does not exist")
-            page.update()
-        clear_order_form(e)
-        refresh_table()
-        if search_stock_levels_table.visible:
-            search(e)
+        refresh_page(_)
 
     def remove_product_data(e) -> None:
         stock_code = str(stock_code_product_tf.value)
@@ -468,17 +445,12 @@ def main(page: Page) -> None:
                 connection.commit()
             else:
                 show_banner("Stock Code does not exist")
-                page.update()
         else:
             show_banner("Please fill in the stock code field")
-            page.update()
-        clear_product_form(e)
-        refresh_table()
-        if search_stock_levels_table.visible:
-            search(e)
+        refresh_page(_)
 
     def remove_order_data(e) -> None:
-        order_id = int(order_id_tf.value) if order_id_tf.value != "" else None
+        order_id = check_value(int(order_id_tf.value))
         if order_id is not None:
             cursor.execute("SELECT * FROM orders WHERE order_id = %s", (order_id,))
             if cursor.rowcount > 0:
@@ -509,14 +481,9 @@ def main(page: Page) -> None:
                 connection.commit()
             else:
                 show_banner("Order ID does not exist")
-                page.update()
         else:
             show_banner("Please fill in the order ID field")
-            page.update()
-        clear_order_form(e)
-        refresh_table()
-        if search_stock_levels_table.visible:
-            search(e)
+        refresh_page(_)
 
     sem = threading.Semaphore()
 
