@@ -2,7 +2,6 @@ import os
 import threading
 from datetime import date
 import flet as ft
-from flet import RoundedRectangleBorder
 import psycopg
 from dotenv import load_dotenv
 from controls import FormField, LoginField, Table, FormButton
@@ -558,7 +557,9 @@ def main(page: ft.Page) -> None:
                     color={
                         ft.MaterialState.DEFAULT: ft.colors.ON_ERROR_CONTAINER,
                     },
-                    shape={ft.MaterialState.DEFAULT: RoundedRectangleBorder(radius=8)},
+                    shape={
+                        ft.MaterialState.DEFAULT: ft.RoundedRectangleBorder(radius=8)
+                    },
                 ),
                 on_click=close_banner,
             )
@@ -572,7 +573,6 @@ def main(page: ft.Page) -> None:
     search_bar = FormField(
         "Search",
         ft.colors.ON_PRIMARY,
-        ft.colors.TRANSPARENT,
         ft.colors.ON_PRIMARY,
         search,
         False,
@@ -596,7 +596,6 @@ def main(page: ft.Page) -> None:
 
     stock_code_product_tf = FormField(
         "Stock Code",
-        ft.colors.TRANSPARENT,
         ft.colors.SURFACE_VARIANT,
         ft.colors.ON_SURFACE_VARIANT,
         None,
@@ -605,7 +604,6 @@ def main(page: ft.Page) -> None:
 
     stock_code_order_tf = FormField(
         "Stock Code",
-        ft.colors.TRANSPARENT,
         ft.colors.SURFACE_VARIANT,
         ft.colors.ON_SURFACE_VARIANT,
         None,
@@ -614,7 +612,6 @@ def main(page: ft.Page) -> None:
 
     order_id_tf = FormField(
         "Order ID",
-        ft.colors.TRANSPARENT,
         ft.colors.SURFACE_VARIANT,
         ft.colors.ON_SURFACE_VARIANT,
         None,
@@ -623,7 +620,6 @@ def main(page: ft.Page) -> None:
 
     stock_cat_tf = FormField(
         "Stock Category",
-        ft.colors.TRANSPARENT,
         ft.colors.SURFACE_VARIANT,
         ft.colors.ON_SURFACE_VARIANT,
         None,
@@ -632,7 +628,6 @@ def main(page: ft.Page) -> None:
 
     description_tf = FormField(
         "Description",
-        ft.colors.TRANSPARENT,
         ft.colors.SURFACE_VARIANT,
         ft.colors.ON_SURFACE_VARIANT,
         None,
@@ -641,7 +636,6 @@ def main(page: ft.Page) -> None:
 
     quantity_tf = FormField(
         "Quantity",
-        ft.colors.TRANSPARENT,
         ft.colors.SURFACE_VARIANT,
         ft.colors.ON_SURFACE_VARIANT,
         None,
@@ -650,7 +644,6 @@ def main(page: ft.Page) -> None:
 
     moq_tf = FormField(
         "MOQ",
-        ft.colors.TRANSPARENT,
         ft.colors.SURFACE_VARIANT,
         ft.colors.ON_SURFACE_VARIANT,
         None,
@@ -659,7 +652,6 @@ def main(page: ft.Page) -> None:
 
     order_quantity_tf = FormField(
         "Order Quantity",
-        ft.colors.TRANSPARENT,
         ft.colors.SURFACE_VARIANT,
         ft.colors.ON_SURFACE_VARIANT,
         None,
@@ -668,7 +660,6 @@ def main(page: ft.Page) -> None:
 
     name_tf = FormField(
         "Customer Name",
-        ft.colors.TRANSPARENT,
         ft.colors.SURFACE_VARIANT,
         ft.colors.ON_SURFACE_VARIANT,
         None,
@@ -677,7 +668,6 @@ def main(page: ft.Page) -> None:
 
     address_tf = FormField(
         "Customer Address",
-        ft.colors.TRANSPARENT,
         ft.colors.SURFACE_VARIANT,
         ft.colors.ON_SURFACE_VARIANT,
         None,
@@ -755,7 +745,7 @@ def main(page: ft.Page) -> None:
     )
 
     minimise = FormButton(
-        ft.icons.REMOVE_ROUNDED, minimise_forms, ft.colors.PRIMARY, True
+        ft.icons.REMOVE_ROUNDED, minimise_forms, ft.colors.ON_PRIMARY, True
     )
 
     forms = ft.Container(
@@ -890,6 +880,7 @@ def main(page: ft.Page) -> None:
                 search_bar,
                 user_icon,
                 user_details,
+                minimise,
             ],
             alignment=ft.MainAxisAlignment.CENTER,
         ),
@@ -910,6 +901,7 @@ def main(page: ft.Page) -> None:
         search_bar.visible = False
         user_icon.visible = False
         user_details.visible = False
+        minimise.visible = False
         page.views.append(ft.View("/login", [app_bar, login_form], padding=15))
         if page.route == "/" and admin:
             page.window_width = 800
@@ -920,20 +912,13 @@ def main(page: ft.Page) -> None:
             search_bar.visible = True
             user_icon.visible = True
             user_details.visible = True
+            minimise.visible = True
             page.views.append(
                 ft.View(
                     "/",
                     [
                         app_bar,
                         forms,
-                        ft.Column(
-                            [
-                                ft.Divider(
-                                    color=ft.colors.SURFACE_VARIANT, thickness=2
-                                ),
-                                minimise,
-                            ],
-                        ),
                         ft.Column(
                             [
                                 ft.Container(
