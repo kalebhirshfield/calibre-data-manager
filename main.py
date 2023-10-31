@@ -1,13 +1,19 @@
 import os
 import threading
 from datetime import date
-import flet as ft
-import psycopg
-from dotenv import load_dotenv
-from controls import FormField, LoginField, Table, FormButton
+
 import matplotlib
 import matplotlib.pyplot as plt
-from flet.matplotlib_chart import MatplotlibChart
+import psycopg
+from dotenv import load_dotenv
+from flet import ClipBehavior, MainAxisAlignment, MaterialState
+from flet import Column, Row, Container, DataTable, DataColumn, DataRow, DataCell
+from flet import FontWeight, IconButton, ButtonStyle, RoundedRectangleBorder, Padding
+from flet import Page, View, Text, Icon, Theme, ThemeMode, ColorScheme, Banner
+from flet import ScrollMode, OnScrollEvent
+from flet import icons, colors, border, app, border_radius, matplotlib_chart
+
+from controls import FormField, LoginField, Table, FormButton
 
 matplotlib.use("svg")
 
@@ -15,13 +21,14 @@ load_dotenv()
 connection = psycopg.connect(os.getenv("DATABASE_URL"))
 cursor = connection.cursor()
 
+
 offset = 0
 current_row = 0
 admin = False
 chart = None
 
 
-def main(page: ft.Page) -> None:
+def main(page: Page) -> None:
     def fetch_stock_levels(limit) -> tuple | int:
         global offset
         cursor.execute(
@@ -45,14 +52,14 @@ def main(page: ft.Page) -> None:
         page.update()
 
     def add_data_to_table(
-        table: ft.DataTable, fetch_function, limit, rows, row=None
+        table: DataTable, fetch_function, limit, rows, row=None
     ) -> None:
         column_names, data = fetch_function(limit=limit)
         new_rows = []
         for row in data:
             new_rows.append(
-                ft.DataRow(
-                    cells=[ft.DataCell(ft.Text(cell)) for cell in row],
+                DataRow(
+                    cells=[DataCell(Text(cell)) for cell in row],
                     on_select_changed=lambda e, selected_row=row: load_data(
                         selected_row
                     ),
@@ -62,7 +69,7 @@ def main(page: ft.Page) -> None:
         table.rows = rows
         page.update()
 
-    def on_scroll(e: ft.OnScrollEvent) -> None:
+    def on_scroll(e: OnScrollEvent) -> None:
         if e.pixels >= e.max_scroll_extent - 300:
             if sem.acquire(blocking=False):
                 try:
@@ -86,7 +93,7 @@ def main(page: ft.Page) -> None:
 
     def show_banner(content) -> None:
         page.banner.open = True
-        page.banner.content = ft.Text(content, color=ft.colors.ON_ERROR_CONTAINER)
+        page.banner.content = Text(content, color=colors.ON_ERROR_CONTAINER)
         page.update()
 
     def close_banner(_) -> None:
@@ -96,16 +103,16 @@ def main(page: ft.Page) -> None:
     def login(e) -> None:
         username = str(username_tf.value) if username_tf.value != "" else None
         password = str(password_tf.value) if password_tf.value != "" else None
-        user_details.content = ft.Row(
+        user_details.content = Row(
             [
-                ft.Text(
+                Text(
                     value=username,
-                    color=ft.colors.ON_PRIMARY,
-                    weight=ft.FontWeight.BOLD,
+                    color=colors.ON_PRIMARY,
+                    weight=FontWeight.BOLD,
                 ),
                 logout_button,
             ],
-            alignment=ft.MainAxisAlignment.CENTER,
+            alignment=MainAxisAlignment.CENTER,
             expand=True,
         )
         if username != "" and password != "":
@@ -159,7 +166,7 @@ def main(page: ft.Page) -> None:
         ax.xaxis.label.set_color("#191c1d")
         ax.yaxis.label.set_color("#191c1d")
         ax.title.set_color("#191c1d")
-        chart = ft.matplotlib_chart.MatplotlibChart(fig, transparent=True)
+        chart = matplotlib_chart.MatplotlibChart(fig, transparent=True)
         page.route = "/chart"
         route_change(_)
 
@@ -189,7 +196,7 @@ def main(page: ft.Page) -> None:
         ax.xaxis.label.set_color("#191c1d")
         ax.yaxis.label.set_color("#191c1d")
         ax.title.set_color("#191c1d")
-        chart = ft.matplotlib_chart.MatplotlibChart(fig, transparent=True)
+        chart = matplotlib_chart.MatplotlibChart(fig, transparent=True)
         page.route = "/chart"
         route_change(_)
 
@@ -218,8 +225,8 @@ def main(page: ft.Page) -> None:
             rows = []
             for row in search_data:
                 rows.append(
-                    ft.DataRow(
-                        cells=[ft.DataCell(ft.Text(str(cell))) for cell in row],
+                    DataRow(
+                        cells=[DataCell(Text(str(cell))) for cell in row],
                         on_select_changed=lambda _, selected_row=row: load_data(
                             selected_row
                         ),
@@ -236,11 +243,11 @@ def main(page: ft.Page) -> None:
     def minimise_forms(_) -> None:
         if forms.visible:
             forms.visible = False
-            minimise.icon = ft.icons.ADD_ROUNDED
+            minimise.icon = icons.ADD_ROUNDED
             page.update()
         else:
             forms.visible = True
-            minimise.icon = ft.icons.REMOVE_ROUNDED
+            minimise.icon = icons.REMOVE_ROUNDED
             page.update()
 
     def clear_product_form(_) -> None:
@@ -515,9 +522,9 @@ def main(page: ft.Page) -> None:
 
     page.window_min_width = 400
     page.window_min_height = 325
-    page.theme = ft.Theme(
+    page.theme = Theme(
         use_material3=True,
-        color_scheme=ft.ColorScheme(
+        color_scheme=ColorScheme(
             primary="#00677f",
             on_primary="#ffffff",
             primary_container="#b6eaff",
@@ -543,37 +550,31 @@ def main(page: ft.Page) -> None:
             on_surface_variant="#40484c",
         ),
     )
-    page.theme_mode = ft.ThemeMode.LIGHT
-    page.bgcolor = ft.colors.BACKGROUND
-    page.banner = ft.Banner(
-        bgcolor=ft.colors.ERROR_CONTAINER,
-        leading=ft.Icon(
-            ft.icons.WARNING_AMBER_ROUNDED, color=ft.colors.ON_ERROR_CONTAINER
-        ),
+    page.theme_mode = ThemeMode.LIGHT
+    page.bgcolor = colors.BACKGROUND
+    page.banner = Banner(
+        bgcolor=colors.ERROR_CONTAINER,
+        leading=Icon(icons.WARNING_AMBER_ROUNDED, color=colors.ON_ERROR_CONTAINER),
         actions=[
-            ft.IconButton(
-                icon=ft.icons.CLOSE,
-                style=ft.ButtonStyle(
+            IconButton(
+                icon=icons.CLOSE,
+                style=ButtonStyle(
                     color={
-                        ft.MaterialState.DEFAULT: ft.colors.ON_ERROR_CONTAINER,
+                        MaterialState.DEFAULT: colors.ON_ERROR_CONTAINER,
                     },
-                    shape={
-                        ft.MaterialState.DEFAULT: ft.RoundedRectangleBorder(radius=8)
-                    },
+                    shape={MaterialState.DEFAULT: RoundedRectangleBorder(radius=8)},
                 ),
                 on_click=close_banner,
             )
         ],
     )
 
-    search_icon = ft.Icon(
-        name=ft.icons.SEARCH, color=ft.colors.ON_PRIMARY, visible=False
-    )
+    search_icon = Icon(name=icons.SEARCH, color=colors.ON_PRIMARY, visible=False)
 
     search_bar = FormField(
         "Search",
-        ft.colors.ON_PRIMARY,
-        ft.colors.ON_PRIMARY,
+        colors.ON_PRIMARY,
+        colors.ON_PRIMARY,
         search,
         False,
     )
@@ -583,187 +584,175 @@ def main(page: ft.Page) -> None:
     stock_levels_columns, _ = refresh_table()
 
     stock_levels_table.columns = [
-        ft.DataColumn(ft.Text(str(column).capitalize().replace("_", " ")))
+        DataColumn(Text(str(column).capitalize().replace("_", " ")))
         for column in stock_levels_columns
     ]
 
     search_stock_levels_table = Table(False)
 
     search_stock_levels_table.columns = [
-        ft.DataColumn(ft.Text(str(column).capitalize().replace("_", " ")))
+        DataColumn(Text(str(column).capitalize().replace("_", " ")))
         for column in stock_levels_columns
     ]
 
     stock_code_product_tf = FormField(
         "Stock Code",
-        ft.colors.SURFACE_VARIANT,
-        ft.colors.ON_SURFACE_VARIANT,
+        colors.SURFACE_VARIANT,
+        colors.ON_SURFACE_VARIANT,
         None,
         True,
     )
 
     stock_code_order_tf = FormField(
         "Stock Code",
-        ft.colors.SURFACE_VARIANT,
-        ft.colors.ON_SURFACE_VARIANT,
+        colors.SURFACE_VARIANT,
+        colors.ON_SURFACE_VARIANT,
         None,
         True,
     )
 
     order_id_tf = FormField(
         "Order ID",
-        ft.colors.SURFACE_VARIANT,
-        ft.colors.ON_SURFACE_VARIANT,
+        colors.SURFACE_VARIANT,
+        colors.ON_SURFACE_VARIANT,
         None,
         True,
     )
 
     stock_cat_tf = FormField(
         "Stock Category",
-        ft.colors.SURFACE_VARIANT,
-        ft.colors.ON_SURFACE_VARIANT,
+        colors.SURFACE_VARIANT,
+        colors.ON_SURFACE_VARIANT,
         None,
         True,
     )
 
     description_tf = FormField(
         "Description",
-        ft.colors.SURFACE_VARIANT,
-        ft.colors.ON_SURFACE_VARIANT,
+        colors.SURFACE_VARIANT,
+        colors.ON_SURFACE_VARIANT,
         None,
         True,
     )
 
     quantity_tf = FormField(
         "Quantity",
-        ft.colors.SURFACE_VARIANT,
-        ft.colors.ON_SURFACE_VARIANT,
+        colors.SURFACE_VARIANT,
+        colors.ON_SURFACE_VARIANT,
         None,
         True,
     )
 
     moq_tf = FormField(
         "MOQ",
-        ft.colors.SURFACE_VARIANT,
-        ft.colors.ON_SURFACE_VARIANT,
+        colors.SURFACE_VARIANT,
+        colors.ON_SURFACE_VARIANT,
         None,
         True,
     )
 
     order_quantity_tf = FormField(
         "Order Quantity",
-        ft.colors.SURFACE_VARIANT,
-        ft.colors.ON_SURFACE_VARIANT,
+        colors.SURFACE_VARIANT,
+        colors.ON_SURFACE_VARIANT,
         None,
         True,
     )
 
     name_tf = FormField(
         "Customer Name",
-        ft.colors.SURFACE_VARIANT,
-        ft.colors.ON_SURFACE_VARIANT,
+        colors.SURFACE_VARIANT,
+        colors.ON_SURFACE_VARIANT,
         None,
         True,
     )
 
     address_tf = FormField(
         "Customer Address",
-        ft.colors.SURFACE_VARIANT,
-        ft.colors.ON_SURFACE_VARIANT,
+        colors.SURFACE_VARIANT,
+        colors.ON_SURFACE_VARIANT,
         None,
         True,
     )
 
-    add_product_button = ft.Container(
-        FormButton(ft.icons.ADD_ROUNDED, add_product_data, ft.colors.ON_PRIMARY, True),
-        bgcolor=ft.colors.PRIMARY,
+    add_product_button = Container(
+        FormButton(icons.ADD_ROUNDED, add_product_data, colors.ON_PRIMARY, True),
+        bgcolor=colors.PRIMARY,
         border_radius=8,
     )
 
-    add_order_button = ft.Container(
-        FormButton(ft.icons.ADD_ROUNDED, add_order_data, ft.colors.ON_PRIMARY, True),
-        bgcolor=ft.colors.PRIMARY,
+    add_order_button = Container(
+        FormButton(icons.ADD_ROUNDED, add_order_data, colors.ON_PRIMARY, True),
+        bgcolor=colors.PRIMARY,
         border_radius=8,
     )
 
-    delete_product_button = ft.Container(
+    delete_product_button = Container(
+        FormButton(icons.DELETE_ROUNDED, remove_product_data, colors.ON_PRIMARY, True),
+        bgcolor=colors.PRIMARY,
+        border_radius=8,
+    )
+
+    delete_order_button = Container(
+        FormButton(icons.DELETE_ROUNDED, remove_order_data, colors.ON_PRIMARY, True),
+        bgcolor=colors.PRIMARY,
+        border_radius=8,
+    )
+
+    clear_product_form_button = Container(
+        FormButton(icons.CLEAR_ROUNDED, clear_product_form, colors.ON_PRIMARY, True),
+        bgcolor=colors.PRIMARY,
+        border_radius=8,
+    )
+
+    clear_order_form_button = Container(
+        FormButton(icons.CLEAR_ROUNDED, clear_order_form, colors.ON_PRIMARY, True),
+        bgcolor=colors.PRIMARY,
+        border_radius=8,
+    )
+
+    display_product_chart_button = Container(
         FormButton(
-            ft.icons.DELETE_ROUNDED, remove_product_data, ft.colors.ON_PRIMARY, True
-        ),
-        bgcolor=ft.colors.PRIMARY,
-        border_radius=8,
-    )
-
-    delete_order_button = ft.Container(
-        FormButton(
-            ft.icons.DELETE_ROUNDED, remove_order_data, ft.colors.ON_PRIMARY, True
-        ),
-        bgcolor=ft.colors.PRIMARY,
-        border_radius=8,
-    )
-
-    clear_product_form_button = ft.Container(
-        FormButton(
-            ft.icons.CLEAR_ROUNDED, clear_product_form, ft.colors.ON_PRIMARY, True
-        ),
-        bgcolor=ft.colors.PRIMARY,
-        border_radius=8,
-    )
-
-    clear_order_form_button = ft.Container(
-        FormButton(
-            ft.icons.CLEAR_ROUNDED, clear_order_form, ft.colors.ON_PRIMARY, True
-        ),
-        bgcolor=ft.colors.PRIMARY,
-        border_radius=8,
-    )
-
-    display_product_chart_button = ft.Container(
-        FormButton(
-            ft.icons.INSIGHTS_ROUNDED,
+            icons.INSIGHTS_ROUNDED,
             display_product_chart,
-            ft.colors.ON_PRIMARY,
+            colors.ON_PRIMARY,
             True,
         ),
-        bgcolor=ft.colors.PRIMARY,
+        bgcolor=colors.PRIMARY,
         border_radius=8,
     )
 
-    display_order_chart_button = ft.Container(
+    display_order_chart_button = Container(
         FormButton(
-            ft.icons.INSIGHTS_ROUNDED,
+            icons.INSIGHTS_ROUNDED,
             display_order_chart,
-            ft.colors.ON_PRIMARY,
+            colors.ON_PRIMARY,
             True,
         ),
-        bgcolor=ft.colors.PRIMARY,
+        bgcolor=colors.PRIMARY,
         border_radius=8,
     )
 
-    back_button = FormButton(
-        ft.icons.ARROW_BACK, back_to_route, ft.colors.PRIMARY, True
-    )
+    back_button = FormButton(icons.ARROW_BACK, back_to_route, colors.PRIMARY, True)
 
-    minimise = FormButton(
-        ft.icons.REMOVE_ROUNDED, minimise_forms, ft.colors.ON_PRIMARY, True
-    )
+    minimise = FormButton(icons.REMOVE_ROUNDED, minimise_forms, colors.ON_PRIMARY, True)
 
-    forms = ft.Container(
-        ft.Row(
+    forms = Container(
+        Row(
             [
-                ft.Container(
-                    ft.Column(
+                Container(
+                    Column(
                         [
-                            ft.Row(
+                            Row(
                                 [
-                                    ft.Text(
+                                    Text(
                                         "Add / Edit Product",
-                                        weight=ft.FontWeight.BOLD,
-                                        color=ft.colors.ON_BACKGROUND,
+                                        weight=FontWeight.BOLD,
+                                        color=colors.ON_BACKGROUND,
                                     ),
                                 ]
                             ),
-                            ft.Row(
+                            Row(
                                 [
                                     stock_code_product_tf,
                                     add_product_button,
@@ -771,28 +760,28 @@ def main(page: ft.Page) -> None:
                                     clear_product_form_button,
                                 ]
                             ),
-                            ft.Row([description_tf]),
-                            ft.Row([stock_cat_tf]),
-                            ft.Row([quantity_tf, moq_tf, display_product_chart_button]),
+                            Row([description_tf]),
+                            Row([stock_cat_tf]),
+                            Row([quantity_tf, moq_tf, display_product_chart_button]),
                         ],
                         expand=True,
-                        scroll=ft.ScrollMode.AUTO,
+                        scroll=ScrollMode.AUTO,
                     ),
                     expand=True,
-                    border=ft.border.all(2, ft.colors.SURFACE_VARIANT),
+                    border=border.all(2, colors.SURFACE_VARIANT),
                     border_radius=8,
                     padding=15,
-                    clip_behavior=ft.ClipBehavior.HARD_EDGE,
+                    clip_behavior=ClipBehavior.HARD_EDGE,
                 ),
-                ft.Container(
-                    ft.Column(
+                Container(
+                    Column(
                         [
-                            ft.Text(
+                            Text(
                                 "Add Order",
-                                weight=ft.FontWeight.BOLD,
-                                color=ft.colors.ON_BACKGROUND,
+                                weight=FontWeight.BOLD,
+                                color=colors.ON_BACKGROUND,
                             ),
-                            ft.Row(
+                            Row(
                                 [
                                     order_id_tf,
                                     add_order_button,
@@ -800,18 +789,18 @@ def main(page: ft.Page) -> None:
                                     clear_order_form_button,
                                 ]
                             ),
-                            ft.Row([stock_code_order_tf, order_quantity_tf]),
-                            ft.Row([name_tf]),
-                            ft.Row([address_tf, display_order_chart_button]),
+                            Row([stock_code_order_tf, order_quantity_tf]),
+                            Row([name_tf]),
+                            Row([address_tf, display_order_chart_button]),
                         ],
                         expand=True,
-                        scroll=ft.ScrollMode.AUTO,
+                        scroll=ScrollMode.AUTO,
                     ),
                     expand=True,
-                    border=ft.border.all(2, ft.colors.SURFACE_VARIANT),
+                    border=border.all(2, colors.SURFACE_VARIANT),
                     border_radius=8,
                     padding=15,
-                    clip_behavior=ft.ClipBehavior.HARD_EDGE,
+                    clip_behavior=ClipBehavior.HARD_EDGE,
                 ),
             ]
         ),
@@ -821,58 +810,58 @@ def main(page: ft.Page) -> None:
 
     password_tf = LoginField("Password", True, login)
 
-    login_button = ft.Container(
-        FormButton(ft.icons.LOGIN, login, ft.colors.ON_PRIMARY, True),
-        bgcolor=ft.colors.PRIMARY,
+    login_button = Container(
+        FormButton(icons.LOGIN, login, colors.ON_PRIMARY, True),
+        bgcolor=colors.PRIMARY,
         border_radius=8,
     )
 
-    logout_button = ft.Container(
-        FormButton(ft.icons.LOGOUT, logout, ft.colors.ON_PRIMARY, True),
-        bgcolor=ft.colors.PRIMARY,
+    logout_button = Container(
+        FormButton(icons.LOGOUT, logout, colors.ON_PRIMARY, True),
+        bgcolor=colors.PRIMARY,
         border_radius=8,
     )
 
-    login_form = ft.Container(
-        ft.Column(
+    login_form = Container(
+        Column(
             [
-                ft.Text(
+                Text(
                     "Login",
-                    weight=ft.FontWeight.BOLD,
-                    color=ft.colors.ON_BACKGROUND,
+                    weight=FontWeight.BOLD,
+                    color=colors.ON_BACKGROUND,
                 ),
-                ft.Row([username_tf]),
-                ft.Row([password_tf, login_button]),
+                Row([username_tf]),
+                Row([password_tf, login_button]),
             ],
-            scroll=ft.ScrollMode.AUTO,
+            scroll=ScrollMode.AUTO,
         ),
-        border=ft.border.all(2, ft.colors.SURFACE_VARIANT),
+        border=border.all(2, colors.SURFACE_VARIANT),
         border_radius=8,
         padding=15,
-        clip_behavior=ft.ClipBehavior.HARD_EDGE,
+        clip_behavior=ClipBehavior.HARD_EDGE,
     )
 
-    user_icon = ft.Icon(
-        name=ft.icons.PERSON,
-        color=ft.colors.ON_PRIMARY,
+    user_icon = Icon(
+        name=icons.PERSON,
+        color=colors.ON_PRIMARY,
         visible=False,
     )
 
-    user_details = ft.Container(
-        border=ft.border.all(2, ft.colors.ON_PRIMARY),
-        padding=ft.Padding(left=10, right=2, top=2, bottom=2),
+    user_details = Container(
+        border=border.all(2, colors.ON_PRIMARY),
+        padding=Padding(left=10, right=2, top=2, bottom=2),
         border_radius=8,
         visible=False,
     )
 
-    app_bar = ft.Container(
-        ft.Row(
+    app_bar = Container(
+        Row(
             [
-                ft.Container(
-                    ft.Text(
+                Container(
+                    Text(
                         "Calibre Data Manager",
-                        color=ft.colors.ON_PRIMARY,
-                        weight=ft.FontWeight.BOLD,
+                        color=colors.ON_PRIMARY,
+                        weight=FontWeight.BOLD,
                     ),
                     padding=10,
                 ),
@@ -882,11 +871,11 @@ def main(page: ft.Page) -> None:
                 user_details,
                 minimise,
             ],
-            alignment=ft.MainAxisAlignment.CENTER,
+            alignment=MainAxisAlignment.CENTER,
         ),
         padding=10,
-        bgcolor=ft.colors.PRIMARY,
-        border_radius=ft.border_radius.only(top_left=8, top_right=8),
+        bgcolor=colors.PRIMARY,
+        border_radius=border_radius.only(top_left=8, top_right=8),
         height=75,
     )
 
@@ -902,7 +891,7 @@ def main(page: ft.Page) -> None:
         user_icon.visible = False
         user_details.visible = False
         minimise.visible = False
-        page.views.append(ft.View("/login", [app_bar, login_form], padding=15))
+        page.views.append(View("/login", [app_bar, login_form], padding=15))
         if page.route == "/" and admin:
             page.window_width = 800
             page.window_height = 700
@@ -914,23 +903,23 @@ def main(page: ft.Page) -> None:
             user_details.visible = True
             minimise.visible = True
             page.views.append(
-                ft.View(
+                View(
                     "/",
                     [
                         app_bar,
                         forms,
-                        ft.Column(
+                        Column(
                             [
-                                ft.Container(
+                                Container(
                                     stock_levels_table,
-                                    clip_behavior=ft.ClipBehavior.HARD_EDGE,
+                                    clip_behavior=ClipBehavior.HARD_EDGE,
                                 ),
-                                ft.Container(
+                                Container(
                                     search_stock_levels_table,
-                                    clip_behavior=ft.ClipBehavior.HARD_EDGE,
+                                    clip_behavior=ClipBehavior.HARD_EDGE,
                                 ),
                             ],
-                            scroll=ft.ScrollMode.AUTO,
+                            scroll=ScrollMode.AUTO,
                             on_scroll=on_scroll,
                             expand=True,
                         ),
@@ -944,9 +933,7 @@ def main(page: ft.Page) -> None:
             page.window_resizable = True
             page.window_maximizable = True
             page.views.append(
-                ft.View(
-                    "/chart", [app_bar, ft.Container(chart), back_button], padding=15
-                )
+                View("/chart", [app_bar, Container(chart), back_button], padding=15)
             )
         else:
             page.route = "/login"
@@ -957,7 +944,7 @@ def main(page: ft.Page) -> None:
 
 
 if __name__ == "__main__":
-    ft.app(target=main)
+    app(target=main)
 
 cursor.close()
 connection.close()
