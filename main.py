@@ -11,7 +11,7 @@ from flet import ClipBehavior, MainAxisAlignment, MaterialState
 from flet import Column, Row, Container, DataTable, DataColumn, DataRow, DataCell
 from flet import FontWeight, IconButton, ButtonStyle, RoundedRectangleBorder, Padding
 from flet import Page, View, Text, Icon, Theme, ThemeMode, ColorScheme, Banner
-from flet import ScrollMode, OnScrollEvent
+from flet import ScrollMode, OnScrollEvent, Dropdown, TextStyle
 from flet import icons, colors, border, app, border_radius, matplotlib_chart
 
 from controls import FormField, LoginField, Table, FormButton
@@ -233,22 +233,20 @@ def main(page: Page) -> None:
                     )
                 )
                 search_stock_levels_table.rows = rows
-            page.update()
         else:
             search_stock_levels_table.rows = []
             search_stock_levels_table.visible = False
             stock_levels_table.visible = True
-            page.update()
+        page.update()
 
     def minimise_forms(_) -> None:
         if forms.visible:
             forms.visible = False
             minimise.icon = icons.ADD_ROUNDED
-            page.update()
         else:
             forms.visible = True
             minimise.icon = icons.REMOVE_ROUNDED
-            page.update()
+        page.update()
 
     def clear_product_form(_) -> None:
         stock_code_product_tf.value = ""
@@ -272,7 +270,6 @@ def main(page: Page) -> None:
         )
         return int(cursor.fetchone()[0])
 
-    # obtains the quantity of a given stock code
     def obtain_quantity(stock_code) -> int:
         cursor.execute(
             "SELECT quantity FROM stocklevels WHERE stock_code = %s",
@@ -294,8 +291,8 @@ def main(page: Page) -> None:
         )
         return int(cursor.fetchone()[0])
 
-    def check_value(value) -> str | int | None:
-        return value if value != "" else None
+    def check_value(value, type) -> str | int | None:
+        return type(value) if str(value) != "" else None
 
     def refresh_page(_) -> None:
         clear_product_form(_)
@@ -306,11 +303,11 @@ def main(page: Page) -> None:
         page.update()
 
     def add_product_data(_) -> None:
-        stock_code = check_value(str(stock_code_product_tf.value))
-        stock_cat = check_value(int(stock_cat_tf.value))
-        description = check_value(str(description_tf.value))
-        quantity = check_value(int(quantity_tf.value))
-        moq = check_value(int(moq_tf.value))
+        stock_code = check_value(stock_code_product_tf.value, str)
+        stock_cat = check_value(stock_cat_tf.value, int)
+        description = check_value(description_tf.value, str)
+        quantity = check_value(quantity_tf.value, int)
+        moq = check_value(moq_tf.value, int)
         if stock_code is not None:
             cursor.execute(
                 "SELECT * FROM products WHERE stock_code = %s", (stock_code,)
@@ -372,10 +369,10 @@ def main(page: Page) -> None:
         refresh_page(_)
 
     def add_order_data(_) -> None:
-        stock_code = check_value(str(stock_code_order_tf.value))
-        quantity = check_value(int(order_quantity_tf.value))
-        name = check_value(str(name_tf.value))
-        address = check_value(str(address_tf.value))
+        stock_code = check_value(stock_code_order_tf.value, str)
+        quantity = check_value(order_quantity_tf.value, int)
+        name = check_value(name_tf.value, str)
+        address = check_value(address_tf.value, str)
         cursor.execute("SELECT * FROM products WHERE stock_code = %s", (stock_code,))
         if cursor.rowcount > 0:
             cursor.execute("SELECT * FROM customers WHERE name = %s", (name,))
@@ -451,7 +448,7 @@ def main(page: Page) -> None:
         refresh_page(_)
 
     def remove_order_data(_) -> None:
-        order_id = check_value(int(order_id_tf.value))
+        order_id = check_value(order_id_tf.value, int)
         if order_id is not None:
             cursor.execute("SELECT * FROM orders WHERE order_id = %s", (order_id,))
             if cursor.rowcount > 0:
@@ -772,6 +769,13 @@ def main(page: Page) -> None:
                 ),
             ]
         ),
+    )
+
+    filter_selection = Dropdown(
+        label="Filter",
+        hint_text="Select a filter",
+        label_style=TextStyle(color=colors.ON_SURFACE_VARIANT, weight=FontWeight.W_600),
+        hint_style=TextStyle(color=colors.ON_SURFACE_VARIANT, weight=FontWeight.W_600),
     )
 
     username_tf = LoginField("Username", False, None)
