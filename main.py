@@ -11,7 +11,7 @@ from flet import ClipBehavior, MainAxisAlignment, MaterialState
 from flet import Column, Row, Container, DataTable, DataColumn, DataRow, DataCell
 from flet import FontWeight, IconButton, ButtonStyle, RoundedRectangleBorder, Padding
 from flet import Page, View, Text, Icon, Theme, ThemeMode, ColorScheme, Banner
-from flet import ScrollMode, OnScrollEvent
+from flet import ScrollMode, OnScrollEvent, Dropdown, dropdown, TextStyle
 from flet import icons, colors, border, app, border_radius, matplotlib_chart
 
 from controls import FormField, LoginField, Table, FormButton
@@ -771,6 +771,18 @@ def main(page: Page) -> None:
         ),
     )
 
+    form_select = Dropdown(
+        options=[
+            dropdown.Option("Product"),
+            dropdown.Option("Order"),
+            dropdown.Option("Customer"),
+        ],
+        value="Product",
+        text_style=TextStyle(color=colors.ON_SURFACE_VARIANT, weight=FontWeight.W_600),
+        border=border.all(2, colors.SURFACE_VARIANT),
+        border_radius=8,
+    )
+
     username_tf = LoginField("Username", False, None)
 
     password_tf = LoginField("Password", True, login)
@@ -872,6 +884,7 @@ def main(page: Page) -> None:
                     "/",
                     [
                         app_bar,
+                        form_select,
                         forms,
                         Column(
                             [
