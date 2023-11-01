@@ -5,6 +5,7 @@ from datetime import date
 import matplotlib
 import matplotlib.pyplot as plt
 import psycopg
+
 from dotenv import load_dotenv
 from flet import ClipBehavior, MainAxisAlignment, MaterialState
 from flet import Column, Row, Container, DataTable, DataColumn, DataRow, DataCell
@@ -304,7 +305,7 @@ def main(page: Page) -> None:
             search(_)
         page.update()
 
-    def add_product_data(e) -> None:
+    def add_product_data(_) -> None:
         stock_code = check_value(str(stock_code_product_tf.value))
         stock_cat = check_value(int(stock_cat_tf.value))
         description = check_value(str(description_tf.value))
@@ -370,7 +371,7 @@ def main(page: Page) -> None:
             show_banner("Please fill in the stock code field")
         refresh_page(_)
 
-    def add_order_data(e) -> None:
+    def add_order_data(_) -> None:
         stock_code = check_value(str(stock_code_order_tf.value))
         quantity = check_value(int(order_quantity_tf.value))
         name = check_value(str(name_tf.value))
@@ -419,7 +420,7 @@ def main(page: Page) -> None:
             show_banner("Stock Code does not exist")
         refresh_page(_)
 
-    def remove_product_data(e) -> None:
+    def remove_product_data(_) -> None:
         stock_code = str(stock_code_product_tf.value)
         if stock_code != "":
             cursor.execute(
@@ -449,7 +450,7 @@ def main(page: Page) -> None:
             show_banner("Please fill in the stock code field")
         refresh_page(_)
 
-    def remove_order_data(e) -> None:
+    def remove_order_data(_) -> None:
         order_id = check_value(int(order_id_tf.value))
         if order_id is not None:
             cursor.execute("SELECT * FROM orders WHERE order_id = %s", (order_id,))
