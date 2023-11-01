@@ -56,7 +56,7 @@ class Table(DataTable):
         self.heading_row_height = 75
         self.horizontal_lines = border.BorderSide(1, colors.PRIMARY)
         self.heading_text_style = TextStyle(
-            color=colors.ON_SURFACE_VARIANT, weight=FontWeight.BOLD
+            color=colors.ON_BACKGROUND, weight=FontWeight.BOLD
         )
         self.data_text_style = TextStyle(
             color=colors.ON_SURFACE_VARIANT, weight=FontWeight.W_600

@@ -11,7 +11,7 @@ from flet import ClipBehavior, MainAxisAlignment, MaterialState
 from flet import Column, Row, Container, DataTable, DataColumn, DataRow, DataCell
 from flet import FontWeight, IconButton, ButtonStyle, RoundedRectangleBorder, Padding
 from flet import Page, View, Text, Icon, Theme, ThemeMode, ColorScheme, Banner
-from flet import ScrollMode, OnScrollEvent, Dropdown, dropdown, TextStyle
+from flet import ScrollMode, OnScrollEvent, Dropdown, dropdown, TextStyle, AlertDialog
 from flet import icons, colors, border, app, border_radius, matplotlib_chart
 
 from controls import FormField, LoginField, Table, FormButton
@@ -140,6 +140,25 @@ def main(page: Page) -> None:
         route_change(e)
         page.update()
 
+    def change_form(_) -> None:
+        if form_select.value == "Product":
+            product_form.visible = True
+            order_form.visible = False
+            customer_form.visible = False
+        elif form_select.value == "Order":
+            product_form.visible = False
+            order_form.visible = True
+            customer_form.visible = False
+        elif form_select.value == "Customer":
+            product_form.visible = False
+            order_form.visible = False
+            customer_form.visible = True
+        elif form_select.value == " ":
+            product_form.visible = False
+            order_form.visible = False
+            customer_form.visible = False
+        page.update()
+
     def display_product_chart(_) -> None:
         global chart
         cursor.execute(
@@ -239,28 +258,20 @@ def main(page: Page) -> None:
             stock_levels_table.visible = True
         page.update()
 
-    def minimise_forms(_) -> None:
-        if forms.visible:
-            forms.visible = False
-            minimise.icon = icons.ADD_ROUNDED
-        else:
-            forms.visible = True
-            minimise.icon = icons.REMOVE_ROUNDED
-        page.update()
-
-    def clear_product_form(_) -> None:
-        stock_code_product_tf.value = ""
-        stock_cat_tf.value = ""
-        description_tf.value = ""
-        quantity_tf.value = ""
-        moq_tf.value = ""
-        page.update()
-
-    def clear_order_form(_) -> None:
-        stock_code_order_tf.value = ""
-        order_quantity_tf.value = ""
-        name_tf.value = ""
-        address_tf.value = ""
+    def clear_form(_) -> None:
+        if form_select.value == "Product":
+            stock_code_product_tf.value = ""
+            stock_cat_tf.value = ""
+            description_tf.value = ""
+            quantity_tf.value = ""
+            moq_tf.value = ""
+        elif form_select.value == "Order":
+            stock_code_order_tf.value = ""
+            order_quantity_tf.value = ""
+            name_tf.value = ""
+        elif form_select.value == "Customer":
+            name_tf.value = ""
+            address_tf.value = ""
         page.update()
 
     def obtain_stock_id(stock_code) -> int:
@@ -295,8 +306,7 @@ def main(page: Page) -> None:
         return type(value) if str(value) != "" else None
 
     def refresh_page(_) -> None:
-        clear_product_form(_)
-        clear_order_form(_)
+        clear_form(_)
         refresh_table()
         if search_stock_levels_table.visible:
             search(_)
@@ -372,19 +382,8 @@ def main(page: Page) -> None:
         stock_code = check_value(stock_code_order_tf.value, str)
         quantity = check_value(order_quantity_tf.value, int)
         name = check_value(name_tf.value, str)
-        address = check_value(address_tf.value, str)
         cursor.execute("SELECT * FROM products WHERE stock_code = %s", (stock_code,))
         if cursor.rowcount > 0:
-            cursor.execute("SELECT * FROM customers WHERE name = %s", (name,))
-            if cursor.rowcount == 0:
-                if None in [stock_code or quantity or name or address]:
-                    show_banner("Please fill in all fields")
-                else:
-                    cursor.execute(
-                        "INSERT INTO customers(name, address) VALUES(%s, %s)",
-                        (name, address),
-                    )
-                    connection.commit()
             if None in [stock_code or quantity or name]:
                 show_banner("Please fill in all fields")
             else:
@@ -415,6 +414,32 @@ def main(page: Page) -> None:
                 connection.commit()
         else:
             show_banner("Stock Code does not exist")
+        refresh_page(_)
+
+    def add_customer_data(_) -> None:
+        name = check_value(name_tf.value, str)
+        address = check_value(address_tf.value, str)
+        if name is not None:
+            cursor.execute("SELECT * FROM customers WHERE name = %s", (name,))
+            if cursor.rowcount > 0:
+                cursor.execute(
+                    "UPDATE customers SET address = %s WHERE name = %s",
+                    (address, name),
+                ) if address is not None else None
+                connection.commit()
+            else:
+                if address is None:
+                    show_banner(
+                        "Please fill in all fields as there is no customer name match"
+                    )
+                else:
+                    cursor.execute(
+                        "INSERT INTO customers(name, address) VALUES(%s, %s)",
+                        (name, address),
+                    )
+                    connection.commit()
+        else:
+            show_banner("Please fill in the customer name field")
         refresh_page(_)
 
     def remove_product_data(_) -> None:
@@ -481,6 +506,27 @@ def main(page: Page) -> None:
                 show_banner("Order ID does not exist")
         else:
             show_banner("Please fill in the order ID field")
+        refresh_page(_)
+
+    def remove_customer_data(_) -> None:
+        name = check_value(name_tf.value, str)
+        if name is not None:
+            cursor.execute("SELECT * FROM customers WHERE name = %s", (name,))
+            if cursor.rowcount > 0:
+                cursor.execute(
+                    "SELECT customer_id FROM customers WHERE name = %s", (name,)
+                )
+                customer_id = int(cursor.fetchone()[0])
+                cursor.execute(
+                    "DELETE FROM orders WHERE customer_id = %s", (customer_id,)
+                )
+                connection.commit()
+                cursor.execute("DELETE FROM customers WHERE name = %s", (name,))
+                connection.commit()
+            else:
+                show_banner("Customer name does not exist")
+        else:
+            show_banner("Please fill in the customer name field")
         refresh_page(_)
 
     sem = threading.Semaphore()
@@ -652,6 +698,12 @@ def main(page: Page) -> None:
         border_radius=8,
     )
 
+    add_customer_button = Container(
+        FormButton(icons.ADD_ROUNDED, add_customer_data, colors.ON_PRIMARY, True),
+        bgcolor=colors.PRIMARY,
+        border_radius=8,
+    )
+
     delete_product_button = Container(
         FormButton(icons.DELETE_ROUNDED, remove_product_data, colors.ON_PRIMARY, True),
         bgcolor=colors.PRIMARY,
@@ -664,14 +716,14 @@ def main(page: Page) -> None:
         border_radius=8,
     )
 
-    clear_product_form_button = Container(
-        FormButton(icons.CLEAR_ROUNDED, clear_product_form, colors.ON_PRIMARY, True),
+    delete_customer_button = Container(
+        FormButton(icons.DELETE_ROUNDED, remove_customer_data, colors.ON_PRIMARY, True),
         bgcolor=colors.PRIMARY,
         border_radius=8,
     )
 
-    clear_order_form_button = Container(
-        FormButton(icons.CLEAR_ROUNDED, clear_order_form, colors.ON_PRIMARY, True),
+    clear_form_button = Container(
+        FormButton(icons.CLEAR_ROUNDED, clear_form, colors.ON_PRIMARY, True),
         bgcolor=colors.PRIMARY,
         border_radius=8,
     )
@@ -700,63 +752,34 @@ def main(page: Page) -> None:
 
     back_button = FormButton(icons.ARROW_BACK, back_to_route, colors.PRIMARY, True)
 
-    minimise = FormButton(icons.REMOVE_ROUNDED, minimise_forms, colors.ON_PRIMARY, True)
-
-    forms = Container(
+    product_form = Container(
         Row(
             [
                 Container(
                     Column(
                         [
-                            Row(
-                                [
-                                    Text(
-                                        "Add / Edit Product",
-                                        weight=FontWeight.BOLD,
-                                        color=colors.ON_BACKGROUND,
-                                    ),
-                                ]
+                            Text(
+                                "Products",
+                                weight=FontWeight.BOLD,
+                                color=colors.ON_BACKGROUND,
                             ),
                             Row(
                                 [
                                     stock_code_product_tf,
                                     add_product_button,
                                     delete_product_button,
-                                    clear_product_form_button,
+                                    clear_form_button,
                                 ]
                             ),
                             Row([description_tf]),
-                            Row([stock_cat_tf]),
-                            Row([quantity_tf, moq_tf, display_product_chart_button]),
-                        ],
-                        expand=True,
-                        scroll=ScrollMode.AUTO,
-                    ),
-                    expand=True,
-                    border=border.all(2, colors.SURFACE_VARIANT),
-                    border_radius=8,
-                    padding=15,
-                    clip_behavior=ClipBehavior.HARD_EDGE,
-                ),
-                Container(
-                    Column(
-                        [
-                            Text(
-                                "Add Order",
-                                weight=FontWeight.BOLD,
-                                color=colors.ON_BACKGROUND,
-                            ),
                             Row(
                                 [
-                                    order_id_tf,
-                                    add_order_button,
-                                    delete_order_button,
-                                    clear_order_form_button,
+                                    stock_cat_tf,
+                                    quantity_tf,
+                                    moq_tf,
+                                    display_product_chart_button,
                                 ]
                             ),
-                            Row([stock_code_order_tf, order_quantity_tf]),
-                            Row([name_tf]),
-                            Row([address_tf, display_order_chart_button]),
                         ],
                         expand=True,
                         scroll=ScrollMode.AUTO,
@@ -771,16 +794,98 @@ def main(page: Page) -> None:
         ),
     )
 
+    order_form = Container(
+        Row(
+            [
+                Container(
+                    Column(
+                        [
+                            Text(
+                                "Orders",
+                                weight=FontWeight.BOLD,
+                                color=colors.ON_BACKGROUND,
+                            ),
+                            Row(
+                                [
+                                    order_id_tf,
+                                    stock_code_order_tf,
+                                    add_order_button,
+                                    delete_order_button,
+                                    clear_form_button,
+                                ]
+                            ),
+                            Row(
+                                [
+                                    name_tf,
+                                    order_quantity_tf,
+                                    display_order_chart_button,
+                                ]
+                            ),
+                        ],
+                        expand=True,
+                        scroll=ScrollMode.AUTO,
+                    ),
+                    expand=True,
+                    border=border.all(2, colors.SURFACE_VARIANT),
+                    border_radius=8,
+                    padding=15,
+                    clip_behavior=ClipBehavior.HARD_EDGE,
+                ),
+            ]
+        ),
+        visible=False,
+    )
+
+    customer_form = Container(
+        Row(
+            [
+                Container(
+                    Column(
+                        [
+                            Text(
+                                "Customers",
+                                weight=FontWeight.BOLD,
+                                color=colors.ON_BACKGROUND,
+                            ),
+                            Row(
+                                [
+                                    name_tf,
+                                    add_customer_button,
+                                    delete_customer_button,
+                                    clear_form_button,
+                                ]
+                            ),
+                            Row([address_tf]),
+                        ],
+                        expand=True,
+                        scroll=ScrollMode.AUTO,
+                    ),
+                    expand=True,
+                    border=border.all(2, colors.SURFACE_VARIANT),
+                    border_radius=8,
+                    padding=15,
+                    clip_behavior=ClipBehavior.HARD_EDGE,
+                ),
+            ]
+        ),
+        visible=False,
+    )
+
     form_select = Dropdown(
+        label="Select Form",
+        label_style=TextStyle(color=colors.ON_BACKGROUND, weight=FontWeight.BOLD),
         options=[
             dropdown.Option("Product"),
             dropdown.Option("Order"),
             dropdown.Option("Customer"),
+            dropdown.Option(" "),
         ],
         value="Product",
         text_style=TextStyle(color=colors.ON_SURFACE_VARIANT, weight=FontWeight.W_600),
-        border=border.all(2, colors.SURFACE_VARIANT),
+        border_color=colors.SURFACE_VARIANT,
+        border_width=2,
         border_radius=8,
+        on_change=change_form,
     )
 
     username_tf = LoginField("Username", False, None)
@@ -846,7 +951,6 @@ def main(page: Page) -> None:
                 search_bar,
                 user_icon,
                 user_details,
-                minimise,
             ],
             alignment=MainAxisAlignment.CENTER,
         ),
@@ -867,7 +971,6 @@ def main(page: Page) -> None:
         search_bar.visible = False
         user_icon.visible = False
         user_details.visible = False
-        minimise.visible = False
         page.views.append(View("/login", [app_bar, login_form], padding=15))
         if page.route == "/" and admin:
             page.window_width = 800
@@ -878,14 +981,15 @@ def main(page: Page) -> None:
             search_bar.visible = True
             user_icon.visible = True
             user_details.visible = True
-            minimise.visible = True
             page.views.append(
                 View(
                     "/",
                     [
                         app_bar,
                         form_select,
-                        forms,
+                        product_form,
+                        order_form,
+                        customer_form,
                         Column(
                             [
                                 Container(
