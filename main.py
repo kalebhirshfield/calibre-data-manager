@@ -11,7 +11,7 @@ from flet import ClipBehavior, MainAxisAlignment, MaterialState
 from flet import Column, Row, Container, DataTable, DataColumn, DataRow, DataCell
 from flet import FontWeight, IconButton, ButtonStyle, RoundedRectangleBorder, Padding
 from flet import Page, View, Text, Icon, Theme, ThemeMode, ColorScheme, Banner
-from flet import ScrollMode, OnScrollEvent, Dropdown, TextStyle
+from flet import ScrollMode, OnScrollEvent
 from flet import icons, colors, border, app, border_radius, matplotlib_chart
 
 from controls import FormField, LoginField, Table, FormButton
@@ -769,13 +769,6 @@ def main(page: Page) -> None:
                 ),
             ]
         ),
-    )
-
-    filter_selection = Dropdown(
-        label="Filter",
-        hint_text="Select a filter",
-        label_style=TextStyle(color=colors.ON_SURFACE_VARIANT, weight=FontWeight.W_600),
-        hint_style=TextStyle(color=colors.ON_SURFACE_VARIANT, weight=FontWeight.W_600),
     )
 
     username_tf = LoginField("Username", False, None)
