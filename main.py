@@ -391,27 +391,30 @@ def main(page: Page) -> None:
                     "SELECT customer_id FROM customers WHERE name = %s",
                     (name,),
                 )
-                customer_id = int(cursor.fetchone()[0])
-                cursor.execute(
-                    "INSERT INTO orders(stock_code, order_quantity, date, customer_id) VALUES(%s, %s, %s,%s)",
-                    (stock_code, quantity, date.today(), customer_id),
-                )
-                connection.commit()
-                on_order = obtain_on_order(stock_code)
-                cursor.execute(
-                    "UPDATE stocklevels SET on_order = %s WHERE stock_code = %s",
-                    (on_order + quantity, stock_code),
-                )
-                connection.commit()
-                on_order = on_order + quantity
-                quantity = obtain_quantity(stock_code)
-                moq = obtain_moq(stock_code)
-                stock_id = obtain_stock_id(stock_code)
-                cursor.execute(
-                    "UPDATE stockbalance SET balance = %s WHERE stock_id = %s",
-                    (quantity + moq - on_order, stock_id),
-                )
-                connection.commit()
+                if cursor.rowcount > 0:
+                    customer_id = int(cursor.fetchone()[0])
+                    cursor.execute(
+                        "INSERT INTO orders(stock_code, order_quantity, date, customer_id) VALUES(%s, %s, %s,%s)",
+                        (stock_code, quantity, date.today(), customer_id),
+                    )
+                    connection.commit()
+                    on_order = obtain_on_order(stock_code)
+                    cursor.execute(
+                        "UPDATE stocklevels SET on_order = %s WHERE stock_code = %s",
+                        (on_order + quantity, stock_code),
+                    )
+                    connection.commit()
+                    on_order = on_order + quantity
+                    quantity = obtain_quantity(stock_code)
+                    moq = obtain_moq(stock_code)
+                    stock_id = obtain_stock_id(stock_code)
+                    cursor.execute(
+                        "UPDATE stockbalance SET balance = %s WHERE stock_id = %s",
+                        (quantity + moq - on_order, stock_id),
+                    )
+                    connection.commit()
+                else:
+                    show_banner("Customer name does not exist")
         else:
             show_banner("Stock Code does not exist")
         refresh_page(_)
