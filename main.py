@@ -10,8 +10,8 @@ from dotenv import load_dotenv
 from flet import ClipBehavior, MainAxisAlignment, MaterialState
 from flet import Column, Row, Container, DataTable, DataColumn, DataRow, DataCell
 from flet import FontWeight, IconButton, ButtonStyle, RoundedRectangleBorder, Padding
-from flet import Page, View, Text, Icon, Theme, ThemeMode, ColorScheme, Banner
-from flet import ScrollMode, OnScrollEvent, Dropdown, dropdown, TextStyle, AlertDialog
+from flet import Page, View, Text, Icon, Theme, ThemeMode, ColorScheme, Banner, Divider
+from flet import ScrollMode, OnScrollEvent, Dropdown, dropdown, TextStyle, Padding
 from flet import icons, colors, border, app, border_radius, matplotlib_chart
 
 from controls import FormField, LoginField, Table, FormButton
@@ -134,6 +134,7 @@ def main(page: Page) -> None:
         page.update()
 
     def logout(e) -> None:
+        refresh_page(_)
         global admin
         admin = False
         page.route = "/login"
@@ -534,8 +535,6 @@ def main(page: Page) -> None:
 
     sem = threading.Semaphore()
 
-    page.window_min_width = 400
-    page.window_min_height = 325
     page.theme = Theme(
         use_material3=True,
         color_scheme=ColorScheme(
@@ -966,7 +965,7 @@ def main(page: Page) -> None:
     def route_change(_) -> None:
         page.views.clear()
         page.window_width = 400
-        page.window_height = 325
+        page.window_height = 400
         page.window_resizable = True
         page.window_maximizable = False
         page.window_resizable = False
@@ -977,7 +976,7 @@ def main(page: Page) -> None:
         page.views.append(View("/login", [app_bar, login_form], padding=15))
         if page.route == "/" and admin:
             page.window_width = 800
-            page.window_height = 700
+            page.window_height = 800
             page.window_resizable = True
             page.window_maximizable = True
             search_icon.visible = True
@@ -989,32 +988,37 @@ def main(page: Page) -> None:
                     "/",
                     [
                         app_bar,
-                        form_select,
-                        product_form,
-                        order_form,
-                        customer_form,
                         Column(
                             [
-                                Container(
-                                    stock_levels_table,
-                                    clip_behavior=ClipBehavior.HARD_EDGE,
-                                ),
-                                Container(
-                                    search_stock_levels_table,
-                                    clip_behavior=ClipBehavior.HARD_EDGE,
+                                Divider(color=colors.TRANSPARENT),
+                                form_select,
+                                product_form,
+                                order_form,
+                                customer_form,
+                                Column(
+                                    [
+                                        Container(
+                                            stock_levels_table,
+                                            clip_behavior=ClipBehavior.HARD_EDGE,
+                                        ),
+                                        Container(
+                                            search_stock_levels_table,
+                                            clip_behavior=ClipBehavior.HARD_EDGE,
+                                        ),
+                                    ],
                                 ),
                             ],
+                            expand=True,
                             scroll=ScrollMode.AUTO,
                             on_scroll=on_scroll,
-                            expand=True,
                         ),
                     ],
                     padding=15,
                 )
             )
         elif page.route == "/chart" and admin:
-            page.window_width = 700
-            page.window_height = 700
+            page.window_width = 800
+            page.window_height = 800
             page.window_resizable = True
             page.window_maximizable = True
             page.views.append(
