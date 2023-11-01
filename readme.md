@@ -8,7 +8,13 @@ To install the Calibre Data Manager app, please follow these steps:
     pip install -r .\requirements.txt
     ```
 
-2. Package the app by running the following command in your terminal:
+2. If you are using python 3.12 or above, you will need to install setuptools module by running:
+
+    ```python
+    pip install setuptools
+    ```
+
+3. Package the app by running the following command in your terminal:
 
     ```python
     flet pack main.py --name Calibre --icon .\assets\icon.ico
