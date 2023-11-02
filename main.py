@@ -381,6 +381,7 @@ def main(page: Page) -> None:
 
     def add_order_data(_) -> None:
         stock_code = check_value(stock_code_order_tf.value, str)
+        moq = obtain_moq(stock_code)
         quantity = check_value(order_quantity_tf.value, int)
         name = check_value(name_tf.value, str)
         cursor.execute("SELECT * FROM products WHERE stock_code = %s", (stock_code,))
@@ -388,34 +389,37 @@ def main(page: Page) -> None:
             if None in [stock_code or quantity or name]:
                 show_banner("Please fill in all fields")
             else:
-                cursor.execute(
-                    "SELECT customer_id FROM customers WHERE name = %s",
-                    (name,),
-                )
-                if cursor.rowcount > 0:
-                    customer_id = int(cursor.fetchone()[0])
-                    cursor.execute(
-                        "INSERT INTO orders(stock_code, order_quantity, date, customer_id) VALUES(%s, %s, %s,%s)",
-                        (stock_code, quantity, date.today(), customer_id),
-                    )
-                    connection.commit()
-                    on_order = obtain_on_order(stock_code)
-                    cursor.execute(
-                        "UPDATE stocklevels SET on_order = %s WHERE stock_code = %s",
-                        (on_order + quantity, stock_code),
-                    )
-                    connection.commit()
-                    on_order = on_order + quantity
-                    quantity = obtain_quantity(stock_code)
-                    moq = obtain_moq(stock_code)
-                    stock_id = obtain_stock_id(stock_code)
-                    cursor.execute(
-                        "UPDATE stockbalance SET balance = %s WHERE stock_id = %s",
-                        (quantity + moq - on_order, stock_id),
-                    )
-                    connection.commit()
+                if quantity < moq:
+                    show_banner("Order quantity cannot be less than MOQ")
                 else:
-                    show_banner("Customer name does not exist")
+                    cursor.execute(
+                        "SELECT customer_id FROM customers WHERE name = %s",
+                        (name,),
+                    )
+                    if cursor.rowcount > 0:
+                        customer_id = int(cursor.fetchone()[0])
+                        cursor.execute(
+                            "INSERT INTO orders(stock_code, order_quantity, date, customer_id) VALUES(%s, %s, %s,%s)",
+                            (stock_code, quantity, date.today(), customer_id),
+                        )
+                        connection.commit()
+                        on_order = obtain_on_order(stock_code)
+                        cursor.execute(
+                            "UPDATE stocklevels SET on_order = %s WHERE stock_code = %s",
+                            (on_order + quantity, stock_code),
+                        )
+                        connection.commit()
+                        on_order = on_order + quantity
+                        quantity = obtain_quantity(stock_code)
+                        moq = obtain_moq(stock_code)
+                        stock_id = obtain_stock_id(stock_code)
+                        cursor.execute(
+                            "UPDATE stockbalance SET balance = %s WHERE stock_id = %s",
+                            (quantity + moq - on_order, stock_id),
+                        )
+                        connection.commit()
+                    else:
+                        show_banner("Customer name does not exist")
         else:
             show_banner("Stock Code does not exist")
         refresh_page(_)
