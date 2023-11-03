@@ -14,7 +14,7 @@ from flet import Page, View, Text, Icon, Theme, ThemeMode, ColorScheme, Banner, 
 from flet import ScrollMode, OnScrollEvent, Dropdown, dropdown, TextStyle, Padding
 from flet import icons, colors, border, app, border_radius, matplotlib_chart
 
-from controls import FormField, LoginField, Table, FormButton
+from controls import SearchField, FormField, LoginField, Table, FormButton
 
 matplotlib.use("svg")
 
@@ -51,25 +51,21 @@ def main(page: Page) -> None:
         stock_code_order_tf.value = row[0]
         page.update()
 
-    def add_data_to_table(
-        table: DataTable, fetch_function, limit, rows, row=None
-    ) -> None:
+    def add_data_to_table(table, fetch_function, limit, rows) -> None:
         column_names, data = fetch_function(limit=limit)
         new_rows = []
         for row in data:
             new_rows.append(
                 DataRow(
                     cells=[DataCell(Text(cell)) for cell in row],
-                    on_select_changed=lambda e, selected_row=row: load_data(
-                        selected_row
-                    ),
+                    on_select_changed=lambda e, row=row: load_data(row),
                 )
             )
         rows += new_rows
         table.rows = rows
         page.update()
 
-    def on_scroll(e: OnScrollEvent) -> None:
+    def on_scroll(e) -> None:
         if e.pixels >= e.max_scroll_extent - 300:
             if sem.acquire(blocking=False):
                 try:
@@ -247,9 +243,7 @@ def main(page: Page) -> None:
                 rows.append(
                     DataRow(
                         cells=[DataCell(Text(str(cell))) for cell in row],
-                        on_select_changed=lambda _, selected_row=row: load_data(
-                            selected_row
-                        ),
+                        on_select_changed=lambda e, row=row: load_data(row),
                     )
                 )
                 search_stock_levels_table.rows = rows
@@ -259,7 +253,7 @@ def main(page: Page) -> None:
             stock_levels_table.visible = True
         page.update()
 
-    def clear_form(_) -> None:
+    def clear_form(e) -> None:
         if form_select.value == "Product":
             stock_code_product_tf.value = ""
             stock_cat_tf.value = ""
@@ -588,13 +582,7 @@ def main(page: Page) -> None:
 
     search_icon = Icon(name=icons.SEARCH, color=colors.ON_PRIMARY, visible=False)
 
-    search_bar = FormField(
-        "Search",
-        colors.ON_PRIMARY,
-        colors.ON_PRIMARY,
-        search,
-        False,
-    )
+    search_bar = SearchField(search, False)
 
     stock_levels_table = Table(True)
 
@@ -612,85 +600,25 @@ def main(page: Page) -> None:
         for column in stock_levels_columns
     ]
 
-    stock_code_product_tf = FormField(
-        "Stock Code",
-        colors.SURFACE_VARIANT,
-        colors.ON_SURFACE_VARIANT,
-        None,
-        True,
-    )
+    stock_code_product_tf = FormField("Stock Code", None, True)
 
-    stock_code_order_tf = FormField(
-        "Stock Code",
-        colors.SURFACE_VARIANT,
-        colors.ON_SURFACE_VARIANT,
-        None,
-        True,
-    )
+    stock_code_order_tf = FormField("Stock Code", None, True)
 
-    order_id_tf = FormField(
-        "Order ID",
-        colors.SURFACE_VARIANT,
-        colors.ON_SURFACE_VARIANT,
-        None,
-        True,
-    )
+    order_id_tf = FormField("Order ID", None, True)
 
-    stock_cat_tf = FormField(
-        "Stock Category",
-        colors.SURFACE_VARIANT,
-        colors.ON_SURFACE_VARIANT,
-        None,
-        True,
-    )
+    stock_cat_tf = FormField("Stock Category", None, True)
 
-    description_tf = FormField(
-        "Description",
-        colors.SURFACE_VARIANT,
-        colors.ON_SURFACE_VARIANT,
-        None,
-        True,
-    )
+    description_tf = FormField("Description", None, True)
 
-    quantity_tf = FormField(
-        "Quantity",
-        colors.SURFACE_VARIANT,
-        colors.ON_SURFACE_VARIANT,
-        None,
-        True,
-    )
+    quantity_tf = FormField("Quantity", None, True)
 
-    moq_tf = FormField(
-        "MOQ",
-        colors.SURFACE_VARIANT,
-        colors.ON_SURFACE_VARIANT,
-        None,
-        True,
-    )
+    moq_tf = FormField("MOQ", None, True)
 
-    order_quantity_tf = FormField(
-        "Order Quantity",
-        colors.SURFACE_VARIANT,
-        colors.ON_SURFACE_VARIANT,
-        None,
-        True,
-    )
+    order_quantity_tf = FormField("Order Quantity", None, True)
 
-    name_tf = FormField(
-        "Customer Name",
-        colors.SURFACE_VARIANT,
-        colors.ON_SURFACE_VARIANT,
-        None,
-        True,
-    )
+    name_tf = FormField("Customer Name", None, True)
 
-    address_tf = FormField(
-        "Customer Address",
-        colors.SURFACE_VARIANT,
-        colors.ON_SURFACE_VARIANT,
-        None,
-        True,
-    )
+    address_tf = FormField("Customer Address", None, True)
 
     add_product_button = Container(
         FormButton(icons.ADD_ROUNDED, add_product_data, colors.ON_PRIMARY, True),

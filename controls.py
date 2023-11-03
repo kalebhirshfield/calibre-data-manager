@@ -3,24 +3,42 @@ from flet import RoundedRectangleBorder, MaterialState, FontWeight
 from flet import IconButton, icons, colors, border
 
 
+class SearchField(TextField):
+    def __init__(self, on_change, visible: bool) -> None:
+        super().__init__()
+        self.label = "Search"
+        self.label_style = TextStyle(color=colors.ON_PRIMARY, weight=FontWeight.W_600)
+        self.text_style = TextStyle(color=colors.ON_PRIMARY, weight=FontWeight.W_600)
+        self.expand = True
+        self.border_radius = 8
+        self.border_width = 2
+        self.border_color = colors.ON_PRIMARY
+        self.cursor_color = colors.ON_PRIMARY
+        self.content_padding = 10
+        self.on_change = on_change
+        self.visible = visible
+
+
 class FormField(TextField):
     def __init__(
         self,
         label: str,
-        bordercolor: colors,
-        textcolor: colors,
         change,
         visible: bool,
     ) -> None:
         super().__init__()
         self.label = label
-        self.label_style = TextStyle(color=textcolor, weight=FontWeight.W_600)
-        self.text_style = TextStyle(color=textcolor, weight=FontWeight.W_600)
+        self.label_style = TextStyle(
+            color=colors.ON_SURFACE_VARIANT, weight=FontWeight.W_600
+        )
+        self.text_style = TextStyle(
+            color=colors.ON_SURFACE_VARIANT, weight=FontWeight.W_600
+        )
         self.expand = True
         self.border_radius = 8
         self.border_width = 2
-        self.border_color = bordercolor
-        self.cursor_color = textcolor
+        self.border_color = colors.SURFACE_VARIANT
+        self.cursor_color = colors.ON_SURFACE_VARIANT
         self.on_submit = change
         self.content_padding = 10
         self.visible = visible
