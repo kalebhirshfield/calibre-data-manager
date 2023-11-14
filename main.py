@@ -156,54 +156,31 @@ def main(page: Page) -> None:
             customer_form.visible = False
         page.update()
 
-    def display_product_chart(_) -> None:
+    def display_chart(_) -> None:
         global chart
-        cursor.execute(
-            "SELECT stock_cat, SUM(quantity) FROM products INNER JOIN stocklevels using(stock_code) GROUP BY stock_cat"
-        )
-        data = cursor.fetchall()
         x = []
         y = []
+        fig, ax = plt.subplots()
+        if form_select.value == "Product":
+            cursor.execute(
+                "SELECT stock_cat, SUM(quantity) FROM products INNER JOIN stocklevels using(stock_code) GROUP BY stock_cat"
+            )
+            ax.set_xlabel("Stock Category")
+            ax.set_ylabel("Quantity")
+            ax.set_title("Stock Category vs Quantity")
+        else:
+            cursor.execute(
+                "SELECT stock_code, SUM(order_quantity) FROM orders GROUP BY stock_code"
+            )
+            ax.set_xlabel("Stock Code")
+            ax.set_ylabel("Order Quantity")
+            ax.set_title("Stock Code vs Order Quantity")
+        data = cursor.fetchall()
         for row in data:
             x.append(row[0])
             y.append(row[1])
-        fig, ax = plt.subplots()
         ax.yaxis.grid(color="#dbe4e8")
         ax.bar(x, y, color="#00677f")
-        ax.set_xlabel("Stock Category")
-        ax.set_ylabel("Quantity")
-        ax.set_title("Stock Category vs Quantity")
-        ax.set_facecolor("#fbfcfe")
-        ax.tick_params(axis="x", colors="#191c1d")
-        ax.tick_params(axis="y", colors="#191c1d")
-        ax.spines["bottom"].set_color("#dbe4e8")
-        ax.spines["top"].set_color("#dbe4e8")
-        ax.spines["left"].set_color("#dbe4e8")
-        ax.spines["right"].set_color("#dbe4e8")
-        ax.xaxis.label.set_color("#191c1d")
-        ax.yaxis.label.set_color("#191c1d")
-        ax.title.set_color("#191c1d")
-        chart = matplotlib_chart.MatplotlibChart(fig, transparent=True)
-        page.route = "/chart"
-        route_change(_)
-
-    def display_order_chart(_) -> None:
-        global chart
-        cursor.execute(
-            "SELECT stock_code, SUM(order_quantity) FROM orders GROUP BY stock_code"
-        )
-        data = cursor.fetchall()
-        x = []
-        y = []
-        for row in data:
-            x.append(row[0])
-            y.append(row[1])
-        fig, ax = plt.subplots()
-        ax.yaxis.grid(color="#dbe4e8")
-        ax.bar(x, y, color="#00677f")
-        ax.set_xlabel("Stock Code")
-        ax.set_ylabel("Order Quantity")
-        ax.set_title("Stock Code vs Order Quantity")
         ax.set_facecolor("#fbfcfe")
         ax.tick_params(axis="x", colors="#191c1d")
         ax.tick_params(axis="y", colors="#191c1d")
@@ -667,7 +644,7 @@ def main(page: Page) -> None:
     display_product_chart_button = Container(
         FormButton(
             icons.INSIGHTS_ROUNDED,
-            display_product_chart,
+            display_chart,
             colors.ON_PRIMARY,
             True,
         ),
@@ -678,7 +655,7 @@ def main(page: Page) -> None:
     display_order_chart_button = Container(
         FormButton(
             icons.INSIGHTS_ROUNDED,
-            display_order_chart,
+            display_chart,
             colors.ON_PRIMARY,
             True,
         ),
