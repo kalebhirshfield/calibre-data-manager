@@ -29,16 +29,31 @@ chart = None
 
 
 def main(page: Page) -> None:
+    # Functions
     def fetch_stock_levels(limit) -> tuple | int:
         global offset
-        cursor.execute(
-            "SELECT d.*, stocklevels.quantity, stocklevels.moq, stocklevels.on_order, stockbalance.balance\
-            FROM products d INNER JOIN stocklevels using(stock_code) INNER JOIN stockbalance using(stock_id)\
-            LIMIT %s OFFSET %s",
-            (limit, offset),
-        )
+        if table_select.value == "Product":
+            cursor.execute(
+                "SELECT products.*, stocklevels.quantity, stocklevels.moq, stocklevels.on_order, stockbalance.balance\
+                FROM products INNER JOIN stocklevels using(stock_code) INNER JOIN stockbalance using(stock_id)\
+                LIMIT %s OFFSET %s",
+                (limit, offset),
+            )
+        elif table_select.value == "Order":
+            cursor.execute(
+                "SELECT orders.*, customers.name FROM orders INNER JOIN customers using(customer_id) LIMIT %s OFFSET %s",
+                (limit, offset),
+            )
+        elif table_select.value == "Customer":
+            cursor.execute(
+                "SELECT * FROM customers LIMIT %s OFFSET %s", (limit, offset)
+            )
         stock_levels = cursor.fetchall()
-        column_names = [desc[0] for desc in cursor.description if desc[0] != "stock_id"]
+        column_names = [
+            desc[0]
+            for desc in cursor.description
+            if desc[0] != "stock_id" or desc[0] != "customer_id"
+        ]
         offset += limit
         return column_names, stock_levels
 
@@ -78,13 +93,20 @@ def main(page: Page) -> None:
                 finally:
                     sem.release()
 
-    def refresh_table() -> tuple | int:
+    def refresh_table(_) -> tuple | int:
         stock_levels_table.rows = []
+        stock_levels_table.columns = []
         global offset
         offset = 0
         add_data_to_table(
             stock_levels_table, fetch_stock_levels, 20, stock_levels_table.rows
         )
+        stock_levels_columns, _ = fetch_stock_levels(1)
+        stock_levels_table.columns = [
+            DataColumn(Text(str(column).capitalize().replace("_", " ")))
+            for column in stock_levels_columns
+        ]
+        page.update()
         return fetch_stock_levels(1)
 
     def show_banner(content) -> None:
@@ -281,7 +303,7 @@ def main(page: Page) -> None:
 
     def refresh_page(_) -> None:
         clear_form(_)
-        refresh_table()
+        refresh_table(_)
         if search_stock_levels_table.visible:
             search(_)
         page.update()
@@ -512,6 +534,7 @@ def main(page: Page) -> None:
 
     sem = threading.Semaphore()
 
+    # Page
     page.theme = Theme(
         use_material3=True,
         color_scheme=ColorScheme(
@@ -565,7 +588,25 @@ def main(page: Page) -> None:
 
     stock_levels_table = Table(True)
 
-    stock_levels_columns, _ = refresh_table()
+    table_select = Dropdown(
+        label="Select Table",
+        label_style=TextStyle(color=colors.ON_BACKGROUND, weight=FontWeight.BOLD),
+        options=[
+            dropdown.Option("Product"),
+            dropdown.Option("Order"),
+            dropdown.Option("Customer"),
+            dropdown.Option(" "),
+        ],
+        value="Product",
+        text_style=TextStyle(color=colors.ON_SURFACE_VARIANT, weight=FontWeight.W_600),
+        border_color=colors.SURFACE_VARIANT,
+        border_width=2,
+        border_radius=8,
+        expand=True,
+        on_change=refresh_table,
+    )
+
+    stock_levels_columns, _ = refresh_table(None)
 
     stock_levels_table.columns = [
         DataColumn(Text(str(column).capitalize().replace("_", " ")))
@@ -798,6 +839,7 @@ def main(page: Page) -> None:
         border_color=colors.SURFACE_VARIANT,
         border_width=2,
         border_radius=8,
+        expand=True,
         on_change=change_form,
     )
 
@@ -902,7 +944,7 @@ def main(page: Page) -> None:
                         Column(
                             [
                                 Divider(color=colors.TRANSPARENT),
-                                form_select,
+                                Row([form_select, table_select]),
                                 product_form,
                                 order_form,
                                 customer_form,
