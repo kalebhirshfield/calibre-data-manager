@@ -85,24 +85,22 @@ def main(page: Page) -> None:
             if sem.acquire(blocking=False):
                 try:
                     add_data_to_table(
-                        stock_levels_table,
+                        data_table,
                         fetch_stock_levels,
                         10,
-                        stock_levels_table.rows,
+                        data_table.rows,
                     )
                 finally:
                     sem.release()
 
     def refresh_table(_) -> tuple | int:
-        stock_levels_table.rows = []
-        stock_levels_table.columns = []
+        data_table.rows = []
+        data_table.columns = []
         global offset
         offset = 0
-        add_data_to_table(
-            stock_levels_table, fetch_stock_levels, 20, stock_levels_table.rows
-        )
+        add_data_to_table(data_table, fetch_stock_levels, 20, data_table.rows)
         stock_levels_columns, _ = fetch_stock_levels(1)
-        stock_levels_table.columns = [
+        data_table.columns = [
             DataColumn(Text(str(column).capitalize().replace("_", " ")))
             for column in stock_levels_columns
         ]
@@ -225,17 +223,29 @@ def main(page: Page) -> None:
 
     def search(_) -> None:
         query = str(search_bar.value.strip())
+        search_data_table.rows = []
         if query != "":
-            search_stock_levels_table.visible = True
-            stock_levels_table.visible = False
-            columns_to_search = [column for column in stock_levels_columns]
+            search_data_table.visible = True
+            data_table.visible = False
+            data_table_columns, _ = refresh_table(None)
+            search_data_table.columns = [
+                DataColumn(Text(str(column).capitalize().replace("_", " ")))
+                for column in data_table_columns
+            ]
+            columns_to_search = [column for column in data_table_columns]
             conditions = [
                 f"CAST({column} as TEXT) LIKE %s" for column in columns_to_search
             ]
             where_clause = " OR ".join(conditions)
-            sql_query = f"SELECT d.*, stocklevels.quantity, stocklevels.moq, stocklevels.on_order,\
-                        stockbalance.balance FROM products d INNER JOIN stocklevels using(stock_code) INNER JOIN\
+            if table_select.value == "Product":
+                sql_query = f"SELECT products.*, stocklevels.quantity, stocklevels.moq, stocklevels.on_order,\
+                        stockbalance.balance FROM products INNER JOIN stocklevels using(stock_code) INNER JOIN\
                         stockbalance using(stock_id) WHERE {where_clause}"
+            elif table_select.value == "Order":
+                sql_query = f"SELECT orders.*, customers.name FROM orders INNER JOIN customers using(customer_id)\
+                        WHERE {where_clause}"
+            elif table_select.value == "Customer":
+                sql_query = f"SELECT * FROM customers WHERE {where_clause}"
             params = [f"%{query}%"] * len(columns_to_search)
             cursor.execute(sql_query, params)
             search_data = cursor.fetchall()
@@ -247,11 +257,10 @@ def main(page: Page) -> None:
                         on_select_changed=lambda e, row=row: load_data(row),
                     )
                 )
-                search_stock_levels_table.rows = rows
+                search_data_table.rows = rows
         else:
-            search_stock_levels_table.rows = []
-            search_stock_levels_table.visible = False
-            stock_levels_table.visible = True
+            search_data_table.visible = False
+            data_table.visible = True
         page.update()
 
     def clear_form(e) -> None:
@@ -304,7 +313,7 @@ def main(page: Page) -> None:
     def refresh_page(_) -> None:
         clear_form(_)
         refresh_table(_)
-        if search_stock_levels_table.visible:
+        if search_data_table.visible:
             search(_)
         page.update()
 
@@ -586,7 +595,7 @@ def main(page: Page) -> None:
 
     search_bar = SearchField(search, False)
 
-    stock_levels_table = Table(True)
+    data_table = Table(True)
 
     table_select = Dropdown(
         label="Select Table",
@@ -595,7 +604,6 @@ def main(page: Page) -> None:
             dropdown.Option("Product"),
             dropdown.Option("Order"),
             dropdown.Option("Customer"),
-            dropdown.Option(" "),
         ],
         value="Product",
         text_style=TextStyle(color=colors.ON_SURFACE_VARIANT, weight=FontWeight.W_600),
@@ -603,21 +611,18 @@ def main(page: Page) -> None:
         border_width=2,
         border_radius=8,
         expand=True,
-        on_change=refresh_table,
+        on_change=refresh_page,
     )
 
-    stock_levels_columns, _ = refresh_table(None)
+    data_table_columns, _ = refresh_table(None)
 
-    stock_levels_table.columns = [
+    data_table.columns = data_table.columns
+
+    search_data_table = Table(False)
+
+    search_data_table.columns = [
         DataColumn(Text(str(column).capitalize().replace("_", " ")))
-        for column in stock_levels_columns
-    ]
-
-    search_stock_levels_table = Table(False)
-
-    search_stock_levels_table.columns = [
-        DataColumn(Text(str(column).capitalize().replace("_", " ")))
-        for column in stock_levels_columns
+        for column in data_table_columns
     ]
 
     stock_code_product_tf = FormField("Stock Code", None, True)
@@ -951,11 +956,11 @@ def main(page: Page) -> None:
                                 Column(
                                     [
                                         Container(
-                                            stock_levels_table,
+                                            data_table,
                                             clip_behavior=ClipBehavior.HARD_EDGE,
                                         ),
                                         Container(
-                                            search_stock_levels_table,
+                                            search_data_table,
                                             clip_behavior=ClipBehavior.HARD_EDGE,
                                         ),
                                     ],
