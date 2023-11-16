@@ -58,12 +58,20 @@ def main(page: Page) -> None:
         return column_names, stock_levels
 
     def load_data(row) -> None:
-        stock_code_product_tf.value = row[0]
-        stock_cat_tf.value = row[1]
-        description_tf.value = row[2]
-        quantity_tf.value = row[3]
-        moq_tf.value = row[4]
-        stock_code_order_tf.value = row[0]
+        if table_select.value == "Product":
+            stock_code_product_tf.value = row[0]
+            stock_cat_tf.value = row[1]
+            description_tf.value = row[2]
+            quantity_tf.value = row[3]
+            moq_tf.value = row[4]
+        elif table_select.value == "Order":
+            order_id_tf.value = row[0]
+            stock_code_order_tf.value = row[1]
+            order_quantity_tf.value = row[3]
+            name_tf.value = row[5]
+        elif table_select.value == "Customer":
+            name_tf.value = row[1]
+            address_tf.value = row[2]
         page.update()
 
     def add_data_to_table(table, fetch_function, limit, rows) -> None:
