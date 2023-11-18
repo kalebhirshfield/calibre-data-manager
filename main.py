@@ -336,41 +336,40 @@ def main(page: Page) -> None:
                 "SELECT * FROM products WHERE stock_code = %s", (stock_code,)
             )
             if cursor.rowcount > 0:
-                cursor.execute(
-                    "UPDATE products SET stock_cat = %s WHERE stock_code = %s",
-                    (stock_cat, stock_code),
-                ) if stock_cat is not None else None
-                connection.commit()
-                cursor.execute(
-                    "UPDATE products SET description = %s WHERE stock_code = %s",
-                    (description, stock_code),
-                ) if description is not None else None
-                connection.commit()
-                cursor.execute(
-                    "UPDATE stocklevels SET quantity = %s WHERE stock_code = %s",
-                    (quantity, stock_code),
-                ) if quantity is not None else None
-                connection.commit()
-                cursor.execute(
-                    "UPDATE stocklevels SET moq = %s WHERE stock_code = %s",
-                    (moq, stock_code),
-                ) if moq is not None else None
-                connection.commit()
-                stock_id = obtain_stock_id(stock_code)
-                quantity = obtain_quantity(stock_code)
-                on_order = obtain_on_order(stock_code)
-                moq = obtain_moq(stock_code)
-                cursor.execute(
-                    "UPDATE stockbalance SET balance = %s WHERE stock_id = %s",
-                    (quantity + moq - on_order, stock_id),
-                )
-                connection.commit()
-            else:
-                if None in [stock_cat or description or quantity or moq]:
-                    show_banner(
-                        "Please fill in all fields as there is no stock code match",
+                if stock_cat is not None:
+                    cursor.execute(
+                        "UPDATE products SET stock_cat = %s WHERE stock_code = %s",
+                        (stock_cat, stock_code),
                     )
-                else:
+                    connection.commit()
+                if description is not None:
+                    cursor.execute(
+                        "UPDATE products SET description = %s WHERE stock_code = %s",
+                        (description, stock_code),
+                    )
+                    connection.commit()
+                if quantity is not None:
+                    cursor.execute(
+                        "UPDATE stocklevels SET quantity = %s WHERE stock_code = %s",
+                        (quantity, stock_code),
+                    )
+                    connection.commit()
+                    stock_id = obtain_stock_id(stock_code)
+                    quantity = obtain_quantity(stock_code)
+                    on_order = obtain_on_order(stock_code)
+                    moq = obtain_moq(stock_code)
+                    cursor.execute(
+                        "UPDATE stockbalance SET balance = %s WHERE stock_id = %s",
+                        (quantity + moq - on_order, stock_id),
+                    )
+                    connection.commit()
+            else:
+                if (
+                    stock_cat is not None
+                    and description is not None
+                    and quantity is not None
+                    and moq is not None
+                ):
                     cursor.execute(
                         "INSERT INTO products(stock_code, stock_cat, description) VALUES(%s, %s, %s)",
                         (stock_code, stock_cat, description),
@@ -387,7 +386,11 @@ def main(page: Page) -> None:
                         (stock_id, quantity + moq),
                     )
                     connection.commit()
-        elif stock_code is None:
+                else:
+                    show_banner(
+                        "Please fill in all fields as there is no stock code match",
+                    )
+        else:
             show_banner("Please fill in the stock code field")
         refresh_page(_)
 
@@ -398,9 +401,7 @@ def main(page: Page) -> None:
         name = check_value(name_tf.value, str)
         cursor.execute("SELECT * FROM products WHERE stock_code = %s", (stock_code,))
         if cursor.rowcount > 0:
-            if None in [stock_code or quantity or name]:
-                show_banner("Please fill in all fields")
-            else:
+            if stock_code is not None and quantity is not None and name is not None:
                 if quantity < moq:
                     show_banner("Order quantity cannot be less than MOQ")
                 else:
@@ -432,6 +433,8 @@ def main(page: Page) -> None:
                         connection.commit()
                     else:
                         show_banner("Customer name does not exist")
+            else:
+                show_banner("Please fill in all fields")
         else:
             show_banner("Stock Code does not exist")
         refresh_page(_)
@@ -442,11 +445,12 @@ def main(page: Page) -> None:
         if name is not None:
             cursor.execute("SELECT * FROM customers WHERE name = %s", (name,))
             if cursor.rowcount > 0:
-                cursor.execute(
-                    "UPDATE customers SET address = %s WHERE name = %s",
-                    (address, name),
-                ) if address is not None else None
-                connection.commit()
+                if address is not None:
+                    cursor.execute(
+                        "UPDATE customers SET address = %s WHERE name = %s",
+                        (address, name),
+                    )
+                    connection.commit()
             else:
                 if address is None:
                     show_banner(
@@ -463,8 +467,8 @@ def main(page: Page) -> None:
         refresh_page(_)
 
     def remove_product_data(_) -> None:
-        stock_code = str(stock_code_product_tf.value)
-        if stock_code != "":
+        stock_code = check_value(stock_code_product_tf.value, str)
+        if stock_code is not None:
             cursor.execute(
                 "SELECT * FROM products WHERE stock_code = %s", (stock_code,)
             )
