@@ -29,7 +29,7 @@ chart = None
 
 
 def main(page: Page) -> None:
-    # Functions
+    # Datatable Functions
     def fetch_stock_levels(limit) -> tuple | int:
         global offset
         if table_select.value == "Product":
@@ -56,23 +56,6 @@ def main(page: Page) -> None:
         ]
         offset += limit
         return column_names, stock_levels
-
-    def load_data(row) -> None:
-        if table_select.value == "Product":
-            stock_code_product_tf.value = row[0]
-            stock_cat_tf.value = row[1]
-            description_tf.value = row[2]
-            quantity_tf.value = row[3]
-            moq_tf.value = row[4]
-        elif table_select.value == "Order":
-            order_id_tf.value = row[0]
-            stock_code_order_tf.value = row[1]
-            order_quantity_tf.value = row[3]
-            name_tf.value = row[5]
-        elif table_select.value == "Customer":
-            name_tf.value = row[1]
-            address_tf.value = row[2]
-        page.update()
 
     def add_data_to_table(table, fetch_function, limit, rows) -> None:
         column_names, data = fetch_function(limit=limit)
@@ -101,6 +84,8 @@ def main(page: Page) -> None:
                 finally:
                     sem.release()
 
+    sem = threading.Semaphore()
+
     def refresh_table(_) -> tuple | int:
         data_table.rows = []
         data_table.columns = []
@@ -115,15 +100,66 @@ def main(page: Page) -> None:
         page.update()
         return fetch_stock_levels(1)
 
-    def show_banner(content) -> None:
-        page.banner.open = True
-        page.banner.content = Text(content, color=colors.ON_ERROR_CONTAINER)
+    def search(_) -> None:
+        query = str(search_bar.value.strip())
+        search_data_table.rows = []
+        if query != "":
+            search_data_table.visible = True
+            data_table.visible = False
+            data_table_columns, _ = refresh_table(None)
+            search_data_table.columns = [
+                DataColumn(Text(str(column).capitalize().replace("_", " ")))
+                for column in data_table_columns
+            ]
+            columns_to_search = [column for column in data_table_columns]
+            conditions = [
+                f"CAST({column} as TEXT) LIKE %s" for column in columns_to_search
+            ]
+            where_clause = " OR ".join(conditions)
+            if table_select.value == "Product":
+                sql_query = f"SELECT products.*, stocklevels.quantity, stocklevels.moq, stocklevels.on_order,\
+                        stockbalance.balance FROM products INNER JOIN stocklevels using(stock_code) INNER JOIN\
+                        stockbalance using(stock_id) WHERE {where_clause}"
+            elif table_select.value == "Order":
+                sql_query = f"SELECT orders.*, customers.name FROM orders INNER JOIN customers using(customer_id)\
+                        WHERE {where_clause}"
+            elif table_select.value == "Customer":
+                sql_query = f"SELECT * FROM customers WHERE {where_clause}"
+            params = [f"%{query}%"] * len(columns_to_search)
+            cursor.execute(sql_query, params)
+            search_data = cursor.fetchall()
+            rows = []
+            for row in search_data:
+                rows.append(
+                    DataRow(
+                        cells=[DataCell(Text(str(cell))) for cell in row],
+                        on_select_changed=lambda e, row=row: load_data(row),
+                    )
+                )
+                search_data_table.rows = rows
+        else:
+            search_data_table.visible = False
+            data_table.visible = True
         page.update()
 
-    def close_banner(_) -> None:
-        page.banner.open = False
+    def load_data(row) -> None:
+        if table_select.value == "Product":
+            stock_code_product_tf.value = row[0]
+            stock_cat_tf.value = row[1]
+            description_tf.value = row[2]
+            quantity_tf.value = row[3]
+            moq_tf.value = row[4]
+        elif table_select.value == "Order":
+            order_id_tf.value = row[0]
+            stock_code_order_tf.value = row[1]
+            order_quantity_tf.value = row[3]
+            name_tf.value = row[5]
+        elif table_select.value == "Customer":
+            name_tf.value = row[1]
+            address_tf.value = row[2]
         page.update()
 
+    # Form Functions
     def login(e) -> None:
         username = str(username_tf.value) if username_tf.value != "" else None
         password = str(password_tf.value) if password_tf.value != "" else None
@@ -184,93 +220,6 @@ def main(page: Page) -> None:
             customer_form.visible = False
         page.update()
 
-    def display_chart(_) -> None:
-        global chart
-        x = []
-        y = []
-        fig, ax = plt.subplots()
-        if form_select.value == "Product":
-            cursor.execute(
-                "SELECT stock_cat, SUM(quantity) FROM products INNER JOIN stocklevels using(stock_code) GROUP BY stock_cat"
-            )
-            ax.set_xlabel("Stock Category")
-            ax.set_ylabel("Quantity")
-            ax.set_title("Stock Category vs Quantity")
-        else:
-            cursor.execute(
-                "SELECT stock_code, SUM(order_quantity) FROM orders GROUP BY stock_code"
-            )
-            ax.set_xlabel("Stock Code")
-            ax.set_ylabel("Order Quantity")
-            ax.set_title("Stock Code vs Order Quantity")
-        data = cursor.fetchall()
-        for row in data:
-            x.append(row[0])
-            y.append(row[1])
-        ax.yaxis.grid(color="#dbe4e8")
-        ax.bar(x, y, color="#00677f")
-        ax.set_facecolor("#fbfcfe")
-        ax.tick_params(axis="x", colors="#191c1d")
-        ax.tick_params(axis="y", colors="#191c1d")
-        ax.spines["bottom"].set_color("#dbe4e8")
-        ax.spines["top"].set_color("#dbe4e8")
-        ax.spines["left"].set_color("#dbe4e8")
-        ax.spines["right"].set_color("#dbe4e8")
-        ax.xaxis.label.set_color("#191c1d")
-        ax.yaxis.label.set_color("#191c1d")
-        ax.title.set_color("#191c1d")
-        chart = matplotlib_chart.MatplotlibChart(fig, transparent=True)
-        page.route = "/chart"
-        route_change(_)
-
-    def back_to_route(_) -> None:
-        global chart
-        chart = None
-        page.route = "/"
-        route_change(_)
-
-    def search(_) -> None:
-        query = str(search_bar.value.strip())
-        search_data_table.rows = []
-        if query != "":
-            search_data_table.visible = True
-            data_table.visible = False
-            data_table_columns, _ = refresh_table(None)
-            search_data_table.columns = [
-                DataColumn(Text(str(column).capitalize().replace("_", " ")))
-                for column in data_table_columns
-            ]
-            columns_to_search = [column for column in data_table_columns]
-            conditions = [
-                f"CAST({column} as TEXT) LIKE %s" for column in columns_to_search
-            ]
-            where_clause = " OR ".join(conditions)
-            if table_select.value == "Product":
-                sql_query = f"SELECT products.*, stocklevels.quantity, stocklevels.moq, stocklevels.on_order,\
-                        stockbalance.balance FROM products INNER JOIN stocklevels using(stock_code) INNER JOIN\
-                        stockbalance using(stock_id) WHERE {where_clause}"
-            elif table_select.value == "Order":
-                sql_query = f"SELECT orders.*, customers.name FROM orders INNER JOIN customers using(customer_id)\
-                        WHERE {where_clause}"
-            elif table_select.value == "Customer":
-                sql_query = f"SELECT * FROM customers WHERE {where_clause}"
-            params = [f"%{query}%"] * len(columns_to_search)
-            cursor.execute(sql_query, params)
-            search_data = cursor.fetchall()
-            rows = []
-            for row in search_data:
-                rows.append(
-                    DataRow(
-                        cells=[DataCell(Text(str(cell))) for cell in row],
-                        on_select_changed=lambda e, row=row: load_data(row),
-                    )
-                )
-                search_data_table.rows = rows
-        else:
-            search_data_table.visible = False
-            data_table.visible = True
-        page.update()
-
     def clear_form(e) -> None:
         if form_select.value == "Product":
             stock_code_product_tf.value = ""
@@ -321,13 +270,6 @@ def main(page: Page) -> None:
         if type == str:
             return str(value) if str(value) != "" else None
         return type(value) if str(value) != "" else None
-
-    def refresh_page(_) -> None:
-        clear_form(_)
-        refresh_table(_)
-        if search_data_table.visible:
-            search(_)
-        page.update()
 
     def add_product_data(_) -> None:
         stock_code = check_value(stock_code_product_tf.value, str)
@@ -557,7 +499,67 @@ def main(page: Page) -> None:
             show_banner("Please fill in the customer name field")
         refresh_page(_)
 
-    sem = threading.Semaphore()
+    # Page Functions
+    def refresh_page(_) -> None:
+        clear_form(_)
+        refresh_table(_)
+        if search_data_table.visible:
+            search(_)
+        page.update()
+
+    def display_chart(_) -> None:
+        global chart
+        x = []
+        y = []
+        fig, ax = plt.subplots()
+        if form_select.value == "Product":
+            cursor.execute(
+                "SELECT stock_cat, SUM(quantity) FROM products INNER JOIN stocklevels using(stock_code) GROUP BY stock_cat"
+            )
+            ax.set_xlabel("Stock Category")
+            ax.set_ylabel("Quantity")
+            ax.set_title("Stock Category vs Quantity")
+        else:
+            cursor.execute(
+                "SELECT stock_code, SUM(order_quantity) FROM orders GROUP BY stock_code"
+            )
+            ax.set_xlabel("Stock Code")
+            ax.set_ylabel("Order Quantity")
+            ax.set_title("Stock Code vs Order Quantity")
+        data = cursor.fetchall()
+        for row in data:
+            x.append(row[0])
+            y.append(row[1])
+        ax.yaxis.grid(color="#dbe4e8")
+        ax.bar(x, y, color="#00677f")
+        ax.set_facecolor("#fbfcfe")
+        ax.tick_params(axis="x", colors="#191c1d")
+        ax.tick_params(axis="y", colors="#191c1d")
+        ax.spines["bottom"].set_color("#dbe4e8")
+        ax.spines["top"].set_color("#dbe4e8")
+        ax.spines["left"].set_color("#dbe4e8")
+        ax.spines["right"].set_color("#dbe4e8")
+        ax.xaxis.label.set_color("#191c1d")
+        ax.yaxis.label.set_color("#191c1d")
+        ax.title.set_color("#191c1d")
+        chart = matplotlib_chart.MatplotlibChart(fig, transparent=True)
+        page.route = "/chart"
+        route_change(_)
+
+    def back_to_route(_) -> None:
+        global chart
+        chart = None
+        page.route = "/"
+        route_change(_)
+
+    def show_banner(content) -> None:
+        page.banner.open = True
+        page.banner.content = Text(content, color=colors.ON_ERROR_CONTAINER)
+        page.update()
+
+    def close_banner(_) -> None:
+        page.banner.open = False
+        page.update()
 
     # Page
     page.theme = Theme(
