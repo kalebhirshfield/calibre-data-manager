@@ -316,6 +316,10 @@ def main(page: Page) -> None:
         return int(cursor.fetchone()[0])
 
     def check_value(value, type) -> str | int | None:
+        if type == int:
+            return int(value) if str(value).isnumeric() else None
+        if type == str:
+            return str(value) if str(value) != "" else None
         return type(value) if str(value) != "" else None
 
     def refresh_page(_) -> None:
