@@ -23,7 +23,6 @@ class FormField(TextField):
     def __init__(
         self,
         label: str,
-        change,
         visible: bool,
     ) -> None:
         super().__init__()
@@ -39,13 +38,12 @@ class FormField(TextField):
         self.border_width = 2
         self.border_color = colors.SURFACE_VARIANT
         self.cursor_color = colors.ON_SURFACE_VARIANT
-        self.on_submit = change
         self.content_padding = 10
         self.visible = visible
 
 
 class LoginField(TextField):
-    def __init__(self, label: str, password: bool, click) -> None:
+    def __init__(self, label: str, password: bool, login) -> None:
         super().__init__()
         self.label = label
         self.label_style = TextStyle(
@@ -62,7 +60,7 @@ class LoginField(TextField):
         self.content_padding = 10
         self.password = password
         self.can_reveal_password = password
-        self.on_submit = click
+        self.on_submit = login
 
 
 class Table(DataTable):

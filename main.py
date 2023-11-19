@@ -643,25 +643,25 @@ def main(page: Page) -> None:
         for column in data_table_columns
     ]
 
-    stock_code_product_tf = FormField("Stock Code", None, True)
+    stock_code_product_tf = FormField("Stock Code", True)
 
-    stock_code_order_tf = FormField("Stock Code", None, True)
+    stock_code_order_tf = FormField("Stock Code", True)
 
-    order_id_tf = FormField("Order ID", None, True)
+    order_id_tf = FormField("Order ID", True)
 
-    stock_cat_tf = FormField("Stock Category", None, True)
+    stock_cat_tf = FormField("Stock Category", True)
 
-    description_tf = FormField("Description", None, True)
+    description_tf = FormField("Description", True)
 
-    quantity_tf = FormField("Quantity", None, True)
+    quantity_tf = FormField("Quantity", True)
 
-    moq_tf = FormField("MOQ", None, True)
+    moq_tf = FormField("MOQ", True)
 
-    order_quantity_tf = FormField("Order Quantity", None, True)
+    order_quantity_tf = FormField("Order Quantity", True)
 
-    name_tf = FormField("Customer Name", None, True)
+    name_tf = FormField("Customer Name", True)
 
-    address_tf = FormField("Customer Address", None, True)
+    address_tf = FormField("Customer Address", True)
 
     add_product_button = Container(
         FormButton(icons.ADD_ROUNDED, add_product_data, colors.ON_PRIMARY, True),
@@ -845,7 +845,7 @@ def main(page: Page) -> None:
         on_change=change_form,
     )
 
-    username_tf = LoginField("Username", False, None)
+    username_tf = LoginField("Username", False, login)
 
     password_tf = LoginField("Password", True, login)
 
@@ -864,19 +864,12 @@ def main(page: Page) -> None:
     login_form = Container(
         Column(
             [
-                Text(
-                    "Login",
-                    weight=FontWeight.BOLD,
-                    color=colors.ON_BACKGROUND,
-                ),
                 Row([username_tf]),
                 Row([password_tf, login_button]),
             ],
             scroll=ScrollMode.AUTO,
         ),
-        border=border.all(2, colors.SURFACE_VARIANT),
-        border_radius=8,
-        padding=15,
+        padding=Padding(left=0, right=0, top=15, bottom=15),
         clip_behavior=ClipBehavior.HARD_EDGE,
     )
 
