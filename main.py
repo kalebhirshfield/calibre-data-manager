@@ -30,7 +30,7 @@ chart = None
 
 def main(page: Page) -> None:
     # Datatable Functions
-    def fetch_stock_levels(limit) -> tuple | int:
+    def fetch_data(limit) -> tuple | int:
         global offset
         if table_select.value == "Product":
             cursor.execute(
@@ -48,17 +48,17 @@ def main(page: Page) -> None:
             cursor.execute(
                 "SELECT * FROM customers LIMIT %s OFFSET %s", (limit, offset)
             )
-        stock_levels = cursor.fetchall()
+        data = cursor.fetchall()
         column_names = [
             desc[0]
             for desc in cursor.description
             if desc[0] != "stock_id" or desc[0] != "customer_id"
         ]
         offset += limit
-        return column_names, stock_levels
+        return column_names, data
 
     def add_data_to_table(table, fetch_function, limit, rows) -> None:
-        column_names, data = fetch_function(limit=limit)
+        column_names, data = fetch_function(limit)
         new_rows = []
         for row in data:
             new_rows.append(
@@ -77,7 +77,7 @@ def main(page: Page) -> None:
                 try:
                     add_data_to_table(
                         data_table,
-                        fetch_stock_levels,
+                        fetch_data,
                         10,
                         data_table.rows,
                     )
@@ -91,14 +91,14 @@ def main(page: Page) -> None:
         data_table.columns = []
         global offset
         offset = 0
-        add_data_to_table(data_table, fetch_stock_levels, 20, data_table.rows)
-        stock_levels_columns, _ = fetch_stock_levels(1)
+        add_data_to_table(data_table, fetch_data, 20, data_table.rows)
+        stock_levels_columns, _ = fetch_data(1)
         data_table.columns = [
             DataColumn(Text(str(column).capitalize().replace("_", " ")))
             for column in stock_levels_columns
         ]
         page.update()
-        return fetch_stock_levels(1)
+        return fetch_data(1)
 
     def search(_) -> None:
         query = str(search_bar.value.strip())
