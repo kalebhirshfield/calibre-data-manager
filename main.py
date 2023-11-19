@@ -735,23 +735,18 @@ def main(page: Page) -> None:
                 Container(
                     Column(
                         [
-                            Text(
-                                "Products",
-                                weight=FontWeight.BOLD,
-                                color=colors.ON_BACKGROUND,
-                            ),
                             Row(
                                 [
                                     stock_code_product_tf,
+                                    stock_cat_tf,
                                     add_product_button,
                                     delete_product_button,
                                     clear_form_button,
                                 ]
                             ),
-                            Row([description_tf]),
                             Row(
                                 [
-                                    stock_cat_tf,
+                                    description_tf,
                                     quantity_tf,
                                     moq_tf,
                                     display_product_chart_button,
@@ -762,10 +757,8 @@ def main(page: Page) -> None:
                         scroll=ScrollMode.AUTO,
                     ),
                     expand=True,
-                    border=border.all(2, colors.SURFACE_VARIANT),
-                    border_radius=8,
-                    padding=15,
                     clip_behavior=ClipBehavior.HARD_EDGE,
+                    padding=Padding(left=0, right=0, top=15, bottom=15),
                 ),
             ]
         ),
@@ -777,11 +770,6 @@ def main(page: Page) -> None:
                 Container(
                     Column(
                         [
-                            Text(
-                                "Orders",
-                                weight=FontWeight.BOLD,
-                                color=colors.ON_BACKGROUND,
-                            ),
                             Row(
                                 [
                                     order_id_tf,
@@ -803,9 +791,7 @@ def main(page: Page) -> None:
                         scroll=ScrollMode.AUTO,
                     ),
                     expand=True,
-                    border=border.all(2, colors.SURFACE_VARIANT),
-                    border_radius=8,
-                    padding=15,
+                    padding=Padding(left=0, right=0, top=15, bottom=15),
                     clip_behavior=ClipBehavior.HARD_EDGE,
                 ),
             ]
@@ -819,11 +805,6 @@ def main(page: Page) -> None:
                 Container(
                     Column(
                         [
-                            Text(
-                                "Customers",
-                                weight=FontWeight.BOLD,
-                                color=colors.ON_BACKGROUND,
-                            ),
                             Row(
                                 [
                                     name_tf,
@@ -838,9 +819,7 @@ def main(page: Page) -> None:
                         scroll=ScrollMode.AUTO,
                     ),
                     expand=True,
-                    border=border.all(2, colors.SURFACE_VARIANT),
-                    border_radius=8,
-                    padding=15,
+                    padding=Padding(left=0, right=0, top=15, bottom=15),
                     clip_behavior=ClipBehavior.HARD_EDGE,
                 ),
             ]

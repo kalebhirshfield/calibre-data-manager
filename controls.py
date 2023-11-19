@@ -72,7 +72,7 @@ class Table(DataTable):
         self.border_radius = 8
         self.divider_thickness = 0
         self.heading_row_height = 75
-        self.horizontal_lines = border.BorderSide(1, colors.PRIMARY)
+        self.horizontal_lines = border.BorderSide(1, colors.SURFACE_VARIANT)
         self.heading_text_style = TextStyle(
             color=colors.ON_BACKGROUND, weight=FontWeight.BOLD
         )
