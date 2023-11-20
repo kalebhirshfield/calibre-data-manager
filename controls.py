@@ -1,6 +1,6 @@
 from flet import TextStyle, TextField, DataTable, ButtonStyle
 from flet import RoundedRectangleBorder, MaterialState, FontWeight
-from flet import IconButton, icons, colors, border
+from flet import IconButton, icons, colors, border, Dropdown, dropdown
 
 
 class SearchField(TextField):
@@ -95,3 +95,25 @@ class FormButton(IconButton):
         )
         self.on_click = click
         self.visible = visible
+
+
+class Selection(Dropdown):
+    def __init__(self, label, on_change) -> None:
+        super().__init__()
+        self.label = label
+        self.label_style = TextStyle(color=colors.ON_BACKGROUND, weight=FontWeight.BOLD)
+        self.options = [
+            dropdown.Option("Product"),
+            dropdown.Option("Order"),
+            dropdown.Option("Customer"),
+        ]
+        self.value = "Product"
+        self.content_padding = 10
+        self.text_style = TextStyle(
+            color=colors.ON_SURFACE_VARIANT, weight=FontWeight.W_600
+        )
+        self.border_color = colors.SURFACE_VARIANT
+        self.border_width = 2
+        self.border_radius = 8
+        self.expand = True
+        self.on_change = on_change

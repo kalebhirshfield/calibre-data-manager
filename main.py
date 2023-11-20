@@ -11,10 +11,10 @@ from flet import ClipBehavior, MainAxisAlignment, MaterialState
 from flet import Column, Row, Container, DataColumn, DataRow, DataCell
 from flet import FontWeight, IconButton, ButtonStyle, RoundedRectangleBorder, Padding
 from flet import Page, View, Text, Icon, Theme, ThemeMode, ColorScheme, Banner, Divider
-from flet import ScrollMode, Dropdown, dropdown, TextStyle, Padding
+from flet import ScrollMode, TextStyle, Padding
 from flet import icons, colors, border, app, border_radius, matplotlib_chart
 
-from controls import SearchField, FormField, LoginField, Table, FormButton
+from controls import SearchField, FormField, LoginField, Table, FormButton, Selection
 
 matplotlib.use("svg")
 
@@ -615,22 +615,7 @@ def main(page: Page) -> None:
 
     data_table = Table(True)
 
-    table_select = Dropdown(
-        label="Select Table",
-        label_style=TextStyle(color=colors.ON_BACKGROUND, weight=FontWeight.BOLD),
-        options=[
-            dropdown.Option("Product"),
-            dropdown.Option("Order"),
-            dropdown.Option("Customer"),
-        ],
-        value="Product",
-        text_style=TextStyle(color=colors.ON_SURFACE_VARIANT, weight=FontWeight.W_600),
-        border_color=colors.SURFACE_VARIANT,
-        border_width=2,
-        border_radius=8,
-        expand=True,
-        on_change=refresh_page,
-    )
+    table_select = Selection("Select Table", refresh_page)
 
     data_table_columns, _ = refresh_table(None)
 
@@ -827,23 +812,7 @@ def main(page: Page) -> None:
         visible=False,
     )
 
-    form_select = Dropdown(
-        label="Select Form",
-        label_style=TextStyle(color=colors.ON_BACKGROUND, weight=FontWeight.BOLD),
-        options=[
-            dropdown.Option("Product"),
-            dropdown.Option("Order"),
-            dropdown.Option("Customer"),
-            dropdown.Option(" "),
-        ],
-        value="Product",
-        text_style=TextStyle(color=colors.ON_SURFACE_VARIANT, weight=FontWeight.W_600),
-        border_color=colors.SURFACE_VARIANT,
-        border_width=2,
-        border_radius=8,
-        expand=True,
-        on_change=change_form,
-    )
+    form_select = Selection("Select Form", change_form)
 
     username_tf = LoginField("Username", False, login)
 
