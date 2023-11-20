@@ -8,7 +8,7 @@ To install the Calibre Data Manager app, please follow these steps:
     pip install -r .\requirements.txt
     ```
 
-2. If you are using python 3.12 or above, you will need to install setuptools module by running:
+2. If you are using python 3.12 or above, and wish to use the Flet CLI, you will need to install setuptools module by running:
 
     ```pwsh
     pip install setuptools
