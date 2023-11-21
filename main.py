@@ -11,7 +11,7 @@ from flet import ClipBehavior, MainAxisAlignment, MaterialState
 from flet import Column, Row, Container, DataColumn, DataRow, DataCell
 from flet import FontWeight, IconButton, ButtonStyle, RoundedRectangleBorder, Padding
 from flet import Page, View, Text, Icon, Theme, ThemeMode, ColorScheme, Banner, Divider
-from flet import ScrollMode, TextStyle, Padding
+from flet import ScrollMode, Padding
 from flet import icons, colors, border, app, border_radius, matplotlib_chart
 
 from controls import SearchField, FormField, LoginField, Table, FormButton, Selection
