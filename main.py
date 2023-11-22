@@ -34,8 +34,8 @@ def main(page: Page) -> None:
         global offset
         if table_select.value == "Product":
             cursor.execute(
-                "SELECT products.*, stocklevels.quantity, stocklevels.moq, stocklevels.on_order, stockbalance.balance\
-                FROM products INNER JOIN stocklevels using(stock_code) INNER JOIN stockbalance using(stock_id)\
+                "SELECT products.*, stock_levels.quantity, stock_levels.moq, stock_levels.on_order, stock_balance.balance\
+                FROM products INNER JOIN stock_levels using(code) INNER JOIN stock_balance using(stock_id)\
                 LIMIT %s OFFSET %s",
                 (limit, offset),
             )
@@ -117,9 +117,9 @@ def main(page: Page) -> None:
             ]
             where_clause = " OR ".join(conditions)
             if table_select.value == "Product":
-                sql_query = f"SELECT products.*, stocklevels.quantity, stocklevels.moq, stocklevels.on_order,\
-                        stockbalance.balance FROM products INNER JOIN stocklevels using(stock_code) INNER JOIN\
-                        stockbalance using(stock_id) WHERE {where_clause}"
+                sql_query = f"SELECT products.*, stock_levels.quantity, stock_levels.moq, stock_levels.on_order,\
+                        stock_balance.balance FROM products INNER JOIN stock_levels using(code) INNER JOIN\
+                        stock_balance using(stock_id) WHERE {where_clause}"
             elif table_select.value == "Order":
                 sql_query = f"SELECT orders.*, customers.name FROM orders INNER JOIN customers using(customer_id)\
                         WHERE {where_clause}"
@@ -238,84 +238,78 @@ def main(page: Page) -> None:
 
     def obtain_stock_id(stock_code) -> int:
         cursor.execute(
-            "SELECT stock_id FROM stocklevels WHERE stock_code = %s",
+            "SELECT stock_id FROM stock_levels WHERE code = %s",
             (stock_code,),
         )
         return int(cursor.fetchone()[0])
 
     def obtain_quantity(stock_code) -> int:
         cursor.execute(
-            "SELECT quantity FROM stocklevels WHERE stock_code = %s",
+            "SELECT quantity FROM stock_levels WHERE code = %s",
             (stock_code,),
         )
         return int(cursor.fetchone()[0])
 
     def obtain_moq(stock_code) -> int:
         cursor.execute(
-            "SELECT moq FROM stocklevels WHERE stock_code = %s",
+            "SELECT moq FROM stock_levels WHERE code = %s",
             (stock_code,),
         )
         return int(cursor.fetchone()[0])
 
     def obtain_on_order(stock_code) -> int:
         cursor.execute(
-            "SELECT on_order FROM stocklevels WHERE stock_code = %s",
+            "SELECT on_order FROM stock_levels WHERE code = %s",
             (stock_code,),
         )
         return int(cursor.fetchone()[0])
 
-    def check_value(value, type) -> str | int | None:
-        if type == int:
-            return int(value) if str(value).isnumeric() else None
-        if type == str:
-            return str(value) if str(value) != "" else None
-        return type(value) if str(value) != "" else None
+    def commit_changes() -> None:
+        try:
+            connection.commit()
+        except psycopg.Error:
+            connection.rollback()
+            show_banner("An error occured while committing changes")
 
     def add_product_data(_) -> None:
-        stock_code = check_value(stock_code_product_tf.value, str)
-        stock_cat = check_value(stock_cat_tf.value, int)
-        description = check_value(description_tf.value, str)
-        quantity = check_value(quantity_tf.value, int)
-        moq = check_value(moq_tf.value, int)
-        if stock_code is not None:
-            cursor.execute(
-                "SELECT * FROM products WHERE stock_code = %s", (stock_code,)
-            )
+        try:
+            stock_code = str(stock_code_product_tf.value)
+            stock_cat = int(stock_cat_tf.value)
+            description = str(description_tf.value)
+            quantity = int(quantity_tf.value)
+            moq = int(moq_tf.value)
+        except ValueError:
+            show_banner("Please fill in all fields")
+            stock_code = ""
+        if stock_code != "":
+            cursor.execute("SELECT * FROM products WHERE code = %s", (stock_code,))
             if cursor.rowcount > 0:
-                if stock_cat is not None:
-                    cursor.execute(
-                        "UPDATE products SET stock_cat = %s WHERE stock_code = %s",
-                        (stock_cat, stock_code),
-                    )
-                    connection.commit()
-                if description is not None:
-                    cursor.execute(
-                        "UPDATE products SET description = %s WHERE stock_code = %s",
-                        (description, stock_code),
-                    )
-                    connection.commit()
-                if quantity is not None:
-                    cursor.execute(
-                        "UPDATE stocklevels SET quantity = %s WHERE stock_code = %s",
-                        (quantity, stock_code),
-                    )
-                    connection.commit()
-                    stock_id = obtain_stock_id(stock_code)
-                    quantity = obtain_quantity(stock_code)
-                    on_order = obtain_on_order(stock_code)
-                    moq = obtain_moq(stock_code)
-                    cursor.execute(
-                        "UPDATE stockbalance SET balance = %s WHERE stock_id = %s",
-                        (quantity + moq - on_order, stock_id),
-                    )
-                    connection.commit()
+                cursor.execute(
+                    "UPDATE products SET category = %s WHERE code = %s",
+                    (stock_cat, stock_code),
+                )
+                commit_changes()
+                cursor.execute(
+                    "UPDATE products SET description = %s WHERE code = %s",
+                    (description, stock_code),
+                )
+                commit_changes()
+                cursor.execute(
+                    "UPDATE stock_levels SET quantity = %s WHERE code = %s",
+                    (quantity, stock_code),
+                )
+                commit_changes()
+                stock_id = obtain_stock_id(stock_code)
+                quantity = obtain_quantity(stock_code)
+                on_order = obtain_on_order(stock_code)
+                moq = obtain_moq(stock_code)
+                cursor.execute(
+                    "UPDATE stock_balance SET balance = %s WHERE stock_id = %s",
+                    (quantity + moq - on_order, stock_id),
+                )
+                commit_changes()
             else:
-                if (
-                    stock_cat is not None
-                    and description is not None
-                    and quantity is not None
-                    and moq is not None
-                ):
+                try:
                     cursor.execute(
                         "INSERT INTO products(stock_code, stock_cat, description) VALUES(%s, %s, %s)",
                         (stock_code, stock_cat, description),
@@ -332,12 +326,13 @@ def main(page: Page) -> None:
                         (stock_id, quantity + moq),
                     )
                     connection.commit()
-                else:
+                except psycopg.Error:
+                    connection.rollback()
                     show_banner(
                         "Please fill in all fields as there is no stock code match",
                     )
         else:
-            show_banner("Please fill in the stock code field")
+            show_banner("Invalid data entered")
         refresh_page(_)
 
     def add_order_data(_) -> None:
