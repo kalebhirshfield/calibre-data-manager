@@ -264,13 +264,6 @@ def main(page: Page) -> None:
         )
         return int(cursor.fetchone()[0])
 
-    def commit_changes() -> None:
-        try:
-            connection.commit()
-        except psycopg.Error:
-            connection.rollback()
-            show_banner("An error occured while committing changes")
-
     def add_product_data(_) -> None:
         try:
             stock_code = str(stock_code_product_tf.value)
@@ -284,30 +277,34 @@ def main(page: Page) -> None:
         if stock_code != "":
             cursor.execute("SELECT * FROM products WHERE code = %s", (stock_code,))
             if cursor.rowcount > 0:
-                cursor.execute(
-                    "UPDATE products SET category = %s WHERE code = %s",
-                    (stock_cat, stock_code),
-                )
-                commit_changes()
-                cursor.execute(
-                    "UPDATE products SET description = %s WHERE code = %s",
-                    (description, stock_code),
-                )
-                commit_changes()
-                cursor.execute(
-                    "UPDATE stock_levels SET quantity = %s WHERE code = %s",
-                    (quantity, stock_code),
-                )
-                commit_changes()
-                stock_id = obtain_stock_id(stock_code)
-                quantity = obtain_quantity(stock_code)
-                on_order = obtain_on_order(stock_code)
-                moq = obtain_moq(stock_code)
-                cursor.execute(
-                    "UPDATE stock_balance SET balance = %s WHERE stock_id = %s",
-                    (quantity + moq - on_order, stock_id),
-                )
-                commit_changes()
+                try:
+                    cursor.execute(
+                        "UPDATE products SET category = %s WHERE code = %s",
+                        (stock_cat, stock_code),
+                    )
+                    connection.commit()
+                    cursor.execute(
+                        "UPDATE products SET description = %s WHERE code = %s",
+                        (description, stock_code),
+                    )
+                    connection.commit()
+                    cursor.execute(
+                        "UPDATE stock_levels SET quantity = %s WHERE code = %s",
+                        (quantity, stock_code),
+                    )
+                    connection.commit()
+                    stock_id = obtain_stock_id(stock_code)
+                    quantity = obtain_quantity(stock_code)
+                    on_order = obtain_on_order(stock_code)
+                    moq = obtain_moq(stock_code)
+                    cursor.execute(
+                        "UPDATE stock_balance SET balance = %s WHERE stock_id = %s",
+                        (quantity + moq - on_order, stock_id),
+                    )
+                    connection.commit()
+                except psycopg.Error:
+                    connection.rollback()
+                    show_banner("An error occurred")
             else:
                 try:
                     cursor.execute(
@@ -336,80 +333,98 @@ def main(page: Page) -> None:
         refresh_page(_)
 
     def add_order_data(_) -> None:
-        stock_code = check_value(stock_code_order_tf.value, str)
-        moq = obtain_moq(stock_code)
-        quantity = check_value(order_quantity_tf.value, int)
-        name = check_value(name_tf.value, str)
-        cursor.execute("SELECT * FROM products WHERE stock_code = %s", (stock_code,))
-        if cursor.rowcount > 0:
-            if stock_code is not None and quantity is not None and name is not None:
-                if quantity < moq:
-                    show_banner("Order quantity cannot be less than MOQ")
-                else:
-                    cursor.execute(
-                        "SELECT customer_id FROM customers WHERE name = %s",
-                        (name,),
-                    )
-                    if cursor.rowcount > 0:
-                        customer_id = int(cursor.fetchone()[0])
-                        cursor.execute(
-                            "INSERT INTO orders(stock_code, order_quantity, date, customer_id) VALUES(%s, %s, %s,%s)",
-                            (stock_code, quantity, date.today(), customer_id),
-                        )
-                        connection.commit()
-                        on_order = obtain_on_order(stock_code)
-                        cursor.execute(
-                            "UPDATE stocklevels SET on_order = %s WHERE stock_code = %s",
-                            (on_order + quantity, stock_code),
-                        )
-                        connection.commit()
-                        on_order = on_order + quantity
-                        quantity = obtain_quantity(stock_code)
-                        moq = obtain_moq(stock_code)
-                        stock_id = obtain_stock_id(stock_code)
-                        cursor.execute(
-                            "UPDATE stockbalance SET balance = %s WHERE stock_id = %s",
-                            (quantity + moq - on_order, stock_id),
-                        )
-                        connection.commit()
+        try:
+            stock_code = str(stock_code_order_tf.value)
+            moq = obtain_moq(stock_code)
+            quantity = int(order_quantity_tf.value)
+            name = str(name_tf.value)
+        except ValueError:
+            show_banner("Please fill in all fields")
+            stock_code = ""
+        if stock_code != "":
+            cursor.execute(
+                "SELECT * FROM products WHERE stock_code = %s", (stock_code,)
+            )
+            if cursor.rowcount > 0:
+                try:
+                    if quantity < moq:
+                        show_banner("Order quantity cannot be less than MOQ")
                     else:
-                        show_banner("Customer name does not exist")
+                        cursor.execute(
+                            "SELECT customer_id FROM customers WHERE name = %s",
+                            (name,),
+                        )
+                        if cursor.rowcount > 0:
+                            customer_id = int(cursor.fetchone()[0])
+                            cursor.execute(
+                                "INSERT INTO orders(stock_code, order_quantity, date, customer_id) VALUES(%s, %s, %s,%s)",
+                                (stock_code, quantity, date.today(), customer_id),
+                            )
+                            connection.commit()
+                            on_order = obtain_on_order(stock_code)
+                            cursor.execute(
+                                "UPDATE stocklevels SET on_order = %s WHERE stock_code = %s",
+                                (on_order + quantity, stock_code),
+                            )
+                            connection.commit()
+                            on_order = on_order + quantity
+                            quantity = obtain_quantity(stock_code)
+                            moq = obtain_moq(stock_code)
+                            stock_id = obtain_stock_id(stock_code)
+                            cursor.execute(
+                                "UPDATE stockbalance SET balance = %s WHERE stock_id = %s",
+                                (quantity + moq - on_order, stock_id),
+                            )
+                            connection.commit()
+                        else:
+                            show_banner("Customer name does not exist")
+                except psycopg.Error:
+                    connection.rollback()
+                    show_banner("Please fill in all fields")
             else:
-                show_banner("Please fill in all fields")
-        else:
-            show_banner("Stock Code does not exist")
-        refresh_page(_)
+                show_banner("Stock Code does not exist")
+            refresh_page(_)
 
     def add_customer_data(_) -> None:
-        name = check_value(name_tf.value, str)
-        address = check_value(address_tf.value, str)
-        if name is not None:
+        try:
+            name = str(name_tf.value)
+            address = str(address_tf.value)
+        except ValueError:
+            show_banner("Please fill in all fields")
+            name = ""
+        if name != "":
             cursor.execute("SELECT * FROM customers WHERE name = %s", (name,))
             if cursor.rowcount > 0:
-                if address is not None:
+                try:
                     cursor.execute(
                         "UPDATE customers SET address = %s WHERE name = %s",
                         (address, name),
                     )
                     connection.commit()
+                except psycopg.Error:
+                    connection.rollback()
+                    show_banner("Please fill in all fields")
             else:
-                if address is None:
-                    show_banner(
-                        "Please fill in all fields as there is no customer name match"
-                    )
-                else:
+                try:
                     cursor.execute(
                         "INSERT INTO customers(name, address) VALUES(%s, %s)",
                         (name, address),
                     )
                     connection.commit()
+                except psycopg.Error:
+                    connection.rollback()
+                    show_banner("Please fill in all fields")
         else:
             show_banner("Please fill in the customer name field")
         refresh_page(_)
 
     def remove_product_data(_) -> None:
-        stock_code = check_value(stock_code_product_tf.value, str)
-        if stock_code is not None:
+        try:
+            stock_code = str(stock_code_product_tf.value)
+        except ValueError:
+            show_banner("Please fill in all fields")
+            stock_code = ""
+        if stock_code != "":
             cursor.execute(
                 "SELECT * FROM products WHERE stock_code = %s", (stock_code,)
             )
@@ -438,8 +453,12 @@ def main(page: Page) -> None:
         refresh_page(_)
 
     def remove_order_data(_) -> None:
-        order_id = check_value(order_id_tf.value, int)
-        if order_id is not None:
+        try:
+            order_id = int(order_id_tf.value)
+        except ValueError:
+            show_banner("Please fill in all fields")
+            order_id = ""
+        if order_id != "":
             cursor.execute("SELECT * FROM orders WHERE order_id = %s", (order_id,))
             if cursor.rowcount > 0:
                 cursor.execute(
@@ -474,8 +493,12 @@ def main(page: Page) -> None:
         refresh_page(_)
 
     def remove_customer_data(_) -> None:
-        name = check_value(name_tf.value, str)
-        if name is not None:
+        try:
+            name = str(name_tf.value)
+        except ValueError:
+            show_banner("Please fill in all fields")
+            name = ""
+        if name != "":
             cursor.execute("SELECT * FROM customers WHERE name = %s", (name,))
             if cursor.rowcount > 0:
                 cursor.execute(
