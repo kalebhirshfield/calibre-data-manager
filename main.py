@@ -382,7 +382,7 @@ def main(page: Page) -> None:
                                 connection.commit()
                                 on_order = obtain_on_order(stock_code)
                                 cursor.execute(
-                                    "UPDATE stock_levels SET on_order = %s WHERE stock_code = %s",
+                                    "UPDATE stock_levels SET on_order = %s WHERE code = %s",
                                     (on_order + quantity, stock_code),
                                 )
                                 connection.commit()
@@ -462,7 +462,7 @@ def main(page: Page) -> None:
             cursor.execute("SELECT * FROM orders WHERE order_id = %s", (order_id,))
             if cursor.rowcount > 0:
                 cursor.execute(
-                    "SELECT stock_code FROM orders WHERE order_id = %s", (order_id,)
+                    "SELECT code FROM orders WHERE order_id = %s", (order_id,)
                 )
                 stock_code = str(cursor.fetchone()[0])
                 on_order = obtain_on_order(stock_code)
@@ -471,7 +471,7 @@ def main(page: Page) -> None:
                 )
                 order_quantity = int(cursor.fetchone()[0])
                 cursor.execute(
-                    "UPDATE stocklevels SET on_order = %s WHERE stock_code = %s",
+                    "UPDATE stock_levels SET on_order = %s WHERE code = %s",
                     (on_order - order_quantity, stock_code),
                 )
                 connection.commit()
@@ -480,7 +480,7 @@ def main(page: Page) -> None:
                 moq = obtain_moq(stock_code)
                 stock_id = obtain_stock_id(stock_code)
                 cursor.execute(
-                    "UPDATE stockbalance SET balance = %s WHERE stock_id = %s",
+                    "UPDATE stock_balance SET balance = %s WHERE stock_id = %s",
                     (quantity + moq - on_order, stock_id),
                 )
                 connection.commit()
