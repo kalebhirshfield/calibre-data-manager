@@ -517,15 +517,13 @@ def main(page: Page) -> None:
         fig, ax = plt.subplots()
         if form_select.value == "Product":
             cursor.execute(
-                "SELECT stock_cat, SUM(quantity) FROM products INNER JOIN stocklevels using(stock_code) GROUP BY stock_cat"
+                "SELECT category, SUM(quantity) FROM products INNER JOIN stock_levels using(code) GROUP BY category"
             )
             ax.set_xlabel("Stock Category")
             ax.set_ylabel("Quantity")
             ax.set_title("Stock Category vs Quantity")
         else:
-            cursor.execute(
-                "SELECT stock_code, SUM(order_quantity) FROM orders GROUP BY stock_code"
-            )
+            cursor.execute("SELECT code, SUM(order_quantity) FROM orders GROUP BY code")
             ax.set_xlabel("Stock Code")
             ax.set_ylabel("Order Quantity")
             ax.set_title("Stock Code vs Order Quantity")
