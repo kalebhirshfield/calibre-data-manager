@@ -144,14 +144,14 @@ def main(page: Page) -> None:
 
     def load_data(row) -> None:
         if table_select.value == "Product":
-            stock_code_product_tf.value = row[0]
-            stock_cat_tf.value = row[1]
+            code_product_tf.value = row[0]
+            category_tf.value = row[1]
             description_tf.value = row[2]
             quantity_tf.value = row[3]
             moq_tf.value = row[4]
         elif table_select.value == "Order":
             order_id_tf.value = row[0]
-            stock_code_order_tf.value = row[1]
+            code_order_tf.value = row[1]
             order_quantity_tf.value = row[3]
             name_tf.value = row[5]
         elif table_select.value == "Customer":
@@ -222,13 +222,13 @@ def main(page: Page) -> None:
 
     def clear_form(e) -> None:
         if form_select.value == "Product":
-            stock_code_product_tf.value = ""
-            stock_cat_tf.value = ""
+            code_product_tf.value = ""
+            category_tf.value = ""
             description_tf.value = ""
             quantity_tf.value = ""
             moq_tf.value = ""
         elif form_select.value == "Order":
-            stock_code_order_tf.value = ""
+            code_order_tf.value = ""
             order_quantity_tf.value = ""
             name_tf.value = ""
         elif form_select.value == "Customer":
@@ -236,40 +236,40 @@ def main(page: Page) -> None:
             address_tf.value = ""
         page.update()
 
-    def obtain_stock_id(stock_code) -> int:
+    def obtain_stock_id(code) -> int:
         cursor.execute(
             "SELECT stock_id FROM stock_levels WHERE code = %s",
-            (stock_code,),
+            (code,),
         )
         return int(cursor.fetchone()[0])
 
-    def obtain_quantity(stock_code) -> int:
+    def obtain_quantity(code) -> int:
         cursor.execute(
             "SELECT quantity FROM stock_levels WHERE code = %s",
-            (stock_code,),
+            (code,),
         )
         return int(cursor.fetchone()[0])
 
-    def obtain_moq(stock_code) -> int:
+    def obtain_moq(code) -> int:
         cursor.execute(
             "SELECT moq FROM stock_levels WHERE code = %s",
-            (stock_code,),
+            (code,),
         )
         return int(cursor.fetchone()[0])
 
-    def obtain_on_order(stock_code) -> int:
+    def obtain_on_order(code) -> int:
         cursor.execute(
             "SELECT on_order FROM stock_levels WHERE code = %s",
-            (stock_code,),
+            (code,),
         )
         return int(cursor.fetchone()[0])
 
     def add_product_data(_) -> None:
-        stock_code = str(stock_code_product_tf.value)
+        code = str(code_product_tf.value)
         try:
-            stock_cat = int(stock_cat_tf.value)
+            category = int(category_tf.value)
         except ValueError:
-            stock_cat = str(stock_cat_tf.value)
+            category = str(category_tf.value)
         description = str(description_tf.value)
         try:
             quantity = int(quantity_tf.value)
@@ -280,12 +280,12 @@ def main(page: Page) -> None:
         except ValueError:
             moq = str(moq_tf.value)
         try:
-            cursor.execute("SELECT * FROM products WHERE code = %s", (stock_code,))
+            cursor.execute("SELECT * FROM products WHERE code = %s", (code,))
             if cursor.rowcount > 0:
                 try:
                     cursor.execute(
                         "UPDATE products SET category = %s WHERE code = %s",
-                        (stock_cat, stock_code),
+                        (category, code),
                     )
                     connection.commit()
                 except psycopg.Error:
@@ -293,7 +293,7 @@ def main(page: Page) -> None:
                 try:
                     cursor.execute(
                         "UPDATE products SET description = %s WHERE code = %s",
-                        (description, stock_code),
+                        (description, code),
                     )
                     connection.commit()
                 except psycopg.Error:
@@ -301,7 +301,7 @@ def main(page: Page) -> None:
                 try:
                     cursor.execute(
                         "UPDATE stock_levels SET quantity = %s WHERE code = %s",
-                        (quantity, stock_code),
+                        (quantity, code),
                     )
                     connection.commit()
                 except psycopg.Error:
@@ -309,16 +309,16 @@ def main(page: Page) -> None:
                 try:
                     cursor.execute(
                         "UPDATE stock_levels SET moq = %s WHERE code = %s",
-                        (moq, stock_code),
+                        (moq, code),
                     )
                     connection.commit()
                 except psycopg.Error:
                     connection.rollback()
                 try:
-                    stock_id = obtain_stock_id(stock_code)
-                    quantity = obtain_quantity(stock_code)
-                    on_order = obtain_on_order(stock_code)
-                    moq = obtain_moq(stock_code)
+                    stock_id = obtain_stock_id(code)
+                    quantity = obtain_quantity(code)
+                    on_order = obtain_on_order(code)
+                    moq = obtain_moq(code)
                     cursor.execute(
                         "UPDATE stock_balance SET balance = %s WHERE stock_id = %s",
                         (quantity + moq - on_order, stock_id),
@@ -330,15 +330,15 @@ def main(page: Page) -> None:
                 try:
                     cursor.execute(
                         "INSERT INTO products(code, category, description) VALUES(%s, %s, %s)",
-                        (stock_code, stock_cat, description),
+                        (code, category, description),
                     )
                     connection.commit()
                     cursor.execute(
                         "INSERT INTO stock_levels(code, moq, quantity, on_order) VALUES(%s, %s, %s, %s)",
-                        (stock_code, moq, quantity, 0),
+                        (code, moq, quantity, 0),
                     )
                     connection.commit()
-                    stock_id = obtain_stock_id(stock_code)
+                    stock_id = obtain_stock_id(code)
                     cursor.execute(
                         "INSERT INTO stock_balance(stock_id, balance) VALUES(%s, %s)",
                         (stock_id, quantity + moq),
@@ -354,17 +354,17 @@ def main(page: Page) -> None:
         refresh_page(_)
 
     def add_order_data(_) -> None:
-        stock_code = str(stock_code_order_tf.value)
+        code = str(code_order_tf.value)
         try:
             quantity = int(order_quantity_tf.value)
         except ValueError:
             quantity = str(order_quantity_tf.value)
         name = str(name_tf.value)
         try:
-            cursor.execute("SELECT * FROM products WHERE code = %s", (stock_code,))
+            cursor.execute("SELECT * FROM products WHERE code = %s", (code,))
             if cursor.rowcount > 0:
                 try:
-                    moq = obtain_moq(stock_code)
+                    moq = obtain_moq(code)
                     if quantity < moq:
                         show_banner("Order quantity cannot be less than MOQ")
                     else:
@@ -377,19 +377,19 @@ def main(page: Page) -> None:
                             try:
                                 cursor.execute(
                                     "INSERT INTO orders(code, order_quantity, date, customer_id) VALUES(%s, %s, %s,%s)",
-                                    (stock_code, quantity, date.today(), customer_id),
+                                    (code, quantity, date.today(), customer_id),
                                 )
                                 connection.commit()
-                                on_order = obtain_on_order(stock_code)
+                                on_order = obtain_on_order(code)
                                 cursor.execute(
                                     "UPDATE stock_levels SET on_order = %s WHERE code = %s",
-                                    (on_order + quantity, stock_code),
+                                    (on_order + quantity, code),
                                 )
                                 connection.commit()
                                 on_order = on_order + quantity
-                                quantity = obtain_quantity(stock_code)
-                                moq = obtain_moq(stock_code)
-                                stock_id = obtain_stock_id(stock_code)
+                                quantity = obtain_quantity(code)
+                                moq = obtain_moq(code)
+                                stock_id = obtain_stock_id(code)
                                 cursor.execute(
                                     "UPDATE stock_balance SET balance = %s WHERE stock_id = %s",
                                     (quantity + moq - on_order, stock_id),
@@ -443,9 +443,9 @@ def main(page: Page) -> None:
         refresh_page(_)
 
     def remove_product_data(_) -> None:
-        stock_code = str(stock_code_product_tf.value)
+        code = str(code_product_tf.value)
         try:
-            cursor.execute("DELETE FROM products WHERE code = %s", (stock_code,))
+            cursor.execute("DELETE FROM products WHERE code = %s", (code,))
             connection.commit()
         except psycopg.Error:
             connection.rollback()
@@ -464,21 +464,21 @@ def main(page: Page) -> None:
                 cursor.execute(
                     "SELECT code FROM orders WHERE order_id = %s", (order_id,)
                 )
-                stock_code = str(cursor.fetchone()[0])
-                on_order = obtain_on_order(stock_code)
+                code = str(cursor.fetchone()[0])
+                on_order = obtain_on_order(code)
                 cursor.execute(
                     "SELECT order_quantity FROM orders WHERE order_id = %s", (order_id,)
                 )
                 order_quantity = int(cursor.fetchone()[0])
                 cursor.execute(
                     "UPDATE stock_levels SET on_order = %s WHERE code = %s",
-                    (on_order - order_quantity, stock_code),
+                    (on_order - order_quantity, code),
                 )
                 connection.commit()
                 on_order = on_order - order_quantity
-                quantity = obtain_quantity(stock_code)
-                moq = obtain_moq(stock_code)
-                stock_id = obtain_stock_id(stock_code)
+                quantity = obtain_quantity(code)
+                moq = obtain_moq(code)
+                stock_id = obtain_stock_id(code)
                 cursor.execute(
                     "UPDATE stock_balance SET balance = %s WHERE stock_id = %s",
                     (quantity + moq - on_order, stock_id),
@@ -629,13 +629,13 @@ def main(page: Page) -> None:
         for column in data_table_columns
     ]
 
-    stock_code_product_tf = FormField("Stock Code", True)
+    code_product_tf = FormField("Code", True)
 
-    stock_code_order_tf = FormField("Stock Code", True)
+    code_order_tf = FormField("Code", True)
 
     order_id_tf = FormField("Order ID", True)
 
-    stock_cat_tf = FormField("Stock Category", True)
+    category_tf = FormField("Category", True)
 
     description_tf = FormField("Description", True)
 
@@ -645,9 +645,9 @@ def main(page: Page) -> None:
 
     order_quantity_tf = FormField("Order Quantity", True)
 
-    name_tf = FormField("Customer Name", True)
+    name_tf = FormField("Name", True)
 
-    address_tf = FormField("Customer Address", True)
+    address_tf = FormField("Address", True)
 
     add_product_button = Container(
         FormButton(icons.ADD_ROUNDED, add_product_data, colors.ON_PRIMARY, True),
@@ -723,8 +723,8 @@ def main(page: Page) -> None:
                         [
                             Row(
                                 [
-                                    stock_code_product_tf,
-                                    stock_cat_tf,
+                                    code_product_tf,
+                                    category_tf,
                                     add_product_button,
                                     delete_product_button,
                                     clear_form_button,
@@ -759,7 +759,7 @@ def main(page: Page) -> None:
                             Row(
                                 [
                                     order_id_tf,
-                                    stock_code_order_tf,
+                                    code_order_tf,
                                     add_order_button,
                                     delete_order_button,
                                     clear_form_button,
