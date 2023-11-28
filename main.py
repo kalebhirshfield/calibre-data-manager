@@ -33,21 +33,19 @@ def main(page: Page) -> None:
     def fetch_data(limit) -> tuple | int:
         global offset
         if table_select.value == "Product":
-            cursor.execute(
-                "SELECT products.*, stock_levels.quantity, stock_levels.moq, stock_levels.on_order, stock_balance.balance\
-                FROM products INNER JOIN stock_levels using(code) INNER JOIN stock_balance using(stock_id)\
-                LIMIT %s OFFSET %s",
-                (limit, offset),
-            )
+            query = """
+                SELECT products.*, stock_levels.quantity, stock_levels.moq, stock_levels.on_order, 
+                stock_balance.balance FROM products INNER JOIN stock_levels using(code) INNER JOIN 
+                stock_balance using(stock_id) LIMIT %s OFFSET %s
+            """
         elif table_select.value == "Order":
-            cursor.execute(
-                "SELECT orders.*, customers.name FROM orders INNER JOIN customers using(customer_id) LIMIT %s OFFSET %s",
-                (limit, offset),
-            )
+            query = """
+                SELECT orders.*, customers.name FROM orders INNER JOIN customers using(customer_id) 
+                LIMIT %s OFFSET %s
+            """
         elif table_select.value == "Customer":
-            cursor.execute(
-                "SELECT * FROM customers LIMIT %s OFFSET %s", (limit, offset)
-            )
+            query = "SELECT * FROM customers LIMIT %s OFFSET %s"
+        cursor.execute(query, (limit, offset))
         data = cursor.fetchall()
         column_names = [
             desc[0]
@@ -59,15 +57,13 @@ def main(page: Page) -> None:
 
     def add_data_to_table(table, fetch_function, limit, rows) -> None:
         column_names, data = fetch_function(limit)
-        new_rows = []
-        for row in data:
-            new_rows.append(
-                DataRow(
-                    cells=[DataCell(Text(cell)) for cell in row],
-                    on_select_changed=lambda e, row=row: load_data(row),
-                )
+        rows += [
+            DataRow(
+                cells=[DataCell(Text(cell)) for cell in row],
+                on_select_changed=lambda e, row=row: load_data(row),
             )
-        rows += new_rows
+            for row in data
+        ]
         table.rows = rows
         page.update()
 
@@ -75,12 +71,7 @@ def main(page: Page) -> None:
         if e.pixels >= e.max_scroll_extent - 300:
             if sem.acquire(blocking=False):
                 try:
-                    add_data_to_table(
-                        data_table,
-                        fetch_data,
-                        10,
-                        data_table.rows,
-                    )
+                    add_data_to_table(data_table, fetch_data, 10, data_table.rows)
                 finally:
                     sem.release()
 
@@ -117,12 +108,16 @@ def main(page: Page) -> None:
             ]
             where_clause = " OR ".join(conditions)
             if table_select.value == "Product":
-                sql_query = f"SELECT products.*, stock_levels.quantity, stock_levels.moq, stock_levels.on_order,\
-                        stock_balance.balance FROM products INNER JOIN stock_levels using(code) INNER JOIN\
-                        stock_balance using(stock_id) WHERE {where_clause}"
+                sql_query = f"""
+                    SELECT products.*, stock_levels.quantity, stock_levels.moq, stock_levels.on_order,
+                    stock_balance.balance FROM products INNER JOIN stock_levels using(code) INNER JOIN
+                    stock_balance using(stock_id) WHERE {where_clause}
+                """
             elif table_select.value == "Order":
-                sql_query = f"SELECT orders.*, customers.name FROM orders INNER JOIN customers using(customer_id)\
-                        WHERE {where_clause}"
+                sql_query = f"""
+                    SELECT orders.*, customers.name FROM orders INNER JOIN customers using(customer_id)
+                    WHERE {where_clause}
+                """
             elif table_select.value == "Customer":
                 sql_query = f"SELECT * FROM customers WHERE {where_clause}"
             params = [f"%{query}%"] * len(columns_to_search)
