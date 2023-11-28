@@ -264,6 +264,14 @@ def main(page: Page) -> None:
         )
         return int(cursor.fetchone()[0])
 
+    def try_commit(query, params) -> None:
+        try:
+            cursor.execute(query, params)
+            connection.commit()
+        except psycopg.Error:
+            show_banner("Invalid data entered")
+            connection.rollback()
+
     def add_product_data(_) -> None:
         stock_code = str(stock_code_product_tf.value)
         try:
@@ -282,50 +290,30 @@ def main(page: Page) -> None:
         try:
             cursor.execute("SELECT * FROM products WHERE code = %s", (stock_code,))
             if cursor.rowcount > 0:
-                try:
-                    cursor.execute(
-                        "UPDATE products SET category = %s WHERE code = %s",
-                        (stock_cat, stock_code),
-                    )
-                    connection.commit()
-                except psycopg.Error:
-                    connection.rollback()
-                try:
-                    cursor.execute(
-                        "UPDATE products SET description = %s WHERE code = %s",
-                        (description, stock_code),
-                    )
-                    connection.commit()
-                except psycopg.Error:
-                    connection.rollback()
-                try:
-                    cursor.execute(
-                        "UPDATE stock_levels SET quantity = %s WHERE code = %s",
-                        (quantity, stock_code),
-                    )
-                    connection.commit()
-                except psycopg.Error:
-                    connection.rollback()
-                try:
-                    cursor.execute(
-                        "UPDATE stock_levels SET moq = %s WHERE code = %s",
-                        (moq, stock_code),
-                    )
-                    connection.commit()
-                except psycopg.Error:
-                    connection.rollback()
-                try:
-                    stock_id = obtain_stock_id(stock_code)
-                    quantity = obtain_quantity(stock_code)
-                    on_order = obtain_on_order(stock_code)
-                    moq = obtain_moq(stock_code)
-                    cursor.execute(
-                        "UPDATE stock_balance SET balance = %s WHERE stock_id = %s",
-                        (quantity + moq - on_order, stock_id),
-                    )
-                    connection.commit()
-                except psycopg.Error:
-                    connection.rollback()
+                try_commit(
+                    "UPDATE products SET category = %s WHERE code = %s",
+                    (stock_cat, stock_code),
+                )
+                try_commit(
+                    "UPDATE products SET description = %s WHERE code = %s",
+                    (description, stock_code),
+                )
+                try_commit(
+                    "UPDATE stock_levels SET quantity = %s WHERE code = %s",
+                    (quantity, stock_code),
+                )
+                try_commit(
+                    "UPDATE stock_levels SET moq = %s WHERE code = %s",
+                    (moq, stock_code),
+                )
+                stock_id = obtain_stock_id(stock_code)
+                quantity = obtain_quantity(stock_code)
+                on_order = obtain_on_order(stock_code)
+                moq = obtain_moq(stock_code)
+                try_commit(
+                    "UPDATE stock_balance SET balance = %s WHERE stock_id = %s",
+                    (quantity + moq - on_order, stock_id),
+                )
             else:
                 try:
                     cursor.execute(
@@ -356,7 +344,8 @@ def main(page: Page) -> None:
     def add_order_data(_) -> None:
         stock_code = str(stock_code_order_tf.value)
         try:
-            quantity = int(order_quantity_tf.value)
+            if int(order_quantity_tf.value) > obtain_moq(stock_code):
+                quantity = int(order_quantity_tf.value)
         except ValueError:
             quantity = str(order_quantity_tf.value)
         name = str(name_tf.value)
@@ -365,40 +354,37 @@ def main(page: Page) -> None:
             if cursor.rowcount > 0:
                 try:
                     moq = obtain_moq(stock_code)
-                    if quantity < moq:
-                        show_banner("Order quantity cannot be less than MOQ")
+                    cursor.execute(
+                        "SELECT customer_id FROM customers WHERE name = %s",
+                        (name,),
+                    )
+                    if cursor.rowcount > 0:
+                        customer_id = int(cursor.fetchone()[0])
+                        try:
+                            cursor.execute(
+                                "INSERT INTO orders(code, order_quantity, date, customer_id) VALUES(%s, %s, %s,%s)",
+                                (stock_code, quantity, date.today(), customer_id),
+                            )
+                            connection.commit()
+                            on_order = obtain_on_order(stock_code)
+                            cursor.execute(
+                                "UPDATE stock_levels SET on_order = %s WHERE code = %s",
+                                (on_order + quantity, stock_code),
+                            )
+                            connection.commit()
+                            on_order = on_order + quantity
+                            quantity = obtain_quantity(stock_code)
+                            moq = obtain_moq(stock_code)
+                            stock_id = obtain_stock_id(stock_code)
+                            cursor.execute(
+                                "UPDATE stock_balance SET balance = %s WHERE stock_id = %s",
+                                (quantity + moq - on_order, stock_id),
+                            )
+                            connection.commit()
+                        except psycopg.Error:
+                            connection.rollback()
                     else:
-                        cursor.execute(
-                            "SELECT customer_id FROM customers WHERE name = %s",
-                            (name,),
-                        )
-                        if cursor.rowcount > 0:
-                            customer_id = int(cursor.fetchone()[0])
-                            try:
-                                cursor.execute(
-                                    "INSERT INTO orders(code, order_quantity, date, customer_id) VALUES(%s, %s, %s,%s)",
-                                    (stock_code, quantity, date.today(), customer_id),
-                                )
-                                connection.commit()
-                                on_order = obtain_on_order(stock_code)
-                                cursor.execute(
-                                    "UPDATE stock_levels SET on_order = %s WHERE code = %s",
-                                    (on_order + quantity, stock_code),
-                                )
-                                connection.commit()
-                                on_order = on_order + quantity
-                                quantity = obtain_quantity(stock_code)
-                                moq = obtain_moq(stock_code)
-                                stock_id = obtain_stock_id(stock_code)
-                                cursor.execute(
-                                    "UPDATE stock_balance SET balance = %s WHERE stock_id = %s",
-                                    (quantity + moq - on_order, stock_id),
-                                )
-                                connection.commit()
-                            except psycopg.Error:
-                                connection.rollback()
-                        else:
-                            show_banner("Customer name does not exist")
+                        show_banner("Customer name does not exist")
                 except psycopg.Error:
                     connection.rollback()
                     show_banner("Please fill in all fields")
