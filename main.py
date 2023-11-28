@@ -52,7 +52,7 @@ def main(page: Page) -> None:
         column_names = [
             desc[0]
             for desc in cursor.description
-            if desc[0] != "stock_id" or desc[0] != "customer_id"
+            if desc[0] != "stock_id" and desc[0] != "customer_id"
         ]
         offset += limit
         return column_names, data
