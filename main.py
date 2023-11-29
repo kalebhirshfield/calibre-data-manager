@@ -150,8 +150,8 @@ def main(page: Page) -> None:
             name_tf.value = row[2]
             order_quantity_tf.value = row[3]
         elif table_select.value == "Customer":
-            name_tf.value = row[1]
-            address_tf.value = row[2]
+            name_tf.value = row[0]
+            address_tf.value = row[1]
         page.update()
 
     # Form Functions
