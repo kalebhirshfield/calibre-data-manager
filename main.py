@@ -47,11 +47,7 @@ def main(page: Page) -> None:
             query = "SELECT name, address FROM customers LIMIT %s OFFSET %s"
         cursor.execute(query, (limit, offset))
         data = cursor.fetchall()
-        column_names = [
-            desc[0]
-            for desc in cursor.description
-            if desc[0] != "stock_id" and desc[0] != "customer_id"
-        ]
+        column_names = [desc[0] for desc in cursor.description]
         offset += limit
         return column_names, data
 
