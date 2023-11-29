@@ -40,11 +40,11 @@ def main(page: Page) -> None:
             """
         elif table_select.value == "Order":
             query = """
-                SELECT orders.*, customers.name FROM orders INNER JOIN customers using(customer_id) 
+                SELECT orders.order_id, orders.code, customers.name, orders.order_quantity, orders.date FROM orders INNER JOIN customers using(customer_id) 
                 LIMIT %s OFFSET %s
             """
         elif table_select.value == "Customer":
-            query = "SELECT * FROM customers LIMIT %s OFFSET %s"
+            query = "SELECT name, address FROM customers LIMIT %s OFFSET %s"
         cursor.execute(query, (limit, offset))
         data = cursor.fetchall()
         column_names = [
@@ -147,8 +147,8 @@ def main(page: Page) -> None:
         elif table_select.value == "Order":
             order_id_tf.value = row[0]
             code_order_tf.value = row[1]
+            name_tf.value = row[2]
             order_quantity_tf.value = row[3]
-            name_tf.value = row[5]
         elif table_select.value == "Customer":
             name_tf.value = row[1]
             address_tf.value = row[2]
@@ -223,6 +223,7 @@ def main(page: Page) -> None:
             quantity_tf.value = ""
             moq_tf.value = ""
         elif form_select.value == "Order":
+            order_id_tf.value = ""
             code_order_tf.value = ""
             order_quantity_tf.value = ""
             name_tf.value = ""
@@ -275,21 +276,18 @@ def main(page: Page) -> None:
         else:
             return False
 
+    def int_check(value) -> str | int:
+        try:
+            return int(value)
+        except ValueError:
+            return str(value)
+
     def add_product_data(_) -> None:
         code = str(code_product_tf.value)
-        try:
-            category = int(category_tf.value)
-        except ValueError:
-            category = str(category_tf.value)
+        category = int_check(category_tf.value)
         description = str(description_tf.value)
-        try:
-            quantity = int(quantity_tf.value)
-        except ValueError:
-            quantity = str(quantity_tf.value)
-        try:
-            moq = int(moq_tf.value)
-        except ValueError:
-            moq = str(moq_tf.value)
+        quantity = int_check(quantity_tf.value)
+        moq = int_check(moq_tf.value)
         if presence_check("SELECT * FROM products WHERE code = %s", (code,)):
             try_commit(
                 "UPDATE products SET category = %s WHERE code = %s",
@@ -341,14 +339,20 @@ def main(page: Page) -> None:
     def add_order_data(_) -> None:
         code = str(code_order_tf.value)
         name = str(name_tf.value)
-        try:
-            if int(order_quantity_tf.value) > obtain_moq(code):
+        if str(order_quantity_tf.value).isnumeric() and code != "":
+            if int(order_quantity_tf.value) >= obtain_moq(code):
                 quantity = int(order_quantity_tf.value)
-        except ValueError:
+            else:
+                quantity = str(order_quantity_tf.value)
+        else:
             quantity = str(order_quantity_tf.value)
-        if presence_check(
-            "SELECT code FROM products WHERE code = %s", code
-        ) and presence_check("SELECT customer_id FROM customers WHERE name = %s", name):
+        if (
+            presence_check("SELECT code FROM products WHERE code = %s", (code,))
+            and presence_check(
+                "SELECT customer_id FROM customers WHERE name = %s", (name,)
+            )
+            and type(quantity) == int
+        ):
             customer_id = int(cursor.fetchone()[0])
             try:
                 cursor.execute(
@@ -373,18 +377,14 @@ def main(page: Page) -> None:
                 connection.commit()
             except psycopg.Error:
                 connection.rollback()
-                show_banner("Please fill in all fields")
+                show_banner("Invalid data entered")
         else:
-            show_banner("Stock Code does not exist")
+            show_banner("Invalid data entry")
         refresh_page(_)
 
     def add_customer_data(_) -> None:
         name = str(name_tf.value)
-        try:
-            address = str(address_tf.value)
-        except ValueError:
-            show_banner("Please fill in all fields")
-            name = ""
+        address = str(address_tf.value)
         if presence_check("SELECT * FROM customers WHERE name = %s", (name,)):
             try_commit(
                 "UPDATE customers SET address = %s WHERE name = %s", (address, name)
@@ -402,11 +402,7 @@ def main(page: Page) -> None:
         refresh_page(_)
 
     def remove_order_data(_) -> None:
-        try:
-            order_id = int(order_id_tf.value)
-        except ValueError:
-            show_banner("Please fill in all fields")
-            order_id = str(order_id_tf.value)
+        order_id = int_check(order_id_tf.value)
         if presence_check("SELECT * FROM orders WHERE order_id = %s", (order_id,)):
             cursor.execute("SELECT code FROM orders WHERE order_id = %s", (order_id,))
             code = str(cursor.fetchone()[0])
@@ -567,25 +563,25 @@ def main(page: Page) -> None:
         for column in data_table_columns
     ]
 
-    code_product_tf = FormField("Code", True)
+    code_product_tf = FormField("Code", True, str)
 
-    code_order_tf = FormField("Code", True)
+    code_order_tf = FormField("Code", True, str)
 
-    order_id_tf = FormField("Order ID", True)
+    order_id_tf = FormField("Order ID", True, int)
 
-    category_tf = FormField("Category", True)
+    category_tf = FormField("Category", True, int)
 
-    description_tf = FormField("Description", True)
+    description_tf = FormField("Description", True, str)
 
-    quantity_tf = FormField("Quantity", True)
+    quantity_tf = FormField("Quantity", True, int)
 
-    moq_tf = FormField("MOQ", True)
+    moq_tf = FormField("MOQ", True, int)
 
-    order_quantity_tf = FormField("Order Quantity", True)
+    order_quantity_tf = FormField("Order Quantity", True, int)
 
-    name_tf = FormField("Name", True)
+    name_tf = FormField("Name", True, str)
 
-    address_tf = FormField("Address", True)
+    address_tf = FormField("Address", True, str)
 
     add_product_button = Container(
         FormButton(icons.ADD_ROUNDED, add_product_data, colors.ON_PRIMARY, True),
@@ -663,16 +659,16 @@ def main(page: Page) -> None:
                                 [
                                     code_product_tf,
                                     category_tf,
+                                    quantity_tf,
+                                    moq_tf,
                                     add_product_button,
                                     delete_product_button,
-                                    clear_form_button,
                                 ]
                             ),
                             Row(
                                 [
                                     description_tf,
-                                    quantity_tf,
-                                    moq_tf,
+                                    clear_form_button,
                                     display_product_chart_button,
                                 ]
                             ),
@@ -700,13 +696,13 @@ def main(page: Page) -> None:
                                     code_order_tf,
                                     add_order_button,
                                     delete_order_button,
-                                    clear_form_button,
                                 ]
                             ),
                             Row(
                                 [
                                     name_tf,
                                     order_quantity_tf,
+                                    clear_form_button,
                                     display_order_chart_button,
                                 ]
                             ),

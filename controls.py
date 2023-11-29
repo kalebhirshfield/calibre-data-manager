@@ -1,4 +1,4 @@
-from flet import TextStyle, TextField, DataTable, ButtonStyle
+from flet import TextStyle, TextField, DataTable, ButtonStyle, InputFilter
 from flet import RoundedRectangleBorder, MaterialState, FontWeight
 from flet import IconButton, icons, colors, border, Dropdown, dropdown
 
@@ -20,11 +20,7 @@ class SearchField(TextField):
 
 
 class FormField(TextField):
-    def __init__(
-        self,
-        label: str,
-        visible: bool,
-    ) -> None:
+    def __init__(self, label: str, visible: bool, type: type) -> None:
         super().__init__()
         self.label = label
         self.label_style = TextStyle(
@@ -34,6 +30,9 @@ class FormField(TextField):
             color=colors.ON_SURFACE_VARIANT, weight=FontWeight.W_600
         )
         self.expand = True
+        self.input_filter = InputFilter(
+            allow=True, regex_string=r"[0-9]" if type == int else r"[^]"
+        )
         self.border_radius = 8
         self.border_width = 2
         self.border_color = colors.SURFACE_VARIANT
