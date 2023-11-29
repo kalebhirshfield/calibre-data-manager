@@ -786,7 +786,7 @@ def main(page: Page) -> None:
             ),
             padding=10,
             bgcolor=colors.PRIMARY,
-            border_radius=border_radius.only(top_left=8, top_right=8),
+            border_radius=border_radius.only(bottom_left=20, bottom_right=20),
             height=75,
         )
     )
@@ -794,7 +794,7 @@ def main(page: Page) -> None:
     def route_change(_) -> None:
         page.views.clear()
         page.window_width = 400
-        page.window_height = 400
+        page.window_height = 300
         page.window_resizable = True
         page.window_maximizable = False
         page.window_resizable = False
@@ -802,7 +802,9 @@ def main(page: Page) -> None:
         search_bar.visible = False
         user_icon.visible = False
         user_details.visible = False
-        page.views.append(View("/login", [app_bar, login_form], padding=15))
+        page.views.append(
+            View("/login", [app_bar, Container(login_form, padding=20)], padding=0)
+        )
         if page.route == "/" and admin:
             page.window_width = 900
             page.window_height = 700
@@ -817,32 +819,35 @@ def main(page: Page) -> None:
                     "/",
                     [
                         app_bar,
-                        Column(
-                            [
-                                Divider(color=colors.TRANSPARENT),
-                                Row([form_select, table_select]),
-                                product_form,
-                                order_form,
-                                customer_form,
-                                Column(
-                                    [
-                                        Container(
-                                            data_table,
-                                            clip_behavior=ClipBehavior.HARD_EDGE,
-                                        ),
-                                        Container(
-                                            search_data_table,
-                                            clip_behavior=ClipBehavior.HARD_EDGE,
-                                        ),
-                                    ],
-                                ),
-                            ],
-                            expand=True,
-                            scroll=ScrollMode.AUTO,
-                            on_scroll=on_scroll,
+                        Container(
+                            Column(
+                                [
+                                    Divider(color=colors.TRANSPARENT),
+                                    Row([form_select, table_select]),
+                                    product_form,
+                                    order_form,
+                                    customer_form,
+                                    Column(
+                                        [
+                                            Container(
+                                                data_table,
+                                                clip_behavior=ClipBehavior.HARD_EDGE,
+                                            ),
+                                            Container(
+                                                search_data_table,
+                                                clip_behavior=ClipBehavior.HARD_EDGE,
+                                            ),
+                                        ],
+                                    ),
+                                ],
+                                expand=True,
+                            ),
+                            padding=20,
                         ),
                     ],
-                    padding=15,
+                    padding=0,
+                    scroll=ScrollMode.AUTO,
+                    on_scroll=on_scroll,
                 )
             )
         elif page.route == "/chart" and admin:
