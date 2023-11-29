@@ -77,6 +77,7 @@ class Table(DataTable):
         self.data_text_style = TextStyle(
             color=colors.ON_SURFACE_VARIANT, weight=FontWeight.W_600
         )
+        self.data_row_max_height = 75
         self.data_row_color = {
             MaterialState.HOVERED: colors.SURFACE_VARIANT,
             MaterialState.PRESSED: colors.SURFACE_VARIANT,
