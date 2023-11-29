@@ -52,7 +52,7 @@ def main(page: Page) -> None:
         return column_names, data
 
     def add_data_to_table(table, fetch_function, limit, rows) -> None:
-        column_names, data = fetch_function(limit)
+        _, data = fetch_function(limit)
         rows += [
             DataRow(
                 cells=[DataCell(Text(cell)) for cell in row],
@@ -79,13 +79,17 @@ def main(page: Page) -> None:
         global offset
         offset = 0
         add_data_to_table(data_table, fetch_data, 20, data_table.rows)
-        stock_levels_columns, _ = fetch_data(1)
+        data_columns, _ = fetch_data(1)
         data_table.columns = [
             DataColumn(Text(str(column).capitalize().replace("_", " ")))
-            for column in stock_levels_columns
+            for column in data_columns
+        ]
+        search_data_table.columns = [
+            DataColumn(Text(str(column).capitalize().replace("_", " ")))
+            for column in data_columns
         ]
         page.update()
-        return fetch_data(1)
+        return data_columns
 
     def search(_) -> None:
         query = str(search_bar.value.strip())
@@ -93,30 +97,23 @@ def main(page: Page) -> None:
         if query != "":
             search_data_table.visible = True
             data_table.visible = False
-            data_table_columns, _ = refresh_table(None)
-            search_data_table.columns = [
-                DataColumn(Text(str(column).capitalize().replace("_", " ")))
-                for column in data_table_columns
-            ]
-            columns_to_search = [column for column in data_table_columns]
-            conditions = [
-                f"CAST({column} as TEXT) LIKE %s" for column in columns_to_search
-            ]
+            data_columns = refresh_table(None)
+            conditions = [f"CAST({column} as TEXT) LIKE %s" for column in data_columns]
             where_clause = " OR ".join(conditions)
             if table_select.value == "Product":
                 sql_query = f"""
-                    SELECT products.*, stock_levels.quantity, stock_levels.moq, stock_levels.on_order,
-                    stock_balance.balance FROM products INNER JOIN stock_levels using(code) INNER JOIN
+                    SELECT products.*, stock_levels.quantity, stock_levels.moq, stock_levels.on_order, 
+                    stock_balance.balance FROM products INNER JOIN stock_levels using(code) INNER JOIN 
                     stock_balance using(stock_id) WHERE {where_clause}
                 """
             elif table_select.value == "Order":
                 sql_query = f"""
-                    SELECT orders.*, customers.name FROM orders INNER JOIN customers using(customer_id)
-                    WHERE {where_clause}
+                    SELECT orders.order_id, orders.code, customers.name, orders.order_quantity, orders.date 
+                    FROM orders INNER JOIN customers using(customer_id) WHERE {where_clause}
                 """
             elif table_select.value == "Customer":
-                sql_query = f"SELECT * FROM customers WHERE {where_clause}"
-            params = [f"%{query}%"] * len(columns_to_search)
+                sql_query = f"SELECT name, address FROM customers WHERE {where_clause}"
+            params = [f"%{query}%"] * len(data_columns)
             cursor.execute(sql_query, params)
             search_data = cursor.fetchall()
             rows = []
@@ -152,8 +149,8 @@ def main(page: Page) -> None:
 
     # Form Functions
     def login(e) -> None:
-        username = str(username_tf.value) if username_tf.value != "" else None
-        password = str(password_tf.value) if password_tf.value != "" else None
+        username = str(username_tf.value)
+        password = str(password_tf.value)
         user_details.content = Row(
             [
                 Text(
@@ -166,30 +163,27 @@ def main(page: Page) -> None:
             alignment=MainAxisAlignment.CENTER,
             expand=True,
         )
-        if username != "" and password != "":
-            cursor.execute(
-                "SELECT * FROM users WHERE username = %s AND password = %s",
-                (username, password),
-            )
-            if cursor.rowcount > 0:
-                global admin
-                admin = True
-                page.route = "/"
-                route_change(e)
-            else:
-                show_banner("Incorrect username or password")
+        cursor.execute(
+            "SELECT * FROM users WHERE username = %s AND password = %s",
+            (username, password),
+        )
+        if cursor.rowcount > 0:
+            global admin
+            admin = True
+            page.route = "/"
+            route_change(e)
         else:
-            show_banner("Please fill in all fields")
+            show_banner("Incorrect username or password")
         username_tf.value = ""
         password_tf.value = ""
         page.update()
 
-    def logout(e) -> None:
+    def logout(_) -> None:
         refresh_page(_)
         global admin
         admin = False
         page.route = "/login"
-        route_change(e)
+        route_change(_)
         page.update()
 
     def change_form(_) -> None:
@@ -211,7 +205,7 @@ def main(page: Page) -> None:
             customer_form.visible = False
         page.update()
 
-    def clear_form(e) -> None:
+    def clear_form(_) -> None:
         if form_select.value == "Product":
             code_product_tf.value = ""
             category_tf.value = ""
@@ -305,7 +299,7 @@ def main(page: Page) -> None:
             moq = obtain_moq(code)
             try_commit(
                 "UPDATE stock_balance SET balance = %s WHERE stock_id = %s",
-                (quantity + moq - on_order, stock_id),
+                (quantity - moq + on_order, stock_id),
             )
         else:
             try:
@@ -368,7 +362,7 @@ def main(page: Page) -> None:
                 stock_id = obtain_stock_id(code)
                 cursor.execute(
                     "UPDATE stock_balance SET balance = %s WHERE stock_id = %s",
-                    (quantity + moq - on_order, stock_id),
+                    (quantity - moq + on_order, stock_id),
                 )
                 connection.commit()
             except psycopg.Error:
@@ -548,16 +542,9 @@ def main(page: Page) -> None:
 
     table_select = Selection("Select Table", refresh_page)
 
-    data_table_columns, _ = refresh_table(None)
-
-    data_table.columns = data_table.columns
-
     search_data_table = Table(False)
 
-    search_data_table.columns = [
-        DataColumn(Text(str(column).capitalize().replace("_", " ")))
-        for column in data_table_columns
-    ]
+    refresh_table(None)
 
     code_product_tf = FormField("Code", True, str)
 
