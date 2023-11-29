@@ -831,8 +831,8 @@ def main(page: Page) -> None:
         user_details.visible = False
         page.views.append(View("/login", [app_bar, login_form], padding=15))
         if page.route == "/" and admin:
-            page.window_width = 800
-            page.window_height = 800
+            page.window_width = 900
+            page.window_height = 700
             page.window_resizable = True
             page.window_maximizable = True
             search_icon.visible = True
@@ -873,8 +873,8 @@ def main(page: Page) -> None:
                 )
             )
         elif page.route == "/chart" and admin:
-            page.window_width = 800
-            page.window_height = 800
+            page.window_width = 700
+            page.window_height = 700
             page.window_resizable = True
             page.window_maximizable = True
             page.views.append(
