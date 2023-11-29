@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import psycopg
 
 from dotenv import load_dotenv
-from flet import ClipBehavior, MainAxisAlignment, MaterialState, Padding
+from flet import ClipBehavior, MainAxisAlignment, MaterialState, Padding, WindowDragArea
 from flet import Column, Row, Container, DataColumn, DataRow, DataCell, ScrollMode
 from flet import FontWeight, IconButton, ButtonStyle, RoundedRectangleBorder
 from flet import Page, View, Text, Icon, Theme, ThemeMode, Banner, Divider
@@ -485,9 +485,19 @@ def main(page: Page) -> None:
         page.banner.open = False
         page.update()
 
+    def toggle_theme(_) -> None:
+        if page.theme_mode == ThemeMode.LIGHT:
+            page.theme_mode = ThemeMode.DARK
+            theme_toggle_button.icon = icons.LIGHT_MODE_ROUNDED
+        else:
+            page.theme_mode = ThemeMode.LIGHT
+            theme_toggle_button.icon = icons.DARK_MODE_ROUNDED
+        page.update()
+
     # Page
     page.theme = Theme(use_material3=True, color_scheme_seed="cyan")
     page.theme_mode = ThemeMode.LIGHT
+    page.window_title_bar_hidden = True
     page.bgcolor = colors.BACKGROUND
     page.banner = Banner(
         bgcolor=colors.ERROR_CONTAINER,
@@ -745,28 +755,40 @@ def main(page: Page) -> None:
         visible=False,
     )
 
-    app_bar = Container(
-        Row(
-            [
-                Container(
-                    Text(
-                        "Calibre Data Manager",
-                        color=colors.ON_PRIMARY,
-                        weight=FontWeight.BOLD,
+    theme_toggle_button = FormButton(
+        icons.DARK_MODE_ROUNDED, toggle_theme, colors.BACKGROUND, True
+    )
+
+    close_button = FormButton(
+        icons.CLOSE, lambda _: page.window_close(), colors.BACKGROUND, True
+    )
+
+    app_bar = WindowDragArea(
+        Container(
+            Row(
+                [
+                    Container(
+                        Text(
+                            "Calibre Data Manager",
+                            color=colors.ON_PRIMARY,
+                            weight=FontWeight.BOLD,
+                        ),
+                        padding=10,
                     ),
-                    padding=10,
-                ),
-                search_icon,
-                search_bar,
-                user_icon,
-                user_details,
-            ],
-            alignment=MainAxisAlignment.CENTER,
-        ),
-        padding=10,
-        bgcolor=colors.PRIMARY,
-        border_radius=border_radius.only(top_left=8, top_right=8),
-        height=75,
+                    search_icon,
+                    search_bar,
+                    user_icon,
+                    user_details,
+                    theme_toggle_button,
+                    close_button,
+                ],
+                alignment=MainAxisAlignment.CENTER,
+            ),
+            padding=10,
+            bgcolor=colors.PRIMARY,
+            border_radius=border_radius.only(top_left=8, top_right=8),
+            height=75,
+        )
     )
 
     def route_change(_) -> None:
