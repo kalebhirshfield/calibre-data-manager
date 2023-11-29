@@ -7,11 +7,10 @@ import matplotlib.pyplot as plt
 import psycopg
 
 from dotenv import load_dotenv
-from flet import ClipBehavior, MainAxisAlignment, MaterialState
-from flet import Column, Row, Container, DataColumn, DataRow, DataCell
-from flet import FontWeight, IconButton, ButtonStyle, RoundedRectangleBorder, Padding
-from flet import Page, View, Text, Icon, Theme, ThemeMode, ColorScheme, Banner, Divider
-from flet import ScrollMode, Padding
+from flet import ClipBehavior, MainAxisAlignment, MaterialState, Padding
+from flet import Column, Row, Container, DataColumn, DataRow, DataCell, ScrollMode
+from flet import FontWeight, IconButton, ButtonStyle, RoundedRectangleBorder
+from flet import Page, View, Text, Icon, Theme, ThemeMode, Banner, Divider
 from flet import icons, colors, border, app, border_radius, matplotlib_chart
 
 from controls import SearchField, FormField, LoginField, Table, FormButton, Selection
@@ -487,34 +486,7 @@ def main(page: Page) -> None:
         page.update()
 
     # Page
-    page.theme = Theme(
-        use_material3=True,
-        color_scheme=ColorScheme(
-            primary="#00677f",
-            on_primary="#ffffff",
-            primary_container="#b6eaff",
-            on_primary_container="#001f28",
-            secondary="#4c626a",
-            on_secondary="#ffffff",
-            secondary_container="#cfe6f1",
-            on_secondary_container="#071e26",
-            tertiary="#5a5c7e",
-            on_tertiary="#ffffff",
-            tertiary_container="#e0e0ff",
-            on_tertiary_container="#171937",
-            error="#ba1a1a",
-            on_error="#ffffff",
-            error_container="#ffdad6",
-            on_error_container="#410002",
-            background="#fbfcfe",
-            on_background="#191c1d",
-            surface="#fbfcfe",
-            on_surface="#191c1d",
-            outline="#70787c",
-            surface_variant="#dbe4e8",
-            on_surface_variant="#40484c",
-        ),
-    )
+    page.theme = Theme(use_material3=True, color_scheme_seed="cyan")
     page.theme_mode = ThemeMode.LIGHT
     page.bgcolor = colors.BACKGROUND
     page.banner = Banner(
