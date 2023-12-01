@@ -10,7 +10,7 @@ from dotenv import load_dotenv
 from flet import ClipBehavior, MainAxisAlignment, MaterialState, Padding, WindowDragArea
 from flet import Column, Row, Container, DataColumn, DataRow, DataCell, ScrollMode
 from flet import FontWeight, IconButton, ButtonStyle, RoundedRectangleBorder
-from flet import Page, View, Text, Icon, Theme, ThemeMode, Banner, Divider
+from flet import Page, View, Text, Icon, Theme, ThemeMode, Banner, Divider, BoxShadow
 from flet import icons, colors, border, app, border_radius, matplotlib_chart
 
 from controls import SearchField, FormField, LoginField, Table, FormButton, Selection
@@ -785,8 +785,8 @@ def main(page: Page) -> None:
                 alignment=MainAxisAlignment.CENTER,
             ),
             padding=10,
+            shadow=BoxShadow(color=colors.SHADOW, blur_radius=5),
             bgcolor=colors.PRIMARY,
-            border_radius=border_radius.only(bottom_left=20, bottom_right=20),
             height=75,
         )
     )
