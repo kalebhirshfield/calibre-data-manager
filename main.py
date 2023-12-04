@@ -11,7 +11,7 @@ from flet import ClipBehavior, MainAxisAlignment, MaterialState, Padding, Window
 from flet import Column, Row, Container, DataColumn, DataRow, DataCell, ScrollMode
 from flet import FontWeight, IconButton, ButtonStyle, RoundedRectangleBorder
 from flet import Page, View, Text, Icon, Theme, ThemeMode, Banner, Divider, BoxShadow
-from flet import icons, colors, border, app, border_radius, matplotlib_chart
+from flet import icons, colors, border, app, matplotlib_chart
 
 from controls import SearchField, FormField, LoginField, Table, FormButton, Selection
 
@@ -509,7 +509,7 @@ def main(page: Page) -> None:
                     color={
                         MaterialState.DEFAULT: colors.ON_ERROR_CONTAINER,
                     },
-                    shape={MaterialState.DEFAULT: RoundedRectangleBorder(radius=8)},
+                    shape={MaterialState.DEFAULT: RoundedRectangleBorder(radius=10)},
                 ),
                 on_click=close_banner,
             )
@@ -551,43 +551,43 @@ def main(page: Page) -> None:
     add_product_button = Container(
         FormButton(icons.ADD_ROUNDED, add_product_data, colors.ON_PRIMARY, True),
         bgcolor=colors.PRIMARY,
-        border_radius=8,
+        border_radius=10,
     )
 
     add_order_button = Container(
         FormButton(icons.ADD_ROUNDED, add_order_data, colors.ON_PRIMARY, True),
         bgcolor=colors.PRIMARY,
-        border_radius=8,
+        border_radius=10,
     )
 
     add_customer_button = Container(
         FormButton(icons.ADD_ROUNDED, add_customer_data, colors.ON_PRIMARY, True),
         bgcolor=colors.PRIMARY,
-        border_radius=8,
+        border_radius=10,
     )
 
     delete_product_button = Container(
         FormButton(icons.DELETE_ROUNDED, remove_product_data, colors.ON_PRIMARY, True),
         bgcolor=colors.PRIMARY,
-        border_radius=8,
+        border_radius=10,
     )
 
     delete_order_button = Container(
         FormButton(icons.DELETE_ROUNDED, remove_order_data, colors.ON_PRIMARY, True),
         bgcolor=colors.PRIMARY,
-        border_radius=8,
+        border_radius=10,
     )
 
     delete_customer_button = Container(
         FormButton(icons.DELETE_ROUNDED, remove_customer_data, colors.ON_PRIMARY, True),
         bgcolor=colors.PRIMARY,
-        border_radius=8,
+        border_radius=10,
     )
 
     clear_form_button = Container(
         FormButton(icons.CLEAR_ROUNDED, clear_form, colors.ON_PRIMARY, True),
         bgcolor=colors.PRIMARY,
-        border_radius=8,
+        border_radius=10,
     )
 
     display_product_chart_button = Container(
@@ -598,7 +598,7 @@ def main(page: Page) -> None:
             True,
         ),
         bgcolor=colors.PRIMARY,
-        border_radius=8,
+        border_radius=10,
     )
 
     display_order_chart_button = Container(
@@ -609,7 +609,7 @@ def main(page: Page) -> None:
             True,
         ),
         bgcolor=colors.PRIMARY,
-        border_radius=8,
+        border_radius=10,
     )
 
     back_button = FormButton(icons.ARROW_BACK, back_to_route, colors.PRIMARY, True)
@@ -721,13 +721,13 @@ def main(page: Page) -> None:
     login_button = Container(
         FormButton(icons.LOGIN, login, colors.ON_PRIMARY, True),
         bgcolor=colors.PRIMARY,
-        border_radius=8,
+        border_radius=10,
     )
 
     logout_button = Container(
         FormButton(icons.LOGOUT, logout, colors.ON_PRIMARY, True),
         bgcolor=colors.PRIMARY,
-        border_radius=8,
+        border_radius=10,
     )
 
     login_form = Container(
@@ -751,7 +751,7 @@ def main(page: Page) -> None:
     user_details = Container(
         border=border.all(2, colors.ON_PRIMARY),
         padding=Padding(left=10, right=2, top=2, bottom=2),
-        border_radius=8,
+        border_radius=10,
         visible=False,
     )
 
