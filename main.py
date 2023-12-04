@@ -497,7 +497,6 @@ def main(page: Page) -> None:
     # Page
     page.theme = Theme(use_material3=True, color_scheme_seed="cyan")
     page.theme_mode = ThemeMode.LIGHT
-    page.window_title_bar_hidden = True
     page.bgcolor = colors.BACKGROUND
     page.banner = Banner(
         bgcolor=colors.ERROR_CONTAINER,
@@ -759,10 +758,6 @@ def main(page: Page) -> None:
         icons.DARK_MODE_ROUNDED, toggle_theme, colors.BACKGROUND, True
     )
 
-    close_button = FormButton(
-        icons.CLOSE, lambda _: page.window_close(), colors.BACKGROUND, True
-    )
-
     app_bar = WindowDragArea(
         Container(
             Row(
@@ -780,7 +775,6 @@ def main(page: Page) -> None:
                     user_icon,
                     user_details,
                     theme_toggle_button,
-                    close_button,
                 ],
                 alignment=MainAxisAlignment.CENTER,
             ),
