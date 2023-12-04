@@ -850,7 +850,14 @@ def main(page: Page) -> None:
             page.window_resizable = True
             page.window_maximizable = True
             page.views.append(
-                View("/chart", [app_bar, Container(chart), back_button], padding=15)
+                View(
+                    "/chart",
+                    [
+                        app_bar,
+                        Container(Column([Container(chart), back_button]), padding=20),
+                    ],
+                    padding=0,
+                )
             )
         else:
             page.route = "/login"
