@@ -854,6 +854,8 @@ def main(page: Page) -> None:
             page.window_height = 700
             page.window_resizable = True
             page.window_maximizable = True
+            user_icon.visible = True
+            user_details.visible = True
             page.views.append(
                 View(
                     "/chart",
