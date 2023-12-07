@@ -496,7 +496,7 @@ def main(page: Page) -> None:
 
     # Page
     page.theme = Theme(use_material3=True, color_scheme_seed="cyan")
-    page.theme_mode = ThemeMode.LIGHT
+    page.theme_mode = ThemeMode.SYSTEM
     page.bgcolor = colors.BACKGROUND
     page.banner = Banner(
         bgcolor=colors.ERROR_CONTAINER,
@@ -755,7 +755,12 @@ def main(page: Page) -> None:
     )
 
     theme_toggle_button = FormButton(
-        icons.DARK_MODE_ROUNDED, toggle_theme, colors.BACKGROUND, True
+        icons.DARK_MODE_ROUNDED
+        if page.theme_mode == ThemeMode.LIGHT
+        else icons.LIGHT_MODE_ROUNDED,
+        toggle_theme,
+        colors.BACKGROUND,
+        True,
     )
 
     app_bar = WindowDragArea(
