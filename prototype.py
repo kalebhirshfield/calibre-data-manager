@@ -15,51 +15,25 @@ load_dotenv()
 connection = psycopg.connect(os.getenv("DATABASE_URL"))
 cursor = connection.cursor()
 
-offset = 0
-
 
 def main(page: ft.Page):
-    def fetchStockLevels(limit):
+    def fetchStockLevels():
         global offset
         cursor.execute(
-            "SELECT * FROM products d INNER JOIN stock_levels using(code) INNER JOIN stock_balance using(stock_id) LIMIT %s OFFSET %s",
-            (limit, offset),
+            "SELECT * FROM products d INNER JOIN stock_levels using(code) INNER JOIN stock_balance using(stock_id)"
         )
         stockLevels = cursor.fetchall()
         columnNames = [desc[0] for desc in cursor.description]
-        offset += limit
-        return columnNames, stockLevels
-
-    def addDataToTable(table: ft.DataTable, fetchFunction, limit, rows):
-        columnNames, data = fetchFunction(limit=limit)
-        newRows = []
-        for row in data:
-            newRows.append(
-                ft.DataRow(cells=[ft.DataCell(ft.Text(cell)) for cell in row])
-            )
-        rows += newRows
-        table.rows = rows
+        rows = []
+        for row in stockLevels:
+            rows.append(ft.DataRow(cells=[ft.DataCell(ft.Text(cell)) for cell in row]))
+        stockLevelsTable.rows = rows
         page.update()
-
-    def onScroll(e: ft.OnScrollEvent):
-        if e.pixels >= e.max_scroll_extent - 300:
-            if sem.acquire(blocking=False):
-                try:
-                    addDataToTable(
-                        stockLevelsTable,
-                        fetchStockLevels,
-                        10,
-                        stockLevelsTable.rows,
-                    )
-                finally:
-                    sem.release()
+        return columnNames
 
     def refreshTable(e):
         stockLevelsTable.rows = []
-        global offset
-        offset = 0
-        addDataToTable(stockLevelsTable, fetchStockLevels, 10, stockLevelsTable.rows)
-        return fetchStockLevels(1)
+        fetchStockLevels()
 
     def showBanner(e, content):
         page.banner.open = True
@@ -71,12 +45,12 @@ def main(page: ft.Page):
         page.update()
 
     def tabSwitch(e):
-        searchBar.visible = (
-            True if tabs.selected_index == 0 or tabs.selected_index == 1 else False
-        )
+        searchBar.visible = True if tabs.selected_index == 0 else False
         searchBar.label = (
             "Enter Stock Code to Display" if tabs.selected_index == 1 else "Search"
         )
+        if tabs.selected_index == 1:
+            search(e)
         page.update()
 
     def search(e):
@@ -90,7 +64,7 @@ def main(page: ft.Page):
                     f"CAST({column} as TEXT) LIKE %s" for column in columnsToSearch
                 ]
                 whereClause = " OR ".join(conditions)
-                table = "products d INNER JOIN stocklevels using(stock_code) INNER JOIN stockbalance using(stock_id)"
+                table = "products d INNER JOIN stock_levels using(code) INNER JOIN stock_balance using(stock_id)"
                 sqlQuery = f"SELECT * FROM {table} WHERE {whereClause}"
                 params = [f"%{query}%"] * len(columnsToSearch)
                 cursor.execute(sqlQuery, params)
@@ -110,27 +84,35 @@ def main(page: ft.Page):
                 stockLevelsTable.visible = True
                 page.update()
         elif tabs.selected_index == 1:
-            if searchBar.value != "":
-                stockCode = str(searchBar.value.strip().upper())
-                fig, ax = plt.subplots()
-                ax.set_xlabel("Years")
-                ax.set_ylabel("Sales")
-                ax.xaxis.set_major_locator(matplotlib.ticker.MultipleLocator(1))
-                ax.set_title("Sales by Year")
-                ax.grid(True)
-                ax.set_facecolor("#1b2628")
-                ax.tick_params(axis="x", colors="#e1e3e3")
-                ax.tick_params(axis="y", colors="#e1e3e3")
-                ax.spines["bottom"].set_color("#e1e3e3")
-                ax.spines["top"].set_color("#e1e3e3")
-                ax.spines["left"].set_color("#e1e3e3")
-                ax.spines["right"].set_color("#e1e3e3")
-                ax.xaxis.label.set_color("#e1e3e3")
-                ax.yaxis.label.set_color("#e1e3e3")
-                ax.title.set_color("#e1e3e3")
-                chart = MatplotlibChart(fig, expand=True, transparent=True)
-                tabs.tabs[1].content = ft.Container(chart, expand=True)
-                page.update()
+            searchBar.visible = False
+            fig, ax = plt.subplots()
+            cursor.execute(
+                "SELECT category, SUM(quantity) FROM products INNER JOIN stock_levels using(code) GROUP BY category"
+            )
+            data = cursor.fetchall()
+            x = []
+            y = []
+            for row in data:
+                x.append(row[0])
+                y.append(row[1])
+            ax.set_xlabel("Stock Category")
+            ax.set_ylabel("Quantity")
+            ax.set_title("Stock Category vs Quantity")
+            ax.bar(x, y, color="#00677f")
+            ax.grid(True)
+            ax.set_facecolor("#1b2628")
+            ax.tick_params(axis="x", colors="#e1e3e3")
+            ax.tick_params(axis="y", colors="#e1e3e3")
+            ax.spines["bottom"].set_color("#e1e3e3")
+            ax.spines["top"].set_color("#e1e3e3")
+            ax.spines["left"].set_color("#e1e3e3")
+            ax.spines["right"].set_color("#e1e3e3")
+            ax.xaxis.label.set_color("#e1e3e3")
+            ax.yaxis.label.set_color("#e1e3e3")
+            ax.title.set_color("#e1e3e3")
+            chart = MatplotlibChart(fig, expand=True, transparent=True)
+            tabs.tabs[1].content = ft.Container(chart, expand=True)
+            page.update()
 
     def checkCustomerExists(e):
         if tabs.selected_index == 3:
@@ -431,8 +413,6 @@ def main(page: ft.Page):
                 page.update()
         refreshTable(e)
 
-    sem = threading.Semaphore()
-
     page.title = "Calibre Data Manager"
     page.window_width = 1200
     page.window_height = 600
@@ -500,7 +480,7 @@ def main(page: ft.Page):
         data_text_style=ft.TextStyle(color="#e1e3e3"),
     )
 
-    stockLevelsColumns, _ = refreshTable(None)
+    stockLevelsColumns = fetchStockLevels()
 
     stockLevelsTable.columns = [
         ft.DataColumn(ft.Text(column)) for column in stockLevelsColumns
@@ -685,7 +665,6 @@ def main(page: ft.Page):
                         ],
                         scroll=True,
                         expand=True,
-                        on_scroll=onScroll,
                     ),
                 ),
             ),
