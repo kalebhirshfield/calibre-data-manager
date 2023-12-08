@@ -1,5 +1,4 @@
 import os
-import threading
 import psycopg
 from dotenv import load_dotenv
 import flet as ft
