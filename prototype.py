@@ -140,52 +140,50 @@ def main(page: ft.Page):
             quantity = int(quantityTF.value) if quantityTF.value != "" else None
             moq = int(moqTF.value) if moqTF.value != "" else None
             if stockCode != None:
-                cursor.execute(
-                    "SELECT * FROM products WHERE stock_code = %s", (stockCode,)
-                )
+                cursor.execute("SELECT * FROM products WHERE code = %s", (stockCode,))
                 if cursor.rowcount > 0:
                     cursor.execute(
-                        "UPDATE products SET stock_cat = %s WHERE stock_code = %s",
+                        "UPDATE products SET category = %s WHERE code = %s",
                         (stockCAT, stockCode),
                     ) if stockCAT != None else None
                     connection.commit()
                     cursor.execute(
-                        "UPDATE products SET description = %s WHERE stock_code = %s",
+                        "UPDATE products SET description = %s WHERE code = %s",
                         (description, stockCode),
                     ) if description != None else None
                     connection.commit()
                     cursor.execute(
-                        "UPDATE stocklevels SET quantity = %s WHERE stock_code = %s",
+                        "UPDATE stock_levels SET quantity = %s WHERE code = %s",
                         (quantity, stockCode),
                     ) if quantity != None else None
                     connection.commit()
                     cursor.execute(
-                        "UPDATE stocklevels SET moq = %s WHERE stock_code = %s",
+                        "UPDATE stock_levels SET moq = %s WHERE code = %s",
                         (moq, stockCode),
                     ) if moq != None else None
                     connection.commit()
                     cursor.execute(
-                        "Select stock_id FROM stocklevels WHERE stock_code = %s",
+                        "Select stock_id FROM stock_levels WHERE code = %s",
                         (stockCode,),
                     )
                     stockID = int(cursor.fetchone()[0])
                     cursor.execute(
-                        "SELECT quantity FROM stocklevels WHERE stock_code = %s",
+                        "SELECT quantity FROM stock_levels WHERE code = %s",
                         (stockCode,),
                     )
                     quantity = int(cursor.fetchone()[0])
                     cursor.execute(
-                        "SELECT on_order FROM stocklevels WHERE stock_code = %s",
+                        "SELECT on_order FROM stock_levels WHERE code = %s",
                         (stockCode,),
                     )
                     onOrder = int(cursor.fetchone()[0])
                     cursor.execute(
-                        "SELECT moq FROM stocklevels WHERE stock_code = %s",
+                        "SELECT moq FROM stock_levels WHERE code = %s",
                         (stockCode,),
                     )
                     moq = int(cursor.fetchone()[0])
                     cursor.execute(
-                        "UPDATE stockbalance SET balance = %s WHERE stock_id = %s",
+                        "UPDATE stock_balance SET balance = %s WHERE stock_id = %s",
                         (quantity + moq - onOrder, stockID),
                     )
                     connection.commit()
@@ -197,27 +195,27 @@ def main(page: ft.Page):
                         and moq != None
                     ):
                         cursor.execute(
-                            "INSERT INTO products(stock_code, stock_cat, description) VALUES(%s, %s, %s)",
+                            "INSERT INTO products(code, category, description) VALUES(%s, %s, %s)",
                             (stockCode, stockCAT, description),
                         )
                         connection.commit()
                         cursor.execute(
-                            "INSERT INTO stocklevels(stock_code, moq, quantity) VALUES(%s, %s, %s)",
+                            "INSERT INTO stock_levels(code, moq, quantity) VALUES(%s, %s, %s)",
                             (stockCode, moq, quantity),
                         )
                         connection.commit()
                         cursor.execute(
-                            "Select stock_id FROM stocklevels WHERE stock_code = %s",
+                            "Select stock_id FROM stock_levels WHERE code = %s",
                             (stockCode,),
                         )
                         stockID = int(cursor.fetchone()[0])
                         cursor.execute(
-                            "SELECT on_order FROM stocklevels WHERE stock_code = %s",
+                            "SELECT on_order FROM stock_levels WHERE code = %s",
                             (stockCode,),
                         )
                         onOrder = int(cursor.fetchone()[0])
                         cursor.execute(
-                            "INSERT INTO stockbalance(stock_id, balance) VALUES(%s, %s)",
+                            "INSERT INTO stock_balance(stock_id, balance) VALUES(%s, %s)",
                             (stockID, quantity + moq - onOrder),
                         )
                         connection.commit()
@@ -241,7 +239,7 @@ def main(page: ft.Page):
             )
             name = str(nameTF.value) if nameTF.value != "" else None
             address = str(addressTF.value) if addressTF.value != "" else None
-            cursor.execute("SELECT * FROM products WHERE stock_code = %s", (stockCode,))
+            cursor.execute("SELECT * FROM products WHERE code = %s", (stockCode,))
             if cursor.rowcount > 0:
                 cursor.execute("SELECT * FROM customers WHERE name = %s", (name,))
                 if cursor.rowcount > 0:
@@ -252,38 +250,38 @@ def main(page: ft.Page):
                         )
                         customerID = int(cursor.fetchone()[0])
                         cursor.execute(
-                            "INSERT INTO orders(stock_code, order_quantity, date, customer_id) VALUES(%s, %s, %s,%s)",
+                            "INSERT INTO orders(code, order_quantity, date, customer_id) VALUES(%s, %s, %s,%s)",
                             (stockCode, quantity, date.today(), customerID),
                         )
                         connection.commit()
                         cursor.execute(
-                            "SELECT on_order FROM stocklevels WHERE stock_code = %s",
+                            "SELECT on_order FROM stock_levels WHERE code = %s",
                             (stockCode,),
                         )
                         onOrder = int(cursor.fetchone()[0])
                         cursor.execute(
-                            "UPDATE stocklevels SET on_order = %s WHERE stock_code = %s",
+                            "UPDATE stock_levels SET on_order = %s WHERE code = %s",
                             (onOrder + quantity, stockCode),
                         )
                         connection.commit()
                         onOrder = onOrder + quantity
                         cursor.execute(
-                            "SELECT quantity FROM stocklevels WHERE stock_code = %s",
+                            "SELECT quantity FROM stock_levels WHERE code = %s",
                             (stockCode,),
                         )
                         quantity = int(cursor.fetchone()[0])
                         cursor.execute(
-                            "SELECT moq FROM stocklevels WHERE stock_code = %s",
+                            "SELECT moq FROM stock_levels WHERE code = %s",
                             (stockCode,),
                         )
                         moq = int(cursor.fetchone()[0])
                         cursor.execute(
-                            "Select stock_id FROM stocklevels WHERE stock_code = %s",
+                            "Select stock_id FROM stock_levels WHERE code = %s",
                             (stockCode,),
                         )
                         stockID = int(cursor.fetchone()[0])
                         cursor.execute(
-                            "UPDATE stockbalance SET balance = %s WHERE stock_id = %s",
+                            "UPDATE stock_balance SET balance = %s WHERE stock_id = %s",
                             (quantity + moq - onOrder, stockID),
                         )
                         connection.commit()
@@ -308,38 +306,38 @@ def main(page: ft.Page):
                         )
                         customerID = int(cursor.fetchone()[0])
                         cursor.execute(
-                            "INSERT INTO orders(stock_code, order_quantity, date, customer_id) VALUES(%s, %s, %s,%s)",
+                            "INSERT INTO orders(code, order_quantity, date, customer_id) VALUES(%s, %s, %s,%s)",
                             (stockCode, quantity, date.today(), customerID),
                         )
                         connection.commit()
                         cursor.execute(
-                            "SELECT on_order FROM stocklevels WHERE stock_code = %s",
+                            "SELECT on_order FROM stock_levels WHERE code = %s",
                             (stockCode,),
                         )
                         onOrder = int(cursor.fetchone()[0])
                         cursor.execute(
-                            "UPDATE stocklevels SET on_order = %s WHERE stock_code = %s",
+                            "UPDATE stock_levels SET on_order = %s WHERE code = %s",
                             (onOrder + quantity, stockCode),
                         )
                         connection.commit()
                         onOrder = onOrder + quantity
                         cursor.execute(
-                            "SELECT quantity FROM stocklevels WHERE stock_code = %s",
+                            "SELECT quantity FROM stock_levels WHERE code = %s",
                             (stockCode,),
                         )
                         quantity = int(cursor.fetchone()[0])
                         cursor.execute(
-                            "SELECT moq FROM stocklevels WHERE stock_code = %s",
+                            "SELECT moq FROM stock_levels WHERE code = %s",
                             (stockCode,),
                         )
                         moq = int(cursor.fetchone()[0])
                         cursor.execute(
-                            "Select stock_id FROM stocklevels WHERE stock_code = %s",
+                            "Select stock_id FROM stock_levels WHERE code = %s",
                             (stockCode,),
                         )
                         stockID = int(cursor.fetchone()[0])
                         cursor.execute(
-                            "UPDATE stockbalance SET balance = %s WHERE stock_id = %s",
+                            "UPDATE stock_balance SET balance = %s WHERE stock_id = %s",
                             (quantity + moq - onOrder, stockID),
                         )
                         connection.commit()
@@ -363,29 +361,25 @@ def main(page: ft.Page):
         if tabs.selected_index == 2:
             stock_code = str(stockCodeTF.value.strip().upper())
             if stock_code != "":
-                cursor.execute(
-                    "SELECT * FROM products WHERE stock_code = %s", (stock_code,)
-                )
+                cursor.execute("SELECT * FROM products WHERE code = %s", (stock_code,))
                 if cursor.rowcount > 0:
                     cursor.execute(
-                        "SELECT stock_id FROM stocklevels WHERE stock_code = %s",
+                        "SELECT stock_id FROM stock_levels WHERE code = %s",
                         (stock_code,),
                     )
                     stock_id = int(cursor.fetchone()[0])
                     cursor.execute(
-                        "DELETE FROM stockbalance WHERE stock_id = %s", (stock_id,)
+                        "DELETE FROM stock_balance WHERE stock_id = %s", (stock_id,)
                     )
                     connection.commit()
                     cursor.execute(
-                        "DELETE FROM stocklevels WHERE stock_code = %s", (stock_code,)
+                        "DELETE FROM stock_levels WHERE code = %s", (stock_code,)
                     )
                     connection.commit()
-                    cursor.execute(
-                        "DELETE FROM orders WHERE stock_code = %s", (stock_code,)
-                    )
+                    cursor.execute("DELETE FROM orders WHERE code = %s", (stock_code,))
                     connection.commit()
                     cursor.execute(
-                        "DELETE FROM products WHERE stock_code = %s", (stock_code,)
+                        "DELETE FROM products WHERE code = %s", (stock_code,)
                     )
                     connection.commit()
                 else:
@@ -397,13 +391,9 @@ def main(page: ft.Page):
         elif tabs.selected_index == 3:
             stock_code = str(stockCodeTF.value.strip().upper())
             if stock_code != "":
-                cursor.execute(
-                    "SELECT * FROM orders WHERE stock_code = %s", (stock_code,)
-                )
+                cursor.execute("SELECT * FROM orders WHERE ode = %s", (stock_code,))
                 if cursor.rowcount > 0:
-                    cursor.execute(
-                        "DELETE FROM orders WHERE stock_code = %s", (stock_code,)
-                    )
+                    cursor.execute("DELETE FROM orders WHERE code = %s", (stock_code,))
                     connection.commit()
                 else:
                     showBanner(e, "Stock Code does not exist")
