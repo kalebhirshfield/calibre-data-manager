@@ -763,31 +763,29 @@ def main(page: Page) -> None:
         True,
     )
 
-    app_bar = WindowDragArea(
-        Container(
-            Row(
-                [
-                    Container(
-                        Text(
-                            "Calibre Data Manager",
-                            color=colors.ON_PRIMARY,
-                            weight=FontWeight.BOLD,
-                        ),
-                        padding=10,
+    app_bar = Container(
+        Row(
+            [
+                Container(
+                    Text(
+                        "Calibre Data Manager",
+                        color=colors.ON_PRIMARY,
+                        weight=FontWeight.BOLD,
                     ),
-                    search_icon,
-                    search_bar,
-                    user_icon,
-                    user_details,
-                    theme_toggle_button,
-                ],
-                alignment=MainAxisAlignment.CENTER,
-            ),
-            padding=10,
-            shadow=BoxShadow(color=colors.SHADOW, blur_radius=5),
-            bgcolor=colors.PRIMARY,
-            height=75,
-        )
+                    padding=10,
+                ),
+                search_icon,
+                search_bar,
+                user_icon,
+                user_details,
+                theme_toggle_button,
+            ],
+            alignment=MainAxisAlignment.CENTER,
+        ),
+        padding=10,
+        shadow=BoxShadow(color=colors.SHADOW, blur_radius=5),
+        bgcolor=colors.PRIMARY,
+        height=75,
     )
 
     def route_change(_) -> None:
