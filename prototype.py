@@ -405,41 +405,11 @@ def main(page: ft.Page):
     page.title = "Calibre Data Manager"
     page.window_width = 1200
     page.window_height = 600
-    page.window_title_bar_hidden = True
-    page.window_title_bar_buttons_hidden = True
-    page.window_resizable = True
-    page.window_maximizable = False
     page.bgcolor = "#191c1d"
     page.banner = ft.Banner(
         bgcolor="#1b2628",
         leading=ft.Icon(ft.icons.WARNING_AMBER_ROUNDED, color="#d6ca00"),
         actions=[ft.TextButton("Close", on_click=closeBanner)],
-    )
-
-    windowDragArea = ft.WindowDragArea(
-        ft.Container(
-            ft.Text(
-                "Calibre Data Manager",
-                color="#e1e3e3",
-                text_align="center",
-                weight=ft.FontWeight.BOLD,
-            ),
-            padding=10,
-        ),
-        expand=True,
-        maximizable=False,
-    )
-
-    btnClose = ft.IconButton(
-        ft.icons.CLOSE,
-        style=ft.ButtonStyle(
-            color={
-                ft.MaterialState.DEFAULT: "#e1e3e3",
-                ft.MaterialState.HOVERED: "#ba1a1a",
-            },
-            shape={ft.MaterialState.DEFAULT: RoundedRectangleBorder(radius=10)},
-        ),
-        on_click=lambda _: page.window_close(),
     )
 
     searchBar = ft.TextField(
@@ -674,40 +644,19 @@ def main(page: ft.Page):
                     )
                 ),
             ),
-            ft.Tab(
-                text="Add Order",
-                icon=ft.icons.ADD_SHOPPING_CART_ROUNDED,
-                content=ft.Container(
-                    ft.Column(
-                        [
-                            ft.Divider(color=ft.colors.BACKGROUND),
-                            ft.Row([stockCodeTF, addButton, deleteButton]),
-                            ft.Row([orderQuantityTF]),
-                            ft.Row([nameTF]),
-                            ft.Row([addressTF]),
-                        ]
-                    )
-                ),
-            ),
         ],
         expand=True,
         on_change=tabSwitch,
     )
 
-    bar = ft.Column(
-        [
-            ft.Row([windowDragArea, btnClose]),
-            ft.Row([searchBar]),
-        ]
-    )
-
     titleBar = ft.Row(
         [
             ft.Container(
-                bar,
+                ft.Column([ft.Row([searchBar])]),
                 bgcolor="#1b2628",
                 expand=True,
                 border_radius=10,
+                padding=10,
             )
         ]
     )
