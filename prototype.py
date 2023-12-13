@@ -103,18 +103,6 @@ def main(page: ft.Page):
             tabs.tabs[1].content = ft.Container(chart, expand=True)
             page.update()
 
-    def checkCustomerExists(e):
-        if tabs.selected_index == 3:
-            name = str(nameTF.value)
-            cursor.execute("SELECT * FROM customers WHERE name = %s", (name,))
-            if cursor.rowcount > 0:
-                addressTF.visible = False
-                addressTF.value = ""
-                page.update()
-            else:
-                addressTF.visible = True
-                page.update()
-
     def addNewData(e):
         if tabs.selected_index == 2:
             stockCode = (
@@ -189,8 +177,8 @@ def main(page: ft.Page):
                         )
                         connection.commit()
                         cursor.execute(
-                            "INSERT INTO stock_levels(code, moq, quantity) VALUES(%s, %s, %s)",
-                            (stockCode, moq, quantity),
+                            "INSERT INTO stock_levels(code, moq, quantity, on_order) VALUES(%s, %s, %s, %s)",
+                            (stockCode, moq, quantity, 0),
                         )
                         connection.commit()
                         cursor.execute(
@@ -217,133 +205,11 @@ def main(page: ft.Page):
             elif stockCode == None:
                 showBanner(e, "Please fill in the stock code field")
                 page.update()
-        elif tabs.selected_index == 3:
-            stockCode = (
-                str(stockCodeTF.value.strip().upper())
-                if stockCodeTF.value != ""
-                else None
-            )
-            quantity = (
-                int(orderQuantityTF.value) if orderQuantityTF.value != "" else None
-            )
-            name = str(nameTF.value) if nameTF.value != "" else None
-            address = str(addressTF.value) if addressTF.value != "" else None
-            cursor.execute("SELECT * FROM products WHERE code = %s", (stockCode,))
-            if cursor.rowcount > 0:
-                cursor.execute("SELECT * FROM customers WHERE name = %s", (name,))
-                if cursor.rowcount > 0:
-                    if stockCode != None and quantity != None and name != None:
-                        cursor.execute(
-                            "SELECT customer_id FROM customers WHERE name = %s",
-                            (name,),
-                        )
-                        customerID = int(cursor.fetchone()[0])
-                        cursor.execute(
-                            "INSERT INTO orders(code, order_quantity, date, customer_id) VALUES(%s, %s, %s,%s)",
-                            (stockCode, quantity, date.today(), customerID),
-                        )
-                        connection.commit()
-                        cursor.execute(
-                            "SELECT on_order FROM stock_levels WHERE code = %s",
-                            (stockCode,),
-                        )
-                        onOrder = int(cursor.fetchone()[0])
-                        cursor.execute(
-                            "UPDATE stock_levels SET on_order = %s WHERE code = %s",
-                            (onOrder + quantity, stockCode),
-                        )
-                        connection.commit()
-                        onOrder = onOrder + quantity
-                        cursor.execute(
-                            "SELECT quantity FROM stock_levels WHERE code = %s",
-                            (stockCode,),
-                        )
-                        quantity = int(cursor.fetchone()[0])
-                        cursor.execute(
-                            "SELECT moq FROM stock_levels WHERE code = %s",
-                            (stockCode,),
-                        )
-                        moq = int(cursor.fetchone()[0])
-                        cursor.execute(
-                            "Select stock_id FROM stock_levels WHERE code = %s",
-                            (stockCode,),
-                        )
-                        stockID = int(cursor.fetchone()[0])
-                        cursor.execute(
-                            "UPDATE stock_balance SET balance = %s WHERE stock_id = %s",
-                            (quantity + moq - onOrder, stockID),
-                        )
-                        connection.commit()
-                    else:
-                        showBanner(e, "Please fill in all fields")
-                    page.update()
-                else:
-                    if (
-                        stockCode != None
-                        and quantity != None
-                        and name != None
-                        and address != None
-                    ):
-                        cursor.execute(
-                            "INSERT INTO customers(name, address) VALUES(%s, %s)",
-                            (name, address),
-                        )
-                        connection.commit()
-                        cursor.execute(
-                            "SELECT customer_id FROM customers WHERE name = %s",
-                            (name,),
-                        )
-                        customerID = int(cursor.fetchone()[0])
-                        cursor.execute(
-                            "INSERT INTO orders(code, order_quantity, date, customer_id) VALUES(%s, %s, %s,%s)",
-                            (stockCode, quantity, date.today(), customerID),
-                        )
-                        connection.commit()
-                        cursor.execute(
-                            "SELECT on_order FROM stock_levels WHERE code = %s",
-                            (stockCode,),
-                        )
-                        onOrder = int(cursor.fetchone()[0])
-                        cursor.execute(
-                            "UPDATE stock_levels SET on_order = %s WHERE code = %s",
-                            (onOrder + quantity, stockCode),
-                        )
-                        connection.commit()
-                        onOrder = onOrder + quantity
-                        cursor.execute(
-                            "SELECT quantity FROM stock_levels WHERE code = %s",
-                            (stockCode,),
-                        )
-                        quantity = int(cursor.fetchone()[0])
-                        cursor.execute(
-                            "SELECT moq FROM stock_levels WHERE code = %s",
-                            (stockCode,),
-                        )
-                        moq = int(cursor.fetchone()[0])
-                        cursor.execute(
-                            "Select stock_id FROM stock_levels WHERE code = %s",
-                            (stockCode,),
-                        )
-                        stockID = int(cursor.fetchone()[0])
-                        cursor.execute(
-                            "UPDATE stock_balance SET balance = %s WHERE stock_id = %s",
-                            (quantity + moq - onOrder, stockID),
-                        )
-                        connection.commit()
-                    else:
-                        showBanner(e, "Please fill in all fields")
-                    page.update()
-            else:
-                showBanner(e, "Stock Code does not exist")
-                page.update()
         stockCodeTF.value = ""
         stockCATTF.value = ""
         descriptionTF.value = ""
         quantityTF.value = ""
         moqTF.value = ""
-        orderQuantityTF.value = ""
-        nameTF.value = ""
-        addressTF.value = ""
         refreshTable(e)
 
     def removeData(e):
@@ -351,22 +217,8 @@ def main(page: ft.Page):
             stock_code = str(stockCodeTF.value.strip().upper())
             if stock_code != "":
                 cursor.execute("SELECT * FROM products WHERE code = %s", (stock_code,))
+
                 if cursor.rowcount > 0:
-                    cursor.execute(
-                        "SELECT stock_id FROM stock_levels WHERE code = %s",
-                        (stock_code,),
-                    )
-                    stock_id = int(cursor.fetchone()[0])
-                    cursor.execute(
-                        "DELETE FROM stock_balance WHERE stock_id = %s", (stock_id,)
-                    )
-                    connection.commit()
-                    cursor.execute(
-                        "DELETE FROM stock_levels WHERE code = %s", (stock_code,)
-                    )
-                    connection.commit()
-                    cursor.execute("DELETE FROM orders WHERE code = %s", (stock_code,))
-                    connection.commit()
                     cursor.execute(
                         "DELETE FROM products WHERE code = %s", (stock_code,)
                     )
@@ -377,19 +229,11 @@ def main(page: ft.Page):
             else:
                 showBanner(e, "Please fill in the stock code field")
                 page.update()
-        elif tabs.selected_index == 3:
-            stock_code = str(stockCodeTF.value.strip().upper())
-            if stock_code != "":
-                cursor.execute("SELECT * FROM orders WHERE ode = %s", (stock_code,))
-                if cursor.rowcount > 0:
-                    cursor.execute("DELETE FROM orders WHERE code = %s", (stock_code,))
-                    connection.commit()
-                else:
-                    showBanner(e, "Stock Code does not exist")
-                    page.update()
-            else:
-                showBanner(e, "Please fill in the stock code field")
-                page.update()
+        stockCodeTF.value = ""
+        stockCATTF.value = ""
+        descriptionTF.value = ""
+        quantityTF.value = ""
+        moqTF.value = ""
         refreshTable(e)
 
     page.title = "Calibre Data Manager"
@@ -509,52 +353,6 @@ def main(page: ft.Page):
 
     moqTF = ft.TextField(
         label="Enter Minimum Order Quantity",
-        expand=True,
-        border_radius=10,
-        text_style=ft.TextStyle(color="#e1e3e3"),
-        label_style=ft.TextStyle(color="#e1e3e3"),
-        border_width=2,
-        focused_border_width=4,
-        border_color="#004f58",
-        focused_border_color="#d6ca00",
-        bgcolor=ft.colors.TRANSPARENT,
-        focused_bgcolor=ft.colors.TRANSPARENT,
-        cursor_color="#e1e3e3",
-    )
-
-    orderQuantityTF = ft.TextField(
-        label="Enter Quantity",
-        expand=True,
-        border_radius=10,
-        text_style=ft.TextStyle(color="#e1e3e3"),
-        label_style=ft.TextStyle(color="#e1e3e3"),
-        border_width=2,
-        focused_border_width=4,
-        border_color="#004f58",
-        focused_border_color="#d6ca00",
-        bgcolor=ft.colors.TRANSPARENT,
-        focused_bgcolor=ft.colors.TRANSPARENT,
-        cursor_color="#e1e3e3",
-    )
-
-    nameTF = ft.TextField(
-        label="Enter Customer Name",
-        expand=True,
-        border_radius=10,
-        text_style=ft.TextStyle(color="#e1e3e3"),
-        label_style=ft.TextStyle(color="#e1e3e3"),
-        border_width=2,
-        focused_border_width=4,
-        border_color="#004f58",
-        focused_border_color="#d6ca00",
-        bgcolor=ft.colors.TRANSPARENT,
-        focused_bgcolor=ft.colors.TRANSPARENT,
-        cursor_color="#e1e3e3",
-        on_change=checkCustomerExists,
-    )
-
-    addressTF = ft.TextField(
-        label="Enter Customer Address",
         expand=True,
         border_radius=10,
         text_style=ft.TextStyle(color="#e1e3e3"),
