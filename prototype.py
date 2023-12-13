@@ -43,15 +43,6 @@ def main(page: ft.Page):
         page.banner.open = False
         page.update()
 
-    def tabSwitch(e):
-        searchBar.visible = True if tabs.selected_index == 0 else False
-        searchBar.label = (
-            "Enter Stock Code to Display" if tabs.selected_index == 1 else "Search"
-        )
-        if tabs.selected_index == 1:
-            search(e)
-        page.update()
-
     def search(e):
         if tabs.selected_index == 0:
             query = str(searchBar.value.strip())
@@ -83,7 +74,6 @@ def main(page: ft.Page):
                 stockLevelsTable.visible = True
                 page.update()
         elif tabs.selected_index == 1:
-            searchBar.visible = False
             fig, ax = plt.subplots()
             cursor.execute(
                 "SELECT category, SUM(quantity) FROM products INNER JOIN stock_levels using(code) GROUP BY category"
@@ -619,7 +609,8 @@ def main(page: ft.Page):
                     ft.Column(
                         [
                             ft.Divider(color=ft.colors.BACKGROUND),
-                            stockLevelsTable,
+                            searchBar,
+                            ft.Row([stockLevelsTable]),
                             searchStockLevelsTable,
                         ],
                         scroll=True,
@@ -646,22 +637,10 @@ def main(page: ft.Page):
             ),
         ],
         expand=True,
-        on_change=tabSwitch,
+        on_change=search,
     )
 
-    titleBar = ft.Row(
-        [
-            ft.Container(
-                ft.Column([ft.Row([searchBar])]),
-                bgcolor="#1b2628",
-                expand=True,
-                border_radius=10,
-                padding=10,
-            )
-        ]
-    )
-
-    page.add(titleBar, tabs)
+    page.add(tabs)
 
 
 ft.app(target=main)
