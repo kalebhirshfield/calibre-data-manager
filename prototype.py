@@ -609,7 +609,7 @@ def main(page: ft.Page):
                     ft.Column(
                         [
                             ft.Divider(color=ft.colors.BACKGROUND),
-                            searchBar,
+                            ft.Container(searchBar),
                             ft.Row([stockLevelsTable]),
                             searchStockLevelsTable,
                         ],
