@@ -22,7 +22,6 @@ connection = psycopg.connect(os.getenv("DATABASE_URL"))
 cursor = connection.cursor()
 
 offset = 0
-current_row = 0
 admin = False
 chart = None
 
