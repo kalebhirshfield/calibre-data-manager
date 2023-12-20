@@ -131,14 +131,14 @@ def main(page: Page) -> None:
 
     def load_data(row) -> None:
         if table_select.value == "Product":
-            code_product_tf.value = row[0]
+            code_tf.value = row[0]
             category_tf.value = row[1]
             description_tf.value = row[2]
             quantity_tf.value = row[3]
             moq_tf.value = row[4]
         elif table_select.value == "Order":
             order_id_tf.value = row[0]
-            code_order_tf.value = row[1]
+            code_tf.value = row[1]
             name_tf.value = row[2]
             order_quantity_tf.value = row[3]
         elif table_select.value == "Customer":
@@ -206,14 +206,14 @@ def main(page: Page) -> None:
 
     def clear_form(_) -> None:
         if form_select.value == "Product":
-            code_product_tf.value = ""
+            code_tf.value = ""
             category_tf.value = ""
             description_tf.value = ""
             quantity_tf.value = ""
             moq_tf.value = ""
         elif form_select.value == "Order":
             order_id_tf.value = ""
-            code_order_tf.value = ""
+            code_tf.value = ""
             order_quantity_tf.value = ""
             name_tf.value = ""
         elif form_select.value == "Customer":
@@ -272,7 +272,7 @@ def main(page: Page) -> None:
             return str(value)
 
     def add_product_data(_) -> None:
-        code = str(code_product_tf.value)
+        code = str(code_tf.value)
         category = int_check(category_tf.value)
         description = str(description_tf.value)
         quantity = int_check(quantity_tf.value)
@@ -326,7 +326,7 @@ def main(page: Page) -> None:
         refresh_page(_)
 
     def add_order_data(_) -> None:
-        code = str(code_order_tf.value)
+        code = str(code_tf.value)
         name = str(name_tf.value)
         if str(order_quantity_tf.value).isnumeric() and code != "":
             if int(order_quantity_tf.value) >= obtain_moq(code):
@@ -386,7 +386,7 @@ def main(page: Page) -> None:
         refresh_page(_)
 
     def remove_product_data(_) -> None:
-        code = str(code_product_tf.value)
+        code = str(code_tf.value)
         try_commit("DELETE FROM stock_balance WHERE code = %s", (code,))
         refresh_page(_)
 
@@ -527,9 +527,7 @@ def main(page: Page) -> None:
 
     refresh_table(None)
 
-    code_product_tf = FormField("Code", True, str)
-
-    code_order_tf = FormField("Code", True, str)
+    code_tf = FormField("Code", True, str)
 
     order_id_tf = FormField("Order ID", True, int)
 
@@ -621,7 +619,7 @@ def main(page: Page) -> None:
                         [
                             Row(
                                 [
-                                    code_product_tf,
+                                    code_tf,
                                     category_tf,
                                     quantity_tf,
                                     moq_tf,
@@ -657,7 +655,7 @@ def main(page: Page) -> None:
                             Row(
                                 [
                                     order_id_tf,
-                                    code_order_tf,
+                                    code_tf,
                                     add_order_button,
                                     delete_order_button,
                                 ]
