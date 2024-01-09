@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import psycopg
 
 from dotenv import load_dotenv
-from flet import ClipBehavior, MainAxisAlignment, MaterialState, Padding, WindowDragArea
+from flet import ClipBehavior, MainAxisAlignment, MaterialState, Padding
 from flet import Column, Row, Container, DataColumn, DataRow, DataCell, ScrollMode
 from flet import FontWeight, IconButton, ButtonStyle, RoundedRectangleBorder
 from flet import Page, View, Text, Icon, Theme, ThemeMode, Banner, Divider, BoxShadow
