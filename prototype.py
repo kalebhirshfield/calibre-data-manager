@@ -6,7 +6,6 @@ from flet import RoundedRectangleBorder
 import matplotlib
 import matplotlib.pyplot as plt
 from flet.matplotlib_chart import MatplotlibChart
-from datetime import date
 
 matplotlib.use("svg")
 
