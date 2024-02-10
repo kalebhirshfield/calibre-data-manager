@@ -752,9 +752,11 @@ def main(page: Page) -> None:
     )
 
     theme_toggle_button = FormButton(
-        icons.DARK_MODE_ROUNDED
-        if page.theme_mode == ThemeMode.LIGHT
-        else icons.LIGHT_MODE_ROUNDED,
+        (
+            icons.DARK_MODE_ROUNDED
+            if page.theme_mode == ThemeMode.LIGHT
+            else icons.LIGHT_MODE_ROUNDED
+        ),
         toggle_theme,
         colors.BACKGROUND,
         True,
