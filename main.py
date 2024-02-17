@@ -545,42 +545,49 @@ def main(page: Page) -> None:
         FormButton(icons.ADD_ROUNDED, add_product_data, colors.ON_PRIMARY, True),
         bgcolor=colors.PRIMARY,
         border_radius=10,
+        tooltip="Add / Edit Product",
     )
 
     add_order_button = Container(
         FormButton(icons.ADD_ROUNDED, add_order_data, colors.ON_PRIMARY, True),
         bgcolor=colors.PRIMARY,
         border_radius=10,
+        tooltip="Add / Edit Order",
     )
 
     add_customer_button = Container(
         FormButton(icons.ADD_ROUNDED, add_customer_data, colors.ON_PRIMARY, True),
         bgcolor=colors.PRIMARY,
         border_radius=10,
+        tooltip="Add / Edit Customer",
     )
 
     delete_product_button = Container(
         FormButton(icons.DELETE_ROUNDED, remove_product_data, colors.ON_PRIMARY, True),
         bgcolor=colors.PRIMARY,
         border_radius=10,
+        tooltip="Remove Product",
     )
 
     delete_order_button = Container(
         FormButton(icons.DELETE_ROUNDED, remove_order_data, colors.ON_PRIMARY, True),
         bgcolor=colors.PRIMARY,
         border_radius=10,
+        tooltip="Remove Order",
     )
 
     delete_customer_button = Container(
         FormButton(icons.DELETE_ROUNDED, remove_customer_data, colors.ON_PRIMARY, True),
         bgcolor=colors.PRIMARY,
         border_radius=10,
+        tooltip="Remove Customer",
     )
 
     clear_form_button = Container(
         FormButton(icons.CLEAR_ROUNDED, clear_form, colors.ON_PRIMARY, True),
         bgcolor=colors.PRIMARY,
         border_radius=10,
+        tooltip="Clear Form",
     )
 
     display_product_chart_button = Container(
@@ -592,6 +599,7 @@ def main(page: Page) -> None:
         ),
         bgcolor=colors.PRIMARY,
         border_radius=10,
+        tooltip="Display Product Chart",
     )
 
     display_order_chart_button = Container(
@@ -603,6 +611,7 @@ def main(page: Page) -> None:
         ),
         bgcolor=colors.PRIMARY,
         border_radius=10,
+        tooltip="Display Order Chart",
     )
 
     back_button = FormButton(icons.ARROW_BACK, back_to_route, colors.PRIMARY, True)
@@ -611,6 +620,7 @@ def main(page: Page) -> None:
         FormButton(icons.REFRESH_ROUNDED, refresh_table, colors.ON_PRIMARY, True),
         bgcolor=colors.PRIMARY,
         border_radius=10,
+        tooltip="Refresh Table / Reconnect to Database",
     )
 
     product_form = Container(
@@ -721,12 +731,14 @@ def main(page: Page) -> None:
         FormButton(icons.LOGIN, login, colors.ON_PRIMARY, True),
         bgcolor=colors.PRIMARY,
         border_radius=10,
+        tooltip="Login",
     )
 
     logout_button = Container(
         FormButton(icons.LOGOUT, logout, colors.ON_PRIMARY, True),
         bgcolor=colors.PRIMARY,
         border_radius=10,
+        tooltip="Logout",
     )
 
     login_form = Container(
