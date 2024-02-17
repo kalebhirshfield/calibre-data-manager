@@ -72,6 +72,12 @@ def main(page: Page) -> None:
     sem = threading.Semaphore()
 
     def refresh_table(_) -> tuple | int:
+        global connection, cursor
+        cursor.close()
+        connection.close()
+        load_dotenv()
+        connection = psycopg.connect(os.getenv("DATABASE_URL"))
+        cursor = connection.cursor()
         data_table.rows = []
         data_table.columns = []
         global offset
@@ -484,18 +490,9 @@ def main(page: Page) -> None:
         page.banner.open = False
         page.update()
 
-    def toggle_theme(_) -> None:
-        if page.theme_mode == ThemeMode.LIGHT:
-            page.theme_mode = ThemeMode.DARK
-            theme_toggle_button.icon = icons.LIGHT_MODE_ROUNDED
-        else:
-            page.theme_mode = ThemeMode.LIGHT
-            theme_toggle_button.icon = icons.DARK_MODE_ROUNDED
-        page.update()
-
     # Page
     page.theme = Theme(use_material3=True, color_scheme_seed="cyan")
-    page.theme_mode = ThemeMode.SYSTEM
+    page.theme_mode = ThemeMode.LIGHT
     page.bgcolor = colors.BACKGROUND
     page.banner = Banner(
         bgcolor=colors.ERROR_CONTAINER,
@@ -609,6 +606,12 @@ def main(page: Page) -> None:
     )
 
     back_button = FormButton(icons.ARROW_BACK, back_to_route, colors.PRIMARY, True)
+
+    refresh_button = Container(
+        FormButton(icons.REFRESH_ROUNDED, refresh_table, colors.ON_PRIMARY, True),
+        bgcolor=colors.PRIMARY,
+        border_radius=10,
+    )
 
     product_form = Container(
         Row(
@@ -751,17 +754,6 @@ def main(page: Page) -> None:
         visible=False,
     )
 
-    theme_toggle_button = FormButton(
-        (
-            icons.DARK_MODE_ROUNDED
-            if page.theme_mode == ThemeMode.LIGHT
-            else icons.LIGHT_MODE_ROUNDED
-        ),
-        toggle_theme,
-        colors.BACKGROUND,
-        True,
-    )
-
     app_bar = Container(
         Row(
             [
@@ -777,7 +769,7 @@ def main(page: Page) -> None:
                 search_bar,
                 user_icon,
                 user_details,
-                theme_toggle_button,
+                refresh_button,
             ],
             alignment=MainAxisAlignment.CENTER,
         ),
@@ -798,6 +790,7 @@ def main(page: Page) -> None:
         search_bar.visible = False
         user_icon.visible = False
         user_details.visible = False
+        refresh_button.visible = False
         page.views.append(
             View("/login", [app_bar, Container(login_form, padding=20)], padding=0)
         )
@@ -810,6 +803,7 @@ def main(page: Page) -> None:
             search_bar.visible = True
             user_icon.visible = True
             user_details.visible = True
+            refresh_button.visible = True
             page.views.append(
                 View(
                     "/",
