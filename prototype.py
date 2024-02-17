@@ -118,25 +118,41 @@ def main(page: ft.Page):
             if stockCode != None:
                 cursor.execute("SELECT * FROM products WHERE code = %s", (stockCode,))
                 if cursor.rowcount > 0:
-                    cursor.execute(
-                        "UPDATE products SET category = %s WHERE code = %s",
-                        (stockCAT, stockCode),
-                    ) if stockCAT != None else None
+                    (
+                        cursor.execute(
+                            "UPDATE products SET category = %s WHERE code = %s",
+                            (stockCAT, stockCode),
+                        )
+                        if stockCAT != None
+                        else None
+                    )
                     connection.commit()
-                    cursor.execute(
-                        "UPDATE products SET description = %s WHERE code = %s",
-                        (description, stockCode),
-                    ) if description != None else None
+                    (
+                        cursor.execute(
+                            "UPDATE products SET description = %s WHERE code = %s",
+                            (description, stockCode),
+                        )
+                        if description != None
+                        else None
+                    )
                     connection.commit()
-                    cursor.execute(
-                        "UPDATE stock_levels SET quantity = %s WHERE code = %s",
-                        (quantity, stockCode),
-                    ) if quantity != None else None
+                    (
+                        cursor.execute(
+                            "UPDATE stock_levels SET quantity = %s WHERE code = %s",
+                            (quantity, stockCode),
+                        )
+                        if quantity != None
+                        else None
+                    )
                     connection.commit()
-                    cursor.execute(
-                        "UPDATE stock_levels SET moq = %s WHERE code = %s",
-                        (moq, stockCode),
-                    ) if moq != None else None
+                    (
+                        cursor.execute(
+                            "UPDATE stock_levels SET moq = %s WHERE code = %s",
+                            (moq, stockCode),
+                        )
+                        if moq != None
+                        else None
+                    )
                     connection.commit()
                     cursor.execute(
                         "Select stock_id FROM stock_levels WHERE code = %s",
