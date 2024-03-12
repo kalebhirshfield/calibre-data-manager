@@ -15,7 +15,7 @@ class SearchField(TextField):
         self.border_color = colors.ON_PRIMARY
         self.cursor_color = colors.ON_PRIMARY
         self.content_padding = 10
-        self.on_change = on_change
+        self.on_submit = on_change
         self.visible = visible
 
 
