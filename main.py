@@ -38,7 +38,8 @@ def main(page: Page) -> None:
             """
         elif table_select.value == "Order":
             query = """
-                SELECT orders.order_id, orders.code, customers.name, orders.order_quantity, orders.date FROM orders INNER JOIN customers using(customer_id) 
+                SELECT orders.order_id, orders.code, customers.name, orders.order_quantity, 
+                orders.date FROM orders INNER JOIN customers using(customer_id) 
                 LIMIT %s OFFSET %s
             """
         elif table_select.value == "Customer":
