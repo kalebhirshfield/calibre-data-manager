@@ -2,26 +2,21 @@
 
 To install the Calibre Data Manager app, please follow these steps:
 
-1. Install the required dependencies by running the following command in your terminal:
+1. Install python 3.12 or above from the [official python website](https://www.python.org/downloads/).
+
+2. Install the required dependencies by running the following command in your terminal:
 
     ```pwsh
     pip install -r .\requirements.txt
     ```
 
-2. If you are using python 3.12 or above, and wish to use the Flet CLI, you will need to install setuptools module by running:
+3. Run the app in your terminal by running the following command:
 
     ```pwsh
-    pip install setuptools
+    python main.py
     ```
 
-3. Package the app by running the following commands in your terminal:
+4. Login to the test account using the following credentials:
 
-    ```pwsh
-    pip install pyinstaller
-    ```
-
-    ```pwsh
-    flet pack main.py --name Calibre --icon .\assets\icon.ico
-    ```
-
-    This will create a packaged app that you can then run on your system.
+    - Username: `test`
+    - Password: `123`
