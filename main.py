@@ -428,7 +428,7 @@ def main(page: Page) -> None:
 
     def remove_customer_data(_) -> None:
         name = str(name_tf.value)
-        try_commit("DELETE FROM orders WHERE name = %s", (name,))
+        try_commit("DELETE FROM customers WHERE name = %s", (name,))
         refresh_page(_)
 
     # Page Functions
