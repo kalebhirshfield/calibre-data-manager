@@ -796,9 +796,8 @@ def main(page: Page) -> None:
         page.views.clear()
         page.window_width = 400
         page.window_height = 300
-        page.window_resizable = True
-        page.window_maximizable = False
         page.window_resizable = False
+        page.window_maximizable = False
         search_icon.visible = False
         search_bar.visible = False
         user_icon.visible = False
